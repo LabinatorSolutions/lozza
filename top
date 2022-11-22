@@ -35,36 +35,35 @@ for (var KKK=0; KKK<64; KKK++) {
 
 //{{{  other lozzas
 
+'lozza\trunk\history\2.5\lozza.js'
+'lozza\trunk\history\2.5\gdtuner.js'
+
 'lozza\trunk\history\2.4\release\lozza.js'
 'lozza\trunk\history\2.4\release\lozza.bat'
 'lozza\trunk\history\2.4\release\readme.txt'
 
-'lozza\trunk\history\2.5\lozza.js'
-'lozza\trunk\history\2.4\gdtuner.js'
 'lozza\trunk\history\2.4\lozza.js'
-'lozza\trunk\history\2.3\lozza.js'
-'lozza\trunk\history\2.2\gdtuner.js'
+'lozza\trunk\history\2.4\gdtuner.js'
+
 'lozza\trunk\history\2.2\lozza.js'
-'lozza\trunk\history\2.1\lozza.js'
-'lozza\trunk\history\2.0\lozza.js'
-'lozza\trunk\history\1.18\lozza.js'
+'lozza\trunk\history\2.2\gdtuner.js'
+
 
 'lozza\trunk\testing\deadends.js'
 
 //}}}
 
-'lozza\trunk\testing\makeepd.bat'        1
-'lozza\trunk\testing\split.js'           2
-
-'lozza\trunk\testing\gdtuner.js'         3
-'lozza\trunk\testing\gdtuner.txt'
-'lozza\trunk\testing\0gdtuner.txt'
+'lozza\trunk\testing\gdtuner.js'
+'lozza\trunk\testing\gdtuner.txt'    - ints
+'lozza\trunk\testing\fgdtuner.txt'   - reals
 'lozza\trunk\testing\tunings.js'
 
 'lozza\trunk\testing\perft.js'
 'lozza\trunk\testing\eval.js'
 'lozza\trunk\testing\eval_flip.js'
 
+'lozza\trunk\testing\makeepd.bat'
+'lozza\trunk\testing\split.js'
 'lozza\trunk\testing\random.js'
 'lozza\trunk\testing\deadends.js'
 

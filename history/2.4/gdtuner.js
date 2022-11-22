@@ -37,6 +37,12 @@ function getprob (r) {
     return 1.0;
   else if (r == '0-1')
     return 0.0;
+  else if (r == '"1/2-1/2"')
+    return 0.5;
+  else if (r == '"1-0"')
+    return 1.0;
+  else if (r == '"0-1"')
+    return 0.0;
   else
     console.log('unknown result',r);
 }
