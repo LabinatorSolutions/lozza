@@ -38,16 +38,15 @@ for (var KKK=0; KKK<64; KKK++) {
 'lozza\trunk\history\2.5\lozza.js'
 'lozza\trunk\history\2.5\gdtuner.js'
 
+'lozza\trunk\history\2.4\lozza.js'
+'lozza\trunk\history\2.4\gdtuner.js'
+
 'lozza\trunk\history\2.4\release\lozza.js'
 'lozza\trunk\history\2.4\release\lozza.bat'
 'lozza\trunk\history\2.4\release\readme.txt'
 
-'lozza\trunk\history\2.4\lozza.js'
-'lozza\trunk\history\2.4\gdtuner.js'
-
 'lozza\trunk\history\2.2\lozza.js'
 'lozza\trunk\history\2.2\gdtuner.js'
-
 
 'lozza\trunk\testing\deadends.js'
 

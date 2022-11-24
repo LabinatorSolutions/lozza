@@ -3,7 +3,7 @@
 rem ******** config start
 
 set e1=coalface
-set e2=released
+set e2=candidate
 
 set elo0=0
 set elo1=5

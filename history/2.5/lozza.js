@@ -16,6 +16,7 @@ var LICHESS     = 0;
 //{{{  history
 /*
 
+2.5 23/11/22 Simplify mobility weights for small dataset.
 2.5 21/11/22 Add basic pawn chain feature to eval.
 2.5 21/11/22 Retune using Zurichess's quiet-labeled.epd.
 2.5 22/11/22 Make eval weights more visible.
@@ -849,16 +850,16 @@ var randoms = [
 // use score = false
 // wdl index = 5
 // num positions = 725000
-// num features = 1035
+// num features = 16
 // batch size = 10000
 // num batches = 72
 // learning rate = 0.1
 // report rate = 10
-// k = 3.27
+// k = 3.2400000000000007
 // reset adagrad = false
-// loss = 0.054996549029379796
-// epochs = 1170
-// last update = Tue Nov 22 2022 06:05:32 GMT+0000 (Greenwich Mean Time)
+// loss = 0.0551224109831909
+// epochs = 260
+// last update = Wed Nov 23 2022 15:11:50 GMT+0000 (Greenwich Mean Time)
 //
 
 const MATERIAL = [0,100,388,385,593,1152,10000];
@@ -916,6 +917,22 @@ var TENSE_RS             = 77;
 var TENSE_RE             = 38;
 var TENSE_QS             = -4;
 var TENSE_QE             = 23;
+var MOBN_S               = 4;
+var MOBN_E               = -3;
+var MOBN_S0              = -2;
+var MOBN_E0              = -1;
+var MOBB_S               = 7;
+var MOBB_E               = 3;
+var MOBB_S0              = -10;
+var MOBB_E0              = -6;
+var MOBR_S               = 5;
+var MOBR_E               = 2;
+var MOBR_S0              = -4;
+var MOBR_E0              = -6;
+var MOBQ_S               = 2;
+var MOBQ_E               = 6;
+var MOBQ_S0              = 0;
+var MOBQ_E0              = -1;
 
 const WPAWN_PSTS      = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -1318,15 +1335,6 @@ const IMBALR_S        = [74,17,-17,-24,-27,-23,-10,2,17];
 const IMBALR_E        = [-44,-34,-7,9,23,39,48,59,82];
 const IMBALQ_S        = [-9,-41,-25,1,16,17,19,12,-7];
 const IMBALQ_E        = [-82,-50,-20,-9,-1,23,44,61,35];
-
-const MOBN_S          = [-1,11,17,20,28,30,33,38,47];
-const MOBN_E          = [-5,-5,-4,0,-7,-6,-11,-17,-26];
-const MOBB_S          = [-1,15,26,34,37,45,51,56,63,71,66,84,92,105];
-const MOBB_E          = [-35,-26,-2,7,22,23,27,30,34,28,29,22,28,24];
-const MOBR_S          = [2,9,13,18,19,25,28,33,40,44,49,54,72,86,68];
-const MOBR_E          = [-46,-20,1,11,22,28,32,34,33,37,38,37,38,24,33];
-const MOBQ_S          = [5,4,6,5,10,14,15,13,17,21,19,19,22,27,27,32,31,36,42,45,40,43,43,48,48,50,49,54];
-const MOBQ_E          = [0,8,16,10,25,40,42,58,68,81,90,97,115,113,118,125,131,136,140,150,151,158,171,172,181,198,202,214];
 
 //}}}
 //{{{  pst lists
@@ -2412,10 +2420,6 @@ function lozBoard () {
   this.features.wShelter = Array(WSHELTER.length);  // ##ifdef
   this.features.wStorm   = Array(WSTORM.length);    // ##ifdef
   this.features.wOutpost = Array(144);              // ##ifdef
-  this.features.mobN     = Array(MOBN_S.length);    // ##ifdef
-  this.features.mobB     = Array(MOBB_S.length);    // ##ifdef
-  this.features.mobR     = Array(MOBR_S.length);    // ##ifdef
-  this.features.mobQ     = Array(MOBQ_S.length);    // ##ifdef
 
   this.lozza        = null;
   this.verbose      = false;
@@ -4360,10 +4364,14 @@ lozBoard.prototype.evaluate = function (turn) {
   f.wOutpost.fill(0);          // ##ifdef
   f.wShelter.fill(0);          // ##ifdef
   f.wStorm.fill(0);            // ##ifdef
-  f.mobN.fill(0);              // ##ifdef
-  f.mobB.fill(0);              // ##ifdef
-  f.mobR.fill(0);              // ##ifdef
-  f.mobQ.fill(0);              // ##ifdef
+  f.mobN               = 0;    // ##ifdef
+  f.mobB               = 0;    // ##ifdef
+  f.mobR               = 0;    // ##ifdef
+  f.mobQ               = 0;    // ##ifdef
+  f.mobN0              = 0;    // ##ifdef
+  f.mobB0              = 0;    // ##ifdef
+  f.mobR0              = 0;    // ##ifdef
+  f.mobQ0              = 0;    // ##ifdef
   f.kingPenalty        = 0;    // ##ifdef
   f.pawnChainS         = 0;    // ##ifdef
   f.pawnChainE         = 0;    // ##ifdef
@@ -5337,10 +5345,16 @@ lozBoard.prototype.evaluate = function (turn) {
       to = fr+25; o=b[to]; mob += IS_E[o]; att |= BKZ[to]; tight += TIGHT_WN[o]; tense += TENSE_WN[o];
       to = fr-25; o=b[to]; mob += IS_E[o]; att |= BKZ[to]; tight += TIGHT_WN[o]; tense += TENSE_WN[o];
       
-      mobS += MOBN_S[mob];
-      mobE += MOBN_E[mob];
-      
-      f.mobN[mob] += 1;    // ##ifdef
+      if (mob) {
+        mobS += mob * MOBN_S;
+        mobE += mob * MOBN_E;
+        f.mobN += mob;                  // ##ifdef
+      }
+      else {
+        mobS += MOBN_S0;
+        mobE += MOBN_E0;
+        f.mobN0 += 1;                   // ##ifdef
+      }
       
       tightS += tight * TIGHT_NS;
       tightE += tight * TIGHT_NE;
@@ -5396,10 +5410,16 @@ lozBoard.prototype.evaluate = function (turn) {
       to = fr + 13; while (!b[to]) {att |= BKZ[to]; to += 13; mob++;} att |= BKZ[to]; o=b[to]; tight += TIGHT_WB[o]; tense += TENSE_WB[o];
       to = fr - 13; while (!b[to]) {att |= BKZ[to]; to -= 13; mob++;} att |= BKZ[to]; o=b[to]; tight += TIGHT_WB[o]; tense += TENSE_WB[o];
       
-      mobS += MOBB_S[mob];
-      mobE += MOBB_E[mob];
-      
-      f.mobB[mob] += 1;    // ##ifdef
+      if (mob) {
+        mobS += mob * MOBB_S;
+        mobE += mob * MOBB_E;
+        f.mobB += mob;                  // ##ifdef
+      }
+      else {
+        mobS += MOBB_S0;
+        mobE += MOBB_E0;
+        f.mobB0 += 1;                   // ##ifdef
+      }
       
       tightS += tight * TIGHT_BS;
       tightE += tight * TIGHT_BE;
@@ -5440,13 +5460,20 @@ lozBoard.prototype.evaluate = function (turn) {
       to = fr + 12; while (!b[to]) {att |= BKZ[to]; to += 12; mob++;} att |= BKZ[to]; o=b[to]; tight += TIGHT_WR[o]; tense += TENSE_WR[o];
       to = fr - 12; while (!b[to]) {att |= BKZ[to]; to -= 12; mob++;} att |= BKZ[to]; o=b[to]; tight += TIGHT_WR[o]; tense += TENSE_WR[o];
       
-      mobS += MOBR_S[mob];
-      mobE += MOBR_E[mob];
-      
-      f.mobR[mob] += 1;    // ##ifdef
+      if (mob) {
+        mobS += mob * MOBR_S;
+        mobE += mob * MOBR_E;
+        f.mobR += mob;                  // ##ifdef
+      }
+      else {
+        mobS += MOBR_S0;
+        mobE += MOBR_E0;
+        f.mobR0 += 1;                   // ##ifdef
+      }
       
       f.tightRS += tight;  // ##ifdef
       f.tightRE += tight;  // ##ifdef
+      
       f.tenseRS += tense;  // ##ifdef
       f.tenseRE += tense;  // ##ifdef
       
@@ -5523,10 +5550,16 @@ lozBoard.prototype.evaluate = function (turn) {
       to = fr + 12; while (!b[to]) {att |= BKZ[to]; to += 12; mob++;} att |= BKZ[to]; o=b[to]; tight += TIGHT_WQ[o]; tense += TENSE_WQ[o];
       to = fr - 12; while (!b[to]) {att |= BKZ[to]; to -= 12; mob++;} att |= BKZ[to]; o=b[to]; tight += TIGHT_WQ[o]; tense += TENSE_WQ[o];
       
-      mobS += MOBQ_S[mob];
-      mobE += MOBQ_E[mob];
-      
-      f.mobQ[mob] += 1;    // ##ifdef
+      if (mob) {
+        mobS += mob * MOBQ_S;
+        mobE += mob * MOBQ_E;
+        f.mobQ += mob;                  // ##ifdef
+      }
+      else {
+        mobS += MOBQ_S0;
+        mobE += MOBQ_E0;
+        f.mobQ0 += 1;                   // ##ifdef
+      }
       
       tightS += tight * TIGHT_QS;
       tightE += tight * TIGHT_QE;
@@ -5536,6 +5569,7 @@ lozBoard.prototype.evaluate = function (turn) {
       
       f.tightQS += tight;  // ##ifdef
       f.tightQE += tight;  // ##ifdef
+      
       f.tenseQS += tense;  // ##ifdef
       f.tenseQE += tense;  // ##ifdef
       
@@ -5643,10 +5677,16 @@ lozBoard.prototype.evaluate = function (turn) {
       to = fr+25; o=b[to]; mob += IS_E[o]; att |= WKZ[to]; tight += TIGHT_BN[o]; tense += TENSE_BN[o];
       to = fr-25; o=b[to]; mob += IS_E[o]; att |= WKZ[to]; tight += TIGHT_BN[o]; tense += TENSE_BN[o];
       
-      mobS -= MOBN_S[mob];
-      mobE -= MOBN_E[mob];
-      
-      f.mobN[mob] -= 1;    // ##ifdef
+      if (mob) {
+        mobS -= mob * MOBN_S;
+        mobE -= mob * MOBN_E;
+        f.mobN -= mob;                  // ##ifdef
+      }
+      else {
+        mobS -= MOBN_S0;
+        mobE -= MOBN_E0;
+        f.mobN0 -= 1;                   // ##ifdef
+      }
       
       tightS -= tight * TIGHT_NS;
       tightE -= tight * TIGHT_NE;
@@ -5656,6 +5696,7 @@ lozBoard.prototype.evaluate = function (turn) {
       
       f.tightNS -= tight;  // ##ifdef
       f.tightNE -= tight;  // ##ifdef
+      
       f.tenseNS -= tense;  // ##ifdef
       f.tenseNE -= tense;  // ##ifdef
       
@@ -5702,10 +5743,16 @@ lozBoard.prototype.evaluate = function (turn) {
       to = fr + 13; while (!b[to]) {att |= WKZ[to]; to += 13; mob++;} att |= WKZ[to]; o=b[to]; tight += TIGHT_BB[o]; tense += TENSE_BB[o];
       to = fr - 13; while (!b[to]) {att |= WKZ[to]; to -= 13; mob++;} att |= WKZ[to]; o=b[to]; tight += TIGHT_BB[o]; tense += TENSE_BB[o];
       
-      mobS -= MOBB_S[mob];
-      mobE -= MOBB_E[mob];
-      
-      f.mobB[mob] -= 1;    // ##ifdef
+      if (mob) {
+        mobS -= mob * MOBB_S;
+        mobE -= mob * MOBB_E;
+        f.mobB -= mob;                  // ##ifdef
+      }
+      else {
+        mobS -= MOBB_S0;
+        mobE -= MOBB_E0;
+        f.mobB0 -= 1;                   // ##ifdef
+      }
       
       tightS -= tight * TIGHT_BS;
       tightE -= tight * TIGHT_BE;
@@ -5715,6 +5762,7 @@ lozBoard.prototype.evaluate = function (turn) {
       
       f.tightBS -= tight;  // ##ifdef
       f.tightBE -= tight;  // ##ifdef
+      
       f.tenseBS -= tense;  // ##ifdef
       f.tenseBE -= tense;  // ##ifdef
       
@@ -5746,10 +5794,16 @@ lozBoard.prototype.evaluate = function (turn) {
       to = fr + 12; while (!b[to]) {att |= WKZ[to]; to += 12; mob++;} att |= WKZ[to]; o=b[to]; tight += TIGHT_BR[o]; tense += TENSE_BR[o];
       to = fr - 12; while (!b[to]) {att |= WKZ[to]; to -= 12; mob++;} att |= WKZ[to]; o=b[to]; tight += TIGHT_BR[o]; tense += TENSE_BR[o];
       
-      mobS -= MOBR_S[mob];
-      mobE -= MOBR_E[mob];
-      
-      f.mobR[mob] -= 1;    // ##ifdef
+      if (mob) {
+        mobS -= mob * MOBR_S;
+        mobE -= mob * MOBR_E;
+        f.mobR -= mob;                  // ##ifdef
+      }
+      else {
+        mobS -= MOBR_S0;
+        mobE -= MOBR_E0;
+        f.mobR0 -= 1;                   // ##ifdef
+      }
       
       tightS -= tight * TIGHT_RS;
       tightE -= tight * TIGHT_RE;
@@ -5759,6 +5813,7 @@ lozBoard.prototype.evaluate = function (turn) {
       
       f.tightRS -= tight;  // ##ifdef
       f.tightRE -= tight;  // ##ifdef
+      
       f.tenseRS -= tense;  // ##ifdef
       f.tenseRE -= tense;  // ##ifdef
       
@@ -5829,10 +5884,16 @@ lozBoard.prototype.evaluate = function (turn) {
       to = fr + 12; while (!b[to]) {att |= WKZ[to]; to += 12; mob++;} att |= WKZ[to]; o=b[to]; tight += TIGHT_BQ[o]; tense += TENSE_BQ[o];
       to = fr - 12; while (!b[to]) {att |= WKZ[to]; to -= 12; mob++;} att |= WKZ[to]; o=b[to]; tight += TIGHT_BQ[o]; tense += TENSE_BQ[o];
       
-      mobS -= MOBQ_S[mob];
-      mobE -= MOBQ_E[mob];
-      
-      f.mobQ[mob] -= 1;    // ##ifdef
+      if (mob) {
+        mobS -= mob * MOBQ_S;
+        mobE -= mob * MOBQ_E;
+        f.mobQ -= mob;                  // ##ifdef
+      }
+      else {
+        mobS -= MOBQ_S0;
+        mobE -= MOBQ_E0;
+        f.mobQ0 -= 1;                   // ##ifdef
+      }
       
       tightS -= tight * TIGHT_QS;
       tightE -= tight * TIGHT_QE;
@@ -5842,6 +5903,7 @@ lozBoard.prototype.evaluate = function (turn) {
       
       f.tightQS -= tight;  // ##ifdef
       f.tightQE -= tight;  // ##ifdef
+      
       f.tenseQS -= tense;  // ##ifdef
       f.tenseQE -= tense;  // ##ifdef
       
@@ -5906,22 +5968,22 @@ lozBoard.prototype.evaluate = function (turn) {
                                                                     // ##ifdef
   var xxS = 0;                                                      // ##ifdef
   var xxE = 0;                                                      // ##ifdef
-  for (var zz=0; zz<f.mobN.length; zz++) {                          // ##ifdef
-    xxS += f.mobN[zz] * MOBN_S[zz];                                 // ##ifdef
-    xxE += f.mobN[zz] * MOBN_E[zz];                                 // ##ifdef
-  }                                                                 // ##ifdef
-  for (var zz=0; zz<f.mobB.length; zz++) {                          // ##ifdef
-    xxS += f.mobB[zz] * MOBB_S[zz];                                 // ##ifdef
-    xxE += f.mobB[zz] * MOBB_E[zz];                                 // ##ifdef
-  }                                                                 // ##ifdef
-  for (var zz=0; zz<f.mobR.length; zz++) {                          // ##ifdef
-    xxS += f.mobR[zz] * MOBR_S[zz];                                 // ##ifdef
-    xxE += f.mobR[zz] * MOBR_E[zz];                                 // ##ifdef
-  }                                                                 // ##ifdef
-  for (var zz=0; zz<f.mobQ.length; zz++) {                          // ##ifdef
-    xxS += f.mobQ[zz] * MOBQ_S[zz];                                 // ##ifdef
-    xxE += f.mobQ[zz] * MOBQ_E[zz];                                 // ##ifdef
-  }                                                                 // ##ifdef
+  xxS += f.mobN  * MOBN_S;                                          // ##ifdef
+  xxE += f.mobN  * MOBN_E;                                          // ##ifdef
+  xxS += f.mobN0 * MOBN_S0;                                         // ##ifdef
+  xxE += f.mobN0 * MOBN_E0;                                         // ##ifdef
+  xxS += f.mobB  * MOBB_S;                                          // ##ifdef
+  xxE += f.mobB  * MOBB_E;                                          // ##ifdef
+  xxS += f.mobB0 * MOBB_S0;                                         // ##ifdef
+  xxE += f.mobB0 * MOBB_E0;                                         // ##ifdef
+  xxS += f.mobR  * MOBR_S;                                          // ##ifdef
+  xxE += f.mobR  * MOBR_E;                                          // ##ifdef
+  xxS += f.mobR0 * MOBR_S0;                                         // ##ifdef
+  xxE += f.mobR0 * MOBR_E0;                                         // ##ifdef
+  xxS += f.mobQ  * MOBQ_S;                                          // ##ifdef
+  xxE += f.mobQ  * MOBQ_E;                                          // ##ifdef
+  xxS += f.mobQ0 * MOBQ_S0;                                         // ##ifdef
+  xxE += f.mobQ0 * MOBQ_E0;                                         // ##ifdef
   if (Math.abs(mobS - xxS) > 0.000001)                              // ##ifdef
     console.log('mobility s',mobS,xxS,this.fen(this.turn));         // ##ifdef
   if (Math.abs(mobE - xxE) > 0.000001)                              // ##ifdef
