@@ -5110,14 +5110,6 @@ lozBoard.prototype.evaluate = function (turn) {
     frBits = (frFile-1) << 2;
     frMask = 0xF << frBits;
   
-    //{{{  outpost
-    
-    if (((bLeastR & frMask) >>> frBits) <= frRank && ((bLeastL & frMask) >>> frBits) <= frRank) {
-      knightsS += 10;
-    }
-    
-    //}}}
-  
     if (frObj == W_KNIGHT) {
       //{{{  N
       
@@ -5393,14 +5385,6 @@ lozBoard.prototype.evaluate = function (turn) {
     frFile  = FILE[fr];
     frBits  = (frFile-1) << 2;
     frMask  = 0xF << frBits;
-  
-    //{{{  outpost
-    
-    if (((wLeastR & frMask) >>> frBits) >= frRank && ((wLeastL & frMask) >>> frBits) >= frRank) {
-      knightsS -= 10;
-    }
-    
-    //}}}
   
     if (frObj == B_KNIGHT) {
       //{{{  N
