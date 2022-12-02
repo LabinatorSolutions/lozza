@@ -917,12 +917,12 @@ var MOBQ_S               = 2;
 var MOBQ_E               = 6;
 var MOBQ_S0              = 4;
 var MOBQ_E0              = -1;
-var XRAY_BS              = 3;
-var XRAY_BE              = 3;
-var XRAY_RS              = -2;
-var XRAY_RE              = 6;
-var XRAY_QS              = -2;
-var XRAY_QE              = 2;
+var XRAY_BS              = 10;
+var XRAY_BE              = 10;
+var XRAY_RS              = 10;
+var XRAY_RE              = 10;
+var XRAY_QS              = 10;
+var XRAY_QE              = 10;
 
 
 const WPAWN_PSTS = [
