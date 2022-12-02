@@ -830,16 +830,16 @@ var randoms = [
 // use score = false
 // wdl index = 5
 // num positions = 725000
-// num features = 919
+// num features = 6
 // batch size = 10000
 // num batches = 72
 // learning rate = 0.1
 // report rate = 10
-// k = 3.2899999999999996
+// k = 3.2999999999999994
 // reset adagrad = false
-// loss = 0.055063084035708726
-// epochs = 2790
-// last update = Thu Dec 01 2022 08:05:22 GMT+0000 (Greenwich Mean Time)
+// loss = 0.05506930157309592
+// epochs = 7
+// last update = Fri Dec 02 2022 21:29:58 GMT+0000 (Greenwich Mean Time)
 //
 
 const MATERIAL = [0,100,394,389,596,1157,10000];
@@ -870,16 +870,14 @@ var ATT_R                = 40;
 var ATT_Q                = 51;
 var TWOBISHOPS_S         = 36;
 var TWOBISHOPS_E         = 57;
-var ROOK_DOUBLED_S       = 0;
-var ROOK_DOUBLED_E       = 0;
 var ROOK7TH_S            = -7;
 var ROOK7TH_E            = 27;
 var ROOKOPEN_S           = 21;
 var ROOKOPEN_E           = -2;
+var ROOK_DOUBLED_S       = 0;
+var ROOK_DOUBLED_E       = 0;
 var QUEEN7TH_S           = -18;
 var QUEEN7TH_E           = 23;
-var QR_DOUBLED_S         = 0;
-var QR_DOUBLED_E         = 0;
 var TRAPPED_S            = 39;
 var TRAPPED_E            = 30;
 var KING_PENALTY         = 7;
@@ -917,13 +915,12 @@ var MOBQ_S               = 2;
 var MOBQ_E               = 6;
 var MOBQ_S0              = 4;
 var MOBQ_E0              = -1;
-var XRAY_BS              = 10;
-var XRAY_BE              = 10;
-var XRAY_RS              = 10;
-var XRAY_RE              = 10;
-var XRAY_QS              = 10;
-var XRAY_QE              = 10;
-
+var XRAY_BS              = 2;
+var XRAY_BE              = 3;
+var XRAY_RS              = -3;
+var XRAY_RE              = -1;
+var XRAY_QS              = -4;
+var XRAY_QE              = 5;
 
 const WPAWN_PSTS = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -5305,7 +5302,7 @@ lozBoard.prototype.evaluate = function (turn) {
       imbalS += IMBALB_S[wNumPawns];
       imbalE += IMBALB_E[wNumPawns];
       
-      if (XRAY[bKingSq][BISHOP][fr]) {
+      if (bCanBeAttacked && XRAY[bKingSq][BISHOP][fr]) {
        xrayS += XRAY_BS;
        xrayE += XRAY_BE;
       }
@@ -5378,7 +5375,7 @@ lozBoard.prototype.evaluate = function (turn) {
       imbalS += IMBALR_S[wNumPawns];
       imbalE += IMBALR_E[wNumPawns];
       
-      if (XRAY[bKingSq][ROOK][fr]) {
+      if (bCanBeAttacked && XRAY[bKingSq][ROOK][fr]) {
        xrayS += XRAY_RS;
        xrayE += XRAY_RE;
       }
@@ -5441,7 +5438,7 @@ lozBoard.prototype.evaluate = function (turn) {
       imbalS += IMBALQ_S[wNumPawns];
       imbalE += IMBALQ_E[wNumPawns];
       
-      if (XRAY[bKingSq][QUEEN][fr]) {
+      if (bCanBeAttacked && XRAY[bKingSq][QUEEN][fr]) {
        xrayS += XRAY_QS;
        xrayE += XRAY_QE;
       }
@@ -5613,7 +5610,7 @@ lozBoard.prototype.evaluate = function (turn) {
       imbalS -= IMBALB_S[bNumPawns];
       imbalE -= IMBALB_E[bNumPawns];
       
-      if (XRAY[wKingSq][BISHOP][fr]) {
+      if (wCanBeAttacked && XRAY[wKingSq][BISHOP][fr]) {
        xrayS -= XRAY_BS;
        xrayE -= XRAY_BE;
       }
@@ -5686,7 +5683,7 @@ lozBoard.prototype.evaluate = function (turn) {
       imbalS -= IMBALR_S[bNumPawns];
       imbalE -= IMBALR_E[bNumPawns];
       
-      if (XRAY[wKingSq][ROOK][fr]) {
+      if (wCanBeAttacked && XRAY[wKingSq][ROOK][fr]) {
        xrayS -= XRAY_RS;
        xrayE -= XRAY_RE;
       }
@@ -5749,7 +5746,7 @@ lozBoard.prototype.evaluate = function (turn) {
       imbalS -= IMBALQ_S[bNumPawns];
       imbalE -= IMBALQ_E[bNumPawns];
       
-      if (XRAY[wKingSq][QUEEN][fr]) {
+      if (wCanBeAttacked && XRAY[wKingSq][QUEEN][fr]) {
        xrayS -= XRAY_QS;
        xrayE -= XRAY_QE;
       }
