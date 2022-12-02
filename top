@@ -35,6 +35,8 @@ for (var KKK=0; KKK<64; KKK++) {
 
 //{{{  other lozzas
 
+'lozza\trunk\kings.js'
+
 'lozza\trunk\history\2.5\lozza.js'
 'lozza\trunk\history\2.5\gdtuner.js'
 
@@ -48,7 +50,12 @@ for (var KKK=0; KKK<64; KKK++) {
 'lozza\trunk\history\2.2\lozza.js'
 'lozza\trunk\history\2.2\gdtuner.js'
 
+'lozza\trunk\history\2.0\lozza.js'
+
 'lozza\trunk\testing\deadends.js'
+
+'lozza\trunk\testing\coalface.js'
+'lozza\trunk\clean.js'
 
 //}}}
 

@@ -17,6 +17,7 @@ var LICHESS     = 0;
 //{{{  history
 /*
 
+2.5 23/11/22 Simplify mobility weights for small dataset.
 2.5 21/11/22 Add basic pawn chain feature to eval.
 2.5 21/11/22 Retune using Zurichess's quiet-labeled.epd.
 2.5 22/11/22 Make eval weights more visible.
@@ -850,16 +851,16 @@ var randoms = [
 // use score = false
 // wdl index = 5
 // num positions = 725000
-// num features = 1035
+// num features = 16
 // batch size = 10000
 // num batches = 72
 // learning rate = 0.1
 // report rate = 10
-// k = 3.27
+// k = 3.2400000000000007
 // reset adagrad = false
-// loss = 0.054996549029379796
-// epochs = 1170
-// last update = Tue Nov 22 2022 06:05:32 GMT+0000 (Greenwich Mean Time)
+// loss = 0.0551224109831909
+// epochs = 260
+// last update = Wed Nov 23 2022 15:11:50 GMT+0000 (Greenwich Mean Time)
 //
 
 const MATERIAL = [0,100,388,385,593,1152,10000];
@@ -918,20 +919,20 @@ var TENSE_RE             = 38;
 var TENSE_QS             = -4;
 var TENSE_QE             = 23;
 var MOBN_S               = 4;
-var MOBN_S0              = -1;
-var MOBN_E               = 4;
+var MOBN_E               = -3;
+var MOBN_S0              = -2;
 var MOBN_E0              = -1;
-var MOBB_S               = 4;
-var MOBB_S0              = -1;
-var MOBB_E               = 4;
-var MOBB_E0              = -1;
-var MOBR_S               = 4;
-var MOBR_S0              = -1;
-var MOBR_E               = 4;
-var MOBR_E0              = -1;
-var MOBQ_S               = 4;
-var MOBQ_S0              = -1;
-var MOBQ_E               = 4;
+var MOBB_S               = 7;
+var MOBB_E               = 3;
+var MOBB_S0              = -10;
+var MOBB_E0              = -6;
+var MOBR_S               = 5;
+var MOBR_E               = 2;
+var MOBR_S0              = -4;
+var MOBR_E0              = -6;
+var MOBQ_S               = 2;
+var MOBQ_E               = 6;
+var MOBQ_S0              = 0;
 var MOBQ_E0              = -1;
 
 const WPAWN_PSTS      = [
@@ -7570,7 +7571,7 @@ board = lozza.board;
 var epds   = [];
 var params = [];
 
-var gK             = 3.27;
+var gK             = 3.29;
 var gPrefix        = 'quiet-labeled';
 var gSuffix        = '';
 var gNumFiles      = 1;              // first file is <gPrefix>0<gSuffix>.epd etc.
@@ -7654,9 +7655,8 @@ var iMOBQ_S               = 6600;
 var iMOBQ_E               = 6700;
 var iMOBQ_S0              = 6800;
 var iMOBQ_E0              = 6900;
-
 //}}}
-//{{{  2. add to tweak()
+//{{{  2. add to tweaking
 
 function tweak(i,v) {
   switch (i) {
@@ -7733,7 +7733,7 @@ function tweak(i,v) {
 }
 
 //}}}
-//{{{  3. add to saveparams()
+//{{{  3. add to output
 
 var lastOut = '';
 
@@ -7838,22 +7838,22 @@ function saveparams (err, epochs, _myround) {
   out +=  'var TENSE_RE             = ' + _myround(TENSE_RE) + ';\r\n';
   out +=  'var TENSE_QS             = ' + _myround(TENSE_QS) + ';\r\n';
   out +=  'var TENSE_QE             = ' + _myround(TENSE_QE) + ';\r\n';
-  out +=  'var MOBN_S               = ' + _myround(MOBN_S)   + ';\r\n';
-  out +=  'var MOBN_E               = ' + _myround(MOBN_E)   + ';\r\n';
-  out +=  'var MOBN_S0              = ' + _myround(MOBN_S0)  + ';\r\n';
-  out +=  'var MOBN_E0              = ' + _myround(MOBN_E0)  + ';\r\n';
-  out +=  'var MOBB_S               = ' + _myround(MOBB_S)   + ';\r\n';
-  out +=  'var MOBB_E               = ' + _myround(MOBB_E)   + ';\r\n';
-  out +=  'var MOBB_S0              = ' + _myround(MOBB_S0)  + ';\r\n';
-  out +=  'var MOBB_E0              = ' + _myround(MOBB_E0)  + ';\r\n';
-  out +=  'var MOBR_S               = ' + _myround(MOBR_S)   + ';\r\n';
-  out +=  'var MOBR_E               = ' + _myround(MOBR_E)   + ';\r\n';
-  out +=  'var MOBR_S0              = ' + _myround(MOBR_S0)  + ';\r\n';
-  out +=  'var MOBR_E0              = ' + _myround(MOBR_E0)  + ';\r\n';
-  out +=  'var MOBQ_S               = ' + _myround(MOBQ_S)   + ';\r\n';
-  out +=  'var MOBQ_E               = ' + _myround(MOBQ_E)   + ';\r\n';
-  out +=  'var MOBQ_S0              = ' + _myround(MOBQ_S0)  + ';\r\n';
-  out +=  'var MOBQ_E0              = ' + _myround(MOBQ_E0)  + ';\r\n';
+  out +=  'var MOBN_S               = ' + _myround(MOBN_S) + ';\r\n';
+  out +=  'var MOBN_E               = ' + _myround(MOBN_E) + ';\r\n';
+  out +=  'var MOBN_S0              = ' + _myround(MOBN_S0) + ';\r\n';
+  out +=  'var MOBN_E0              = ' + _myround(MOBN_E0) + ';\r\n';
+  out +=  'var MOBB_S               = ' + _myround(MOBB_S) + ';\r\n';
+  out +=  'var MOBB_E               = ' + _myround(MOBB_E) + ';\r\n';
+  out +=  'var MOBB_S0              = ' + _myround(MOBB_S0) + ';\r\n';
+  out +=  'var MOBB_E0              = ' + _myround(MOBB_E0) + ';\r\n';
+  out +=  'var MOBR_S               = ' + _myround(MOBR_S) + ';\r\n';
+  out +=  'var MOBR_E               = ' + _myround(MOBR_E) + ';\r\n';
+  out +=  'var MOBR_S0              = ' + _myround(MOBR_S0) + ';\r\n';
+  out +=  'var MOBR_E0              = ' + _myround(MOBR_E0) + ';\r\n';
+  out +=  'var MOBQ_S               = ' + _myround(MOBQ_S) + ';\r\n';
+  out +=  'var MOBQ_E               = ' + _myround(MOBQ_E) + ';\r\n';
+  out +=  'var MOBQ_S0              = ' + _myround(MOBQ_S0) + ';\r\n';
+  out +=  'var MOBQ_E0              = ' + _myround(MOBQ_E0) + ';\r\n';
 
   out += '\r\n';
 
@@ -7902,7 +7902,7 @@ function saveparams (err, epochs, _myround) {
 
   out += '\r\n';
 
-  if (out == lastOut)
+  if (out == lastOut && epochs)
     console.log(epochs,err,'POSSIBLE CONVERGENCE');
 
   lastOut = out;
@@ -7913,6 +7913,136 @@ function saveparams (err, epochs, _myround) {
     fs.writeFileSync('f'+gOutFile, out1+out);
   else
     fs.writeFileSync(gOutFile, out1+out);
+}
+
+//}}}
+//{{{  4. add to tuning
+
+function createParams() {
+
+  addp('knight', MATERIAL, KNIGHT, function (piece,mg,eg) {return (board.wCounts[KNIGHT] - board.bCounts[KNIGHT])});
+  addp('bishop', MATERIAL, BISHOP, function (piece,mg,eg) {return (board.wCounts[BISHOP] - board.bCounts[BISHOP])});
+  addp('rook',   MATERIAL, ROOK,   function (piece,mg,eg) {return (board.wCounts[ROOK]   - board.bCounts[ROOK])});
+  addp('queen',  MATERIAL, QUEEN,  function (piece,mg,eg) {return (board.wCounts[QUEEN]  - board.bCounts[QUEEN])});
+
+  for (var i=8; i < 56; i++) {
+    var sq = B88[i];
+    addp('wp_pst_s_'+COORDS[sq], WPAWN_PSTS, sq, function (sq,mg,eg) {return (is(W_PAWN,sq) - is(B_PAWN,wbmap(sq))) * mg;});
+    addp('wp_pst_s_'+COORDS[sq], WPAWN_PSTE, sq, function (sq,mg,eg) {return (is(W_PAWN,sq) - is(B_PAWN,wbmap(sq))) * eg;});
+  }
+
+  for (var i=0; i < 64; i++) {
+    var sq = B88[i];
+    addp('wn_pst_s_'+COORDS[sq], WKNIGHT_PSTS, sq, function (sq,mg,eg) {return (is(W_KNIGHT,sq) - is(B_KNIGHT,wbmap(sq))) * mg;});
+    addp('wn_pst_e_'+COORDS[sq], WKNIGHT_PSTE, sq, function (sq,mg,eg) {return (is(W_KNIGHT,sq) - is(B_KNIGHT,wbmap(sq))) * eg;});
+    addp('wb_pst_s_'+COORDS[sq], WBISHOP_PSTS, sq, function (sq,mg,eg) {return (is(W_BISHOP,sq) - is(B_BISHOP,wbmap(sq))) * mg;});
+    addp('wb_pst_e_'+COORDS[sq], WBISHOP_PSTE, sq, function (sq,mg,eg) {return (is(W_BISHOP,sq) - is(B_BISHOP,wbmap(sq))) * eg;});
+    addp('wr_pst_s_'+COORDS[sq], WROOK_PSTS,   sq, function (sq,mg,eg) {return (is(W_ROOK,sq)   - is(B_ROOK,  wbmap(sq))) * mg;});
+    addp('wr_pst_e_'+COORDS[sq], WROOK_PSTE,   sq, function (sq,mg,eg) {return (is(W_ROOK,sq)   - is(B_ROOK,  wbmap(sq))) * eg;});
+    addp('wq_pst_s_'+COORDS[sq], WQUEEN_PSTS,  sq, function (sq,mg,eg) {return (is(W_QUEEN,sq)  - is(B_QUEEN, wbmap(sq))) * mg;});
+    addp('wq_pst_e_'+COORDS[sq], WQUEEN_PSTE,  sq, function (sq,mg,eg) {return (is(W_QUEEN,sq)  - is(B_QUEEN, wbmap(sq))) * eg;});
+    addp('wk_pst_s_'+COORDS[sq], WKING_PSTS,   sq, function (sq,mg,eg) {return (is(W_KING,sq)   - is(B_KING,  wbmap(sq))) * mg;});
+    addp('wk_pst_e_'+COORDS[sq], WKING_PSTE,   sq, function (sq,mg,eg) {return (is(W_KING,sq)   - is(B_KING,  wbmap(sq))) * eg;});
+  }
+
+  for (var i=0; i < WSHELTER.length; i++) {
+    addp('shelter_'+i, WSHELTER, i, function (row,mg,eg) {return board.features.wShelter[row] * mg;});
+    addp('storm_'+i,   WSTORM,   i, function (row,mg,eg) {return board.features.wStorm[row]   * mg;});
+  }
+  addp('k penalty s', null, iKING_PENALTY, function (i,mg,eg) {return board.features.kingPenalty * mg;});
+
+  var ko =[51,52,53,54,55,56,63,64,65,66,67,68,75,76,77,78,79,80]; //knight outpost squares
+  for (var i=0; i < ko.length; i++) {
+    var sq = ko[i];
+    addp('outpost_'+COORDS[sq], WOUTPOST, sq, function (sq,mg,eg) {return board.features.wOutpost[sq] * mg;});
+  }
+  for (var i=0; i <= 8; i++) {
+    addp('n_imbal_s_'+i, IMBALN_S, i, function (pawns,mg,eg) {return (board.wCounts[KNIGHT] * (board.wCounts[PAWN] == pawns) - board.bCounts[KNIGHT] * (board.bCounts[PAWN] == pawns)) * mg});
+    addp('n_imbal_e_'+i, IMBALN_E, i, function (pawns,mg,eg) {return (board.wCounts[KNIGHT] * (board.wCounts[PAWN] == pawns) - board.bCounts[KNIGHT] * (board.bCounts[PAWN] == pawns)) * eg});
+    addp('b_imbal_s_'+i, IMBALB_S, i, function (pawns,mg,eg) {return (board.wCounts[BISHOP] * (board.wCounts[PAWN] == pawns) - board.bCounts[BISHOP] * (board.bCounts[PAWN] == pawns)) * mg});
+    addp('b_imbal_e_'+i, IMBALB_E, i, function (pawns,mg,eg) {return (board.wCounts[BISHOP] * (board.wCounts[PAWN] == pawns) - board.bCounts[BISHOP] * (board.bCounts[PAWN] == pawns)) * eg});
+    addp('r_imbal_s_'+i, IMBALR_S, i, function (pawns,mg,eg) {return (board.wCounts[ROOK]   * (board.wCounts[PAWN] == pawns) - board.bCounts[ROOK]   * (board.bCounts[PAWN] == pawns)) * mg});
+    addp('r_imbal_e_'+i, IMBALR_E, i, function (pawns,mg,eg) {return (board.wCounts[ROOK]   * (board.wCounts[PAWN] == pawns) - board.bCounts[ROOK]   * (board.bCounts[PAWN] == pawns)) * eg});
+    addp('q_imbal_s_'+i, IMBALQ_S, i, function (pawns,mg,eg) {return (board.wCounts[QUEEN]  * (board.wCounts[PAWN] == pawns) - board.bCounts[QUEEN]  * (board.bCounts[PAWN] == pawns)) * mg});
+    addp('q_imbal_e_'+i, IMBALQ_E, i, function (pawns,mg,eg) {return (board.wCounts[QUEEN]  * (board.wCounts[PAWN] == pawns) - board.bCounts[QUEEN]  * (board.bCounts[PAWN] == pawns)) * eg});
+  }
+  addp('n_mob_s',  null, iMOBN_S,  function (i,mg,eg) {return board.features.mobN  * mg;});
+  addp('n_mob_e',  null, iMOBN_E,  function (i,mg,eg) {return board.features.mobN  * eg;});
+  addp('n_mob_s0', null, iMOBN_S0, function (i,mg,eg) {return board.features.mobN0 * mg;});
+  addp('n_mob_e0', null, iMOBN_E0, function (i,mg,eg) {return board.features.mobN0 * eg;});
+  addp('b_mob_s',  null, iMOBB_S,  function (i,mg,eg) {return board.features.mobB  * mg;});
+  addp('b_mob_e',  null, iMOBB_E,  function (i,mg,eg) {return board.features.mobB  * eg;});
+  addp('b_mob_s0', null, iMOBB_S0, function (i,mg,eg) {return board.features.mobB0 * mg;});
+  addp('b_mob_e0', null, iMOBB_E0, function (i,mg,eg) {return board.features.mobB0 * eg;});
+  addp('r_mob_s',  null, iMOBR_S,  function (i,mg,eg) {return board.features.mobR  * mg;});
+  addp('r_mob_e',  null, iMOBR_E,  function (i,mg,eg) {return board.features.mobR  * eg;});
+  addp('r_mob_s0', null, iMOBR_S0, function (i,mg,eg) {return board.features.mobR0 * mg;});
+  addp('r_mob_e0', null, iMOBR_E0, function (i,mg,eg) {return board.features.mobR0 * eg;});
+  addp('q_mob_s',  null, iMOBQ_S,  function (i,mg,eg) {return board.features.mobQ  * mg;});
+  addp('q_mob_e',  null, iMOBQ_E,  function (i,mg,eg) {return board.features.mobQ  * eg;});
+  addp('q_mob_s0', null, iMOBQ_S0, function (i,mg,eg) {return board.features.mobQ0 * mg;});
+  addp('q_mob_e0', null, iMOBQ_E0, function (i,mg,eg) {return board.features.mobQ0 * eg;});
+
+  addp('n_tight_s', null, iTIGHT_NS, function (i,mg,eg) {return board.features.tightNS * mg;});
+  addp('n_tight_e', null, iTIGHT_NE, function (i,mg,eg) {return board.features.tightNE * eg;});
+  addp('b_tight_s', null, iTIGHT_BS, function (i,mg,eg) {return board.features.tightBS * mg;});
+  addp('b_tight_e', null, iTIGHT_BE, function (i,mg,eg) {return board.features.tightBE * eg;});
+  addp('r_tight_s', null, iTIGHT_RS, function (i,mg,eg) {return board.features.tightRS * mg;});
+  addp('r_tight_e', null, iTIGHT_RE, function (i,mg,eg) {return board.features.tightRE * eg;});
+  addp('q_tight_s', null, iTIGHT_QS, function (i,mg,eg) {return board.features.tightQS * mg;});
+  addp('q_tight_e', null, iTIGHT_QE, function (i,mg,eg) {return board.features.tightQE * eg;});
+
+  addp('n_tense_s', null, iTENSE_NS, function (i,mg,eg) {return board.features.tenseNS * mg;});
+  addp('n_tense_e', null, iTENSE_NE, function (i,mg,eg) {return board.features.tenseNE * eg;});
+  addp('b_tense_s', null, iTENSE_BS, function (i,mg,eg) {return board.features.tenseBS * mg;});
+  addp('b_tense_e', null, iTENSE_BE, function (i,mg,eg) {return board.features.tenseBE * eg;});
+  addp('r_tense_s', null, iTENSE_RS, function (i,mg,eg) {return board.features.tenseRS * mg;});
+  addp('r_tense_e', null, iTENSE_RE, function (i,mg,eg) {return board.features.tenseRE * eg;});
+  addp('q_tense_s', null, iTENSE_QS, function (i,mg,eg) {return board.features.tenseQS * mg;});
+  addp('q_tense_e', null, iTENSE_QE, function (i,mg,eg) {return board.features.tenseQE * eg;});
+
+  addp('p_chain_s',      null, iPAWN_CHAIN_S,         function (i,mg,eg) {return board.features.pawnChainS         * mg;});
+  addp('p_chain_e',      null, iPAWN_CHAIN_E,         function (i,mg,eg) {return board.features.pawnChainE         * eg;});
+  addp('p_doubled_s',    null, iPAWN_DOUBLED_S,       function (i,mg,eg) {return board.features.pawnDoubledS       * mg;});
+  addp('p_doubled_e',    null, iPAWN_DOUBLED_E,       function (i,mg,eg) {return board.features.pawnDoubledE       * eg;});
+  addp('p_backward_s',   null, iPAWN_BACKWARD_S,      function (i,mg,eg) {return board.features.pawnBackwardS      * mg;});
+  addp('p_backward_e',   null, iPAWN_BACKWARD_E,      function (i,mg,eg) {return board.features.pawnBackwardE      * eg;});
+  addp('p_isolated_s',   null, iPAWN_ISOLATED_S,      function (i,mg,eg) {return board.features.pawnIsolatedS      * mg;});
+  addp('p_isolated_e',   null, iPAWN_ISOLATED_E,      function (i,mg,eg) {return board.features.pawnIsolatedE      * eg;});
+  addp('p_passoffset_s', null, iPAWN_PASSED_OFFSET_S, function (i,mg,eg) {return board.features.pawnPassedOffsetS  * mg;});
+  addp('p_passoffset_e', null, iPAWN_PASSED_OFFSET_E, function (i,mg,eg) {return board.features.pawnPassedOffsetE  * eg;});
+  addp('p_passmult_s',   null, iPAWN_PASSED_MULT_S,   function (i,mg,eg) {return board.features.pawnPassedMultS    * mg;});
+  addp('p_passmult_s',   null, iPAWN_PASSED_MULT_E,   function (i,mg,eg) {return board.features.pawnPassedMultE    * eg;});
+  addp('p_candoffset_s', null, iPAWN_OFFSET_S,        function (i,mg,eg) {return board.features.pawnPassedOffset2S * mg;});
+  addp('p_candoffset_e', null, iPAWN_OFFSET_E,        function (i,mg,eg) {return board.features.pawnPassedOffset2E * eg;});
+  addp('p_candmult_s',   null, iPAWN_MULT_S,          function (i,mg,eg) {return board.features.pawnPassedMult2S   * mg;});
+  addp('p_candmult_e',   null, iPAWN_MULT_E,          function (i,mg,eg) {return board.features.pawnPassedMult2E   * eg;});
+  addp('p_passfree',     null, iPAWN_PASS_FREE,       function (i,mg,eg) {return board.features.pawnPassedFreeE    * eg;});
+  addp('p_passunstop',   null, iPAWN_PASS_UNSTOP,     function (i,mg,eg) {return board.features.pawnPassedUnstopE  * eg;});
+  addp('p_passking1',    null, iPAWN_PASS_KING1,      function (i,mg,eg) {return board.features.pawnPassedKing1E   * eg;});
+  addp('p_passking2',    null, iPAWN_PASS_KING2,      function (i,mg,eg) {return board.features.pawnPassedKing2E   * eg;});
+
+  addp('bispair_s', null, iTWOBISHOPS_S, function (i,mg,eg) {return board.features.bishopPairS * mg;});
+  addp('bispair_e', null, iTWOBISHOPS_E, function (i,mg,eg) {return board.features.bishopPairE * eg;});
+
+  addp('rook7th_s',  null, iROOK7TH_S,  function (i,mg,eg) {return board.features.rook7thS  * mg;});
+  addp('rook7th_e',  null, iROOK7TH_E,  function (i,mg,eg) {return board.features.rook7thE  * eg;});
+  addp('rookopen_s', null, iROOKOPEN_S, function (i,mg,eg) {return board.features.rookOpenS * mg;});
+  addp('rookopen_e', null, iROOKOPEN_E, function (i,mg,eg) {return board.features.rookOpenE * eg;});
+
+  addp('queen7th_s', null, iQUEEN7TH_S, function (i,mg,eg) {return board.features.queen7thS * mg;});
+  addp('queen7th_e', null, iQUEEN7TH_E, function (i,mg,eg) {return board.features.queen7thE * eg;});
+
+  addp('tempo_s', null, iTEMPO_S, function (i,mg,eg) {return board.features.tempoS * mg;});
+  addp('tempo_e', null, iTEMPO_E, function (i,mg,eg) {return board.features.tempoE * eg;});
+
+  addp('trapped_s', null, iTRAPPED_S, function (i,mg,eg) {return board.features.trappedS * mg;});
+  addp('trapped_e', null, iTRAPPED_E, function (i,mg,eg) {return board.features.trappedE * eg;});
+
+  addp('n_att', null, iATT_N, function (i,mg,eg) {return board.features.attN * mg;});
+  addp('b_att', null, iATT_B, function (i,mg,eg) {return board.features.attB * mg;});
+  addp('r_att', null, iATT_R, function (i,mg,eg) {return board.features.attR * mg;});
+  addp('q_att', null, iATT_Q, function (i,mg,eg) {return board.features.attQ * mg;});
 }
 
 //}}}
@@ -8202,134 +8332,7 @@ function grunt () {
   console.log('k =', gK);
   console.log('creating params...');
 
-  //{{{  create params
-  /*
-  addp('knight', MATERIAL, KNIGHT, function (piece,mg,eg) {return (board.wCounts[KNIGHT] - board.bCounts[KNIGHT])});
-  addp('bishop', MATERIAL, BISHOP, function (piece,mg,eg) {return (board.wCounts[BISHOP] - board.bCounts[BISHOP])});
-  addp('rook',   MATERIAL, ROOK,   function (piece,mg,eg) {return (board.wCounts[ROOK]   - board.bCounts[ROOK])});
-  addp('queen',  MATERIAL, QUEEN,  function (piece,mg,eg) {return (board.wCounts[QUEEN]  - board.bCounts[QUEEN])});
-  
-  for (var i=8; i < 56; i++) {
-    var sq = B88[i];
-    addp('wp_pst_s_'+COORDS[sq], WPAWN_PSTS, sq, function (sq,mg,eg) {return (is(W_PAWN,sq) - is(B_PAWN,wbmap(sq))) * mg;});
-    addp('wp_pst_s_'+COORDS[sq], WPAWN_PSTE, sq, function (sq,mg,eg) {return (is(W_PAWN,sq) - is(B_PAWN,wbmap(sq))) * eg;});
-  }
-  
-  for (var i=0; i < 64; i++) {
-    var sq = B88[i];
-    addp('wn_pst_s_'+COORDS[sq], WKNIGHT_PSTS, sq, function (sq,mg,eg) {return (is(W_KNIGHT,sq) - is(B_KNIGHT,wbmap(sq))) * mg;});
-    addp('wn_pst_e_'+COORDS[sq], WKNIGHT_PSTE, sq, function (sq,mg,eg) {return (is(W_KNIGHT,sq) - is(B_KNIGHT,wbmap(sq))) * eg;});
-    addp('wb_pst_s_'+COORDS[sq], WBISHOP_PSTS, sq, function (sq,mg,eg) {return (is(W_BISHOP,sq) - is(B_BISHOP,wbmap(sq))) * mg;});
-    addp('wb_pst_e_'+COORDS[sq], WBISHOP_PSTE, sq, function (sq,mg,eg) {return (is(W_BISHOP,sq) - is(B_BISHOP,wbmap(sq))) * eg;});
-    addp('wr_pst_s_'+COORDS[sq], WROOK_PSTS,   sq, function (sq,mg,eg) {return (is(W_ROOK,sq)   - is(B_ROOK,  wbmap(sq))) * mg;});
-    addp('wr_pst_e_'+COORDS[sq], WROOK_PSTE,   sq, function (sq,mg,eg) {return (is(W_ROOK,sq)   - is(B_ROOK,  wbmap(sq))) * eg;});
-    addp('wq_pst_s_'+COORDS[sq], WQUEEN_PSTS,  sq, function (sq,mg,eg) {return (is(W_QUEEN,sq)  - is(B_QUEEN, wbmap(sq))) * mg;});
-    addp('wq_pst_e_'+COORDS[sq], WQUEEN_PSTE,  sq, function (sq,mg,eg) {return (is(W_QUEEN,sq)  - is(B_QUEEN, wbmap(sq))) * eg;});
-    addp('wk_pst_s_'+COORDS[sq], WKING_PSTS,   sq, function (sq,mg,eg) {return (is(W_KING,sq)   - is(B_KING,  wbmap(sq))) * mg;});
-    addp('wk_pst_e_'+COORDS[sq], WKING_PSTE,   sq, function (sq,mg,eg) {return (is(W_KING,sq)   - is(B_KING,  wbmap(sq))) * eg;});
-  }
-  
-  for (var i=0; i < WSHELTER.length; i++) {
-    addp('shelter_'+i, WSHELTER, i, function (row,mg,eg) {return board.features.wShelter[row] * mg;});
-    addp('storm_'+i,   WSTORM,   i, function (row,mg,eg) {return board.features.wStorm[row]   * mg;});
-  }
-  addp('k penalty s', null, iKING_PENALTY, function (i,mg,eg) {return board.features.kingPenalty * mg;});
-  
-  var ko =[51,52,53,54,55,56,63,64,65,66,67,68,75,76,77,78,79,80]; //knight outpost squares
-  for (var i=0; i < ko.length; i++) {
-    var sq = ko[i];
-    addp('outpost_'+COORDS[sq], WOUTPOST, sq, function (sq,mg,eg) {return board.features.wOutpost[sq] * mg;});
-  }
-  for (var i=0; i <= 8; i++) {
-    addp('n_imbal_s_'+i, IMBALN_S, i, function (pawns,mg,eg) {return (board.wCounts[KNIGHT] * (board.wCounts[PAWN] == pawns) - board.bCounts[KNIGHT] * (board.bCounts[PAWN] == pawns)) * mg});
-    addp('n_imbal_e_'+i, IMBALN_E, i, function (pawns,mg,eg) {return (board.wCounts[KNIGHT] * (board.wCounts[PAWN] == pawns) - board.bCounts[KNIGHT] * (board.bCounts[PAWN] == pawns)) * eg});
-    addp('b_imbal_s_'+i, IMBALB_S, i, function (pawns,mg,eg) {return (board.wCounts[BISHOP] * (board.wCounts[PAWN] == pawns) - board.bCounts[BISHOP] * (board.bCounts[PAWN] == pawns)) * mg});
-    addp('b_imbal_e_'+i, IMBALB_E, i, function (pawns,mg,eg) {return (board.wCounts[BISHOP] * (board.wCounts[PAWN] == pawns) - board.bCounts[BISHOP] * (board.bCounts[PAWN] == pawns)) * eg});
-    addp('r_imbal_s_'+i, IMBALR_S, i, function (pawns,mg,eg) {return (board.wCounts[ROOK]   * (board.wCounts[PAWN] == pawns) - board.bCounts[ROOK]   * (board.bCounts[PAWN] == pawns)) * mg});
-    addp('r_imbal_e_'+i, IMBALR_E, i, function (pawns,mg,eg) {return (board.wCounts[ROOK]   * (board.wCounts[PAWN] == pawns) - board.bCounts[ROOK]   * (board.bCounts[PAWN] == pawns)) * eg});
-    addp('q_imbal_s_'+i, IMBALQ_S, i, function (pawns,mg,eg) {return (board.wCounts[QUEEN]  * (board.wCounts[PAWN] == pawns) - board.bCounts[QUEEN]  * (board.bCounts[PAWN] == pawns)) * mg});
-    addp('q_imbal_e_'+i, IMBALQ_E, i, function (pawns,mg,eg) {return (board.wCounts[QUEEN]  * (board.wCounts[PAWN] == pawns) - board.bCounts[QUEEN]  * (board.bCounts[PAWN] == pawns)) * eg});
-  }
-  */
-  addp('n_mob_s',  null, iMOBN_S,  function (i,mg,eg) {return board.features.mobN  * mg;});
-  addp('n_mob_e',  null, iMOBN_E,  function (i,mg,eg) {return board.features.mobN  * eg;});
-  addp('n_mob_s0', null, iMOBN_S0, function (i,mg,eg) {return board.features.mobN0 * mg;});
-  addp('n_mob_e0', null, iMOBN_E0, function (i,mg,eg) {return board.features.mobN0 * eg;});
-  addp('b_mob_s',  null, iMOBB_S,  function (i,mg,eg) {return board.features.mobB  * mg;});
-  addp('b_mob_e',  null, iMOBB_E,  function (i,mg,eg) {return board.features.mobB  * eg;});
-  addp('b_mob_s0', null, iMOBB_S0, function (i,mg,eg) {return board.features.mobB0 * mg;});
-  addp('b_mob_e0', null, iMOBB_E0, function (i,mg,eg) {return board.features.mobB0 * eg;});
-  addp('r_mob_s',  null, iMOBR_S,  function (i,mg,eg) {return board.features.mobR  * mg;});
-  addp('r_mob_e',  null, iMOBR_E,  function (i,mg,eg) {return board.features.mobR  * eg;});
-  addp('r_mob_s0', null, iMOBR_S0, function (i,mg,eg) {return board.features.mobR0 * mg;});
-  addp('r_mob_e0', null, iMOBR_E0, function (i,mg,eg) {return board.features.mobR0 * eg;});
-  addp('q_mob_s',  null, iMOBQ_S,  function (i,mg,eg) {return board.features.mobQ  * mg;});
-  addp('q_mob_e',  null, iMOBQ_E,  function (i,mg,eg) {return board.features.mobQ  * eg;});
-  addp('q_mob_s0', null, iMOBQ_S0, function (i,mg,eg) {return board.features.mobQ0 * mg;});
-  addp('q_mob_e0', null, iMOBQ_E0, function (i,mg,eg) {return board.features.mobQ0 * eg;});
-  /*
-  addp('n_tight_s', null, iTIGHT_NS, function (i,mg,eg) {return board.features.tightNS * mg;});
-  addp('n_tight_e', null, iTIGHT_NE, function (i,mg,eg) {return board.features.tightNE * eg;});
-  addp('b_tight_s', null, iTIGHT_BS, function (i,mg,eg) {return board.features.tightBS * mg;});
-  addp('b_tight_e', null, iTIGHT_BE, function (i,mg,eg) {return board.features.tightBE * eg;});
-  addp('r_tight_s', null, iTIGHT_RS, function (i,mg,eg) {return board.features.tightRS * mg;});
-  addp('r_tight_e', null, iTIGHT_RE, function (i,mg,eg) {return board.features.tightRE * eg;});
-  addp('q_tight_s', null, iTIGHT_QS, function (i,mg,eg) {return board.features.tightQS * mg;});
-  addp('q_tight_e', null, iTIGHT_QE, function (i,mg,eg) {return board.features.tightQE * eg;});
-  
-  addp('n_tense_s', null, iTENSE_NS, function (i,mg,eg) {return board.features.tenseNS * mg;});
-  addp('n_tense_e', null, iTENSE_NE, function (i,mg,eg) {return board.features.tenseNE * eg;});
-  addp('b_tense_s', null, iTENSE_BS, function (i,mg,eg) {return board.features.tenseBS * mg;});
-  addp('b_tense_e', null, iTENSE_BE, function (i,mg,eg) {return board.features.tenseBE * eg;});
-  addp('r_tense_s', null, iTENSE_RS, function (i,mg,eg) {return board.features.tenseRS * mg;});
-  addp('r_tense_e', null, iTENSE_RE, function (i,mg,eg) {return board.features.tenseRE * eg;});
-  addp('q_tense_s', null, iTENSE_QS, function (i,mg,eg) {return board.features.tenseQS * mg;});
-  addp('q_tense_e', null, iTENSE_QE, function (i,mg,eg) {return board.features.tenseQE * eg;});
-  
-  addp('p_chain_s',      null, iPAWN_CHAIN_S,         function (i,mg,eg) {return board.features.pawnChainS         * mg;});
-  addp('p_chain_e',      null, iPAWN_CHAIN_E,         function (i,mg,eg) {return board.features.pawnChainE         * eg;});
-  addp('p_doubled_s',    null, iPAWN_DOUBLED_S,       function (i,mg,eg) {return board.features.pawnDoubledS       * mg;});
-  addp('p_doubled_e',    null, iPAWN_DOUBLED_E,       function (i,mg,eg) {return board.features.pawnDoubledE       * eg;});
-  addp('p_backward_s',   null, iPAWN_BACKWARD_S,      function (i,mg,eg) {return board.features.pawnBackwardS      * mg;});
-  addp('p_backward_e',   null, iPAWN_BACKWARD_E,      function (i,mg,eg) {return board.features.pawnBackwardE      * eg;});
-  addp('p_isolated_s',   null, iPAWN_ISOLATED_S,      function (i,mg,eg) {return board.features.pawnIsolatedS      * mg;});
-  addp('p_isolated_e',   null, iPAWN_ISOLATED_E,      function (i,mg,eg) {return board.features.pawnIsolatedE      * eg;});
-  addp('p_passoffset_s', null, iPAWN_PASSED_OFFSET_S, function (i,mg,eg) {return board.features.pawnPassedOffsetS  * mg;});
-  addp('p_passoffset_e', null, iPAWN_PASSED_OFFSET_E, function (i,mg,eg) {return board.features.pawnPassedOffsetE  * eg;});
-  addp('p_passmult_s',   null, iPAWN_PASSED_MULT_S,   function (i,mg,eg) {return board.features.pawnPassedMultS    * mg;});
-  addp('p_passmult_s',   null, iPAWN_PASSED_MULT_E,   function (i,mg,eg) {return board.features.pawnPassedMultE    * eg;});
-  addp('p_candoffset_s', null, iPAWN_OFFSET_S,        function (i,mg,eg) {return board.features.pawnPassedOffset2S * mg;});
-  addp('p_candoffset_e', null, iPAWN_OFFSET_E,        function (i,mg,eg) {return board.features.pawnPassedOffset2E * eg;});
-  addp('p_candmult_s',   null, iPAWN_MULT_S,          function (i,mg,eg) {return board.features.pawnPassedMult2S   * mg;});
-  addp('p_candmult_e',   null, iPAWN_MULT_E,          function (i,mg,eg) {return board.features.pawnPassedMult2E   * eg;});
-  addp('p_passfree',     null, iPAWN_PASS_FREE,       function (i,mg,eg) {return board.features.pawnPassedFreeE    * eg;});
-  addp('p_passunstop',   null, iPAWN_PASS_UNSTOP,     function (i,mg,eg) {return board.features.pawnPassedUnstopE  * eg;});
-  addp('p_passking1',    null, iPAWN_PASS_KING1,      function (i,mg,eg) {return board.features.pawnPassedKing1E   * eg;});
-  addp('p_passking2',    null, iPAWN_PASS_KING2,      function (i,mg,eg) {return board.features.pawnPassedKing2E   * eg;});
-  
-  addp('bispair_s', null, iTWOBISHOPS_S, function (i,mg,eg) {return board.features.bishopPairS * mg;});
-  addp('bispair_e', null, iTWOBISHOPS_E, function (i,mg,eg) {return board.features.bishopPairE * eg;});
-  
-  addp('rook7th_s',  null, iROOK7TH_S,  function (i,mg,eg) {return board.features.rook7thS  * mg;});
-  addp('rook7th_e',  null, iROOK7TH_E,  function (i,mg,eg) {return board.features.rook7thE  * eg;});
-  addp('rookopen_s', null, iROOKOPEN_S, function (i,mg,eg) {return board.features.rookOpenS * mg;});
-  addp('rookopen_e', null, iROOKOPEN_E, function (i,mg,eg) {return board.features.rookOpenE * eg;});
-  
-  addp('queen7th_s', null, iQUEEN7TH_S, function (i,mg,eg) {return board.features.queen7thS * mg;});
-  addp('queen7th_e', null, iQUEEN7TH_E, function (i,mg,eg) {return board.features.queen7thE * eg;});
-  
-  addp('tempo_s', null, iTEMPO_S, function (i,mg,eg) {return board.features.tempoS * mg;});
-  addp('tempo_e', null, iTEMPO_E, function (i,mg,eg) {return board.features.tempoE * eg;});
-  
-  addp('trapped_s', null, iTRAPPED_S, function (i,mg,eg) {return board.features.trappedS * mg;});
-  addp('trapped_e', null, iTRAPPED_E, function (i,mg,eg) {return board.features.trappedE * eg;});
-  
-  addp('n_att', null, iATT_N, function (i,mg,eg) {return board.features.attN * mg;});
-  addp('b_att', null, iATT_B, function (i,mg,eg) {return board.features.attB * mg;});
-  addp('r_att', null, iATT_R, function (i,mg,eg) {return board.features.attR * mg;});
-  addp('q_att', null, iATT_Q, function (i,mg,eg) {return board.features.attQ * mg;});
-  */
-  //}}}
+  createParams();
 
   console.log('tuning...');
 

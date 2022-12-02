@@ -3,7 +3,7 @@
 rem ******** config start
 
 set e1=coalface
-set e2=candidate
+set e2=released
 
 set elo0=0
 set elo1=5
@@ -15,7 +15,7 @@ set lastver=2.4
 
 set games=20000
 
-set threads=2
+set threads=1
 
 rem ******** config end
 

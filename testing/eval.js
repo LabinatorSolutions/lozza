@@ -17,6 +17,8 @@ var LICHESS     = 0;
 //{{{  history
 /*
 
+2.5 23/11/22 Add a simple-safety-from pawns feature to eval for NBRQ.
+2.5 23/11/22 Simplify mobility weights for small dataset.
 2.5 21/11/22 Add basic pawn chain feature to eval.
 2.5 21/11/22 Retune using Zurichess's quiet-labeled.epd.
 2.5 22/11/22 Make eval weights more visible.
@@ -850,28 +852,28 @@ var randoms = [
 // use score = false
 // wdl index = 5
 // num positions = 725000
-// num features = 1035
+// num features = 8
 // batch size = 10000
 // num batches = 72
 // learning rate = 0.1
 // report rate = 10
-// k = 3.27
+// k = 3.2500000000000004
 // reset adagrad = false
-// loss = 0.054996549029379796
-// epochs = 1170
-// last update = Tue Nov 22 2022 06:05:32 GMT+0000 (Greenwich Mean Time)
+// loss = 0.05509029941512853
+// epochs = 100
+// last update = Tue Nov 29 2022 16:13:21 GMT+0000 (Greenwich Mean Time)
 //
 
 const MATERIAL = [0,100,388,385,593,1152,10000];
 
 var PAWN_CHAIN_S         = 8;
 var PAWN_CHAIN_E         = 8;
-var PAWN_DOUBLED_S       = -11;
-var PAWN_DOUBLED_E       = -4;
-var PAWN_ISOLATED_S      = -14;
-var PAWN_ISOLATED_E      = -12;
-var PAWN_BACKWARD_S      = -12;
-var PAWN_BACKWARD_E      = -6;
+var PAWN_DOUBLED_S       = 11;
+var PAWN_DOUBLED_E       = 4;
+var PAWN_ISOLATED_S      = 14;
+var PAWN_ISOLATED_E      = 12;
+var PAWN_BACKWARD_S      = 12;
+var PAWN_BACKWARD_E      = 6;
 var PAWN_PASSED_OFFSET_S = -1;
 var PAWN_PASSED_OFFSET_E = 3;
 var PAWN_PASSED_MULT_S   = 9;
@@ -917,8 +919,32 @@ var TENSE_RS             = 77;
 var TENSE_RE             = 38;
 var TENSE_QS             = -4;
 var TENSE_QE             = 23;
+var MOBN_S               = 4;
+var MOBN_E               = -3;
+var MOBN_S0              = -2;
+var MOBN_E0              = -1;
+var MOBB_S               = 7;
+var MOBB_E               = 3;
+var MOBB_S0              = -10;
+var MOBB_E0              = -6;
+var MOBR_S               = 5;
+var MOBR_E               = 2;
+var MOBR_S0              = -4;
+var MOBR_E0              = -6;
+var MOBQ_S               = 2;
+var MOBQ_E               = 6;
+var MOBQ_S0              = 0;
+var MOBQ_E0              = -1;
+var SAFETY_NS            = 3;
+var SAFETY_NE            = 4;
+var SAFETY_BS            = 6;
+var SAFETY_BE            = 3;
+var SAFETY_RS            = 3;
+var SAFETY_RE            = 10;
+var SAFETY_QS            = 9;
+var SAFETY_QE            = 9;
 
-const WPAWN_PSTS      = [
+const WPAWN_PSTS = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -933,7 +959,7 @@ const WPAWN_PSTS      = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const WPAWN_PSTE      = [
+const WPAWN_PSTE = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -948,7 +974,7 @@ const WPAWN_PSTE      = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const WKNIGHT_PSTS    = [
+const WKNIGHT_PSTS = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0, -168,  -89,  -53,  -51,   30, -117,  -47,  -89,    0,    0,
@@ -963,7 +989,7 @@ const WKNIGHT_PSTS    = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const WKNIGHT_PSTE    = [
+const WKNIGHT_PSTE = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,  -65,  -59,  -21,  -43,  -42,  -45,  -80, -120,    0,    0,
@@ -978,7 +1004,7 @@ const WKNIGHT_PSTE    = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const WBISHOP_PSTS    = [
+const WBISHOP_PSTS = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,  -45,  -16, -127,  -79,  -52,  -70,  -10,  -15,    0,    0,
@@ -993,7 +1019,7 @@ const WBISHOP_PSTS    = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const WBISHOP_PSTE    = [
+const WBISHOP_PSTE = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,  -34,  -38,  -21,  -26,  -17,  -25,  -39,  -46,    0,    0,
@@ -1008,7 +1034,7 @@ const WBISHOP_PSTE    = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const WROOK_PSTS      = [
+const WROOK_PSTS = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,   12,   29,    4,   37,   33,   -1,    2,   17,    0,    0,
@@ -1023,7 +1049,7 @@ const WROOK_PSTS      = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const WROOK_PSTE      = [
+const WROOK_PSTE = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,   42,   33,   44,   35,   37,   36,   35,   33,    0,    0,
@@ -1038,7 +1064,7 @@ const WROOK_PSTE      = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const WQUEEN_PSTS     = [
+const WQUEEN_PSTS = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,  -18,   -2,   12,    5,   76,   56,   58,   55,    0,    0,
@@ -1053,7 +1079,7 @@ const WQUEEN_PSTS     = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const WQUEEN_PSTE     = [
+const WQUEEN_PSTE = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,   -4,   33,   38,   40,   30,   34,    8,   34,    0,    0,
@@ -1068,7 +1094,7 @@ const WQUEEN_PSTE     = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const WKING_PSTS      = [
+const WKING_PSTS = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,  -86,   38,   19,  -17,  -89,  -65,   12,  -15,    0,    0,
@@ -1083,7 +1109,7 @@ const WKING_PSTS      = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const WKING_PSTE      = [
+const WKING_PSTE = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0, -135,  -65,  -38,  -53,  -27,    0,  -32,  -43,    0,    0,
@@ -1098,7 +1124,7 @@ const WKING_PSTE      = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const BPAWN_PSTS      = [
+const BPAWN_PSTS = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -1113,7 +1139,7 @@ const BPAWN_PSTS      = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const BPAWN_PSTE      = [
+const BPAWN_PSTE = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -1128,7 +1154,7 @@ const BPAWN_PSTE      = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const BKNIGHT_PSTS    = [
+const BKNIGHT_PSTS = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0, -108,    2,  -29,  -10,   25,    3,    3,   -4,    0,    0,
@@ -1143,7 +1169,7 @@ const BKNIGHT_PSTS    = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const BKNIGHT_PSTE    = [
+const BKNIGHT_PSTE = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,  -44,  -75,  -47,  -35,  -49,  -45,  -79,  -97,    0,    0,
@@ -1158,7 +1184,7 @@ const BKNIGHT_PSTE    = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const BBISHOP_PSTS    = [
+const BBISHOP_PSTS = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,  -11,   26,   23,   20,   25,   18,  -14,    3,    0,    0,
@@ -1173,7 +1199,7 @@ const BBISHOP_PSTS    = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const BBISHOP_PSTE    = [
+const BBISHOP_PSTE = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,  -41,  -35,  -37,  -32,  -34,  -32,  -29,  -35,    0,    0,
@@ -1188,7 +1214,7 @@ const BBISHOP_PSTE    = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const BROOK_PSTS      = [
+const BROOK_PSTS = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,   -6,   -5,    2,   12,   13,   15,  -28,   -2,    0,    0,
@@ -1203,7 +1229,7 @@ const BROOK_PSTS      = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const BROOK_PSTE      = [
+const BROOK_PSTE = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,   12,   20,   21,   13,    9,    6,   18,  -11,    0,    0,
@@ -1218,7 +1244,7 @@ const BROOK_PSTE      = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const BQUEEN_PSTS     = [
+const BQUEEN_PSTS = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    5,    1,    8,   22,    3,   -4,  -11,  -31,    0,    0,
@@ -1233,7 +1259,7 @@ const BQUEEN_PSTS     = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const BQUEEN_PSTE     = [
+const BQUEEN_PSTE = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,  -33,  -41,  -32,  -43,   -5,  -28,  -20,  -44,    0,    0,
@@ -1248,7 +1274,7 @@ const BQUEEN_PSTE     = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const BKING_PSTS      = [
+const BKING_PSTS = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,   -4,   73,   55,  -36,   43,   -5,   63,   36,    0,    0,
@@ -1263,7 +1289,7 @@ const BKING_PSTS      = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const BKING_PSTE      = [
+const BKING_PSTE = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,  -86,  -73,  -55,  -36,  -61,  -34,  -61,  -82,    0,    0,
@@ -1278,7 +1304,7 @@ const BKING_PSTE      = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const WOUTPOST        = [
+const WOUTPOST = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -1293,7 +1319,7 @@ const WOUTPOST        = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const BOUTPOST        = [
+const BOUTPOST = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
@@ -1308,26 +1334,18 @@ const BOUTPOST        = [
      0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 ];
 
-const WSHELTER        = [0,0,-1,2,10,12,41,25,0,28];
-const WSTORM          = [0,0,15,24,4,4,-11,-1,0,7];
+const SHELTER = [0,0,-1,2,10,12,41,25,0,28];
+const STORM   = [0,0,15,24,4,4,-11,-1,0,7];
 
-const IMBALN_S        = [-110,43,25,5,-1,2,6,17,31];
-const IMBALN_E        = [-114,-58,-37,-19,0,14,38,56,63];
-const IMBALB_S        = [-74,3,15,9,13,15,11,16,24];
-const IMBALB_E        = [-6,-38,-30,-18,-13,-3,13,24,42];
-const IMBALR_S        = [74,17,-17,-24,-27,-23,-10,2,17];
-const IMBALR_E        = [-44,-34,-7,9,23,39,48,59,82];
-const IMBALQ_S        = [-9,-41,-25,1,16,17,19,12,-7];
-const IMBALQ_E        = [-82,-50,-20,-9,-1,23,44,61,35];
+const IMBALN_S = [-110,43,25,5,-1,2,6,17,31];
+const IMBALN_E = [-114,-58,-37,-19,0,14,38,56,63];
+const IMBALB_S = [-74,3,15,9,13,15,11,16,24];
+const IMBALB_E = [-6,-38,-30,-18,-13,-3,13,24,42];
+const IMBALR_S = [74,17,-17,-24,-27,-23,-10,2,17];
+const IMBALR_E = [-44,-34,-7,9,23,39,48,59,82];
+const IMBALQ_S = [-9,-41,-25,1,16,17,19,12,-7];
+const IMBALQ_E = [-82,-50,-20,-9,-1,23,44,61,35];
 
-const MOBN_S          = [-1,11,17,20,28,30,33,38,47];
-const MOBN_E          = [-5,-5,-4,0,-7,-6,-11,-17,-26];
-const MOBB_S          = [-1,15,26,34,37,45,51,56,63,71,66,84,92,105];
-const MOBB_E          = [-35,-26,-2,7,22,23,27,30,34,28,29,22,28,24];
-const MOBR_S          = [2,9,13,18,19,25,28,33,40,44,49,54,72,86,68];
-const MOBR_E          = [-46,-20,1,11,22,28,32,34,33,37,38,37,38,24,33];
-const MOBQ_S          = [5,4,6,5,10,14,15,13,17,21,19,19,22,27,27,32,31,36,42,45,40,43,43,48,48,50,49,54];
-const MOBQ_E          = [0,8,16,10,25,40,42,58,68,81,90,97,115,113,118,125,131,136,140,150,151,158,171,172,181,198,202,214];
 
 //}}}
 //{{{  pst lists
@@ -2409,14 +2427,10 @@ lozChess.prototype.perftSearch = function (node, depth, turn, inner) {
 
 function lozBoard () {
 
-  this.features          = {};                      // ##ifdef
-  this.features.wShelter = Array(WSHELTER.length);  // ##ifdef
-  this.features.wStorm   = Array(WSTORM.length);    // ##ifdef
-  this.features.wOutpost = Array(144);              // ##ifdef
-  this.features.mobN     = Array(MOBN_S.length);    // ##ifdef
-  this.features.mobB     = Array(MOBB_S.length);    // ##ifdef
-  this.features.mobR     = Array(MOBR_S.length);    // ##ifdef
-  this.features.mobQ     = Array(MOBQ_S.length);    // ##ifdef
+  this.features          = {};                    // ##ifdef
+  this.features.shelter = Array(SHELTER.length);  // ##ifdef
+  this.features.storm   = Array(STORM.length);    // ##ifdef
+  this.features.outpost = Array(144);             // ##ifdef
 
   this.lozza        = null;
   this.verbose      = false;
@@ -4358,13 +4372,17 @@ lozBoard.prototype.evaluate = function (turn) {
   
   var f = this.features;       // ##ifdef
                                // ##ifdef
-  f.wOutpost.fill(0);          // ##ifdef
-  f.wShelter.fill(0);          // ##ifdef
-  f.wStorm.fill(0);            // ##ifdef
-  f.mobN.fill(0);              // ##ifdef
-  f.mobB.fill(0);              // ##ifdef
-  f.mobR.fill(0);              // ##ifdef
-  f.mobQ.fill(0);              // ##ifdef
+  f.outpost.fill(0);           // ##ifdef
+  f.shelter.fill(0);           // ##ifdef
+  f.storm.fill(0);             // ##ifdef
+  f.mobN               = 0;    // ##ifdef
+  f.mobB               = 0;    // ##ifdef
+  f.mobR               = 0;    // ##ifdef
+  f.mobQ               = 0;    // ##ifdef
+  f.mobN0              = 0;    // ##ifdef
+  f.mobB0              = 0;    // ##ifdef
+  f.mobR0              = 0;    // ##ifdef
+  f.mobQ0              = 0;    // ##ifdef
   f.kingPenalty        = 0;    // ##ifdef
   f.pawnChainS         = 0;    // ##ifdef
   f.pawnChainE         = 0;    // ##ifdef
@@ -4426,6 +4444,10 @@ lozBoard.prototype.evaluate = function (turn) {
   f.attQ               = 0;    // ##ifdef
   f.trappedS           = 0;    // ##ifdef
   f.trappedE           = 0;    // ##ifdef
+  f.safetyN            = 0;    // ##ifdef
+  f.safetyB            = 0;    // ##ifdef
+  f.safetyR            = 0;    // ##ifdef
+  f.safetyQ            = 0;    // ##ifdef
   
   //}}}
 
@@ -4613,10 +4635,10 @@ lozBoard.prototype.evaluate = function (turn) {
       }
     
       if (lRank != 9) {
-        pawnsS += PAWN_DOUBLED_S;
-        pawnsE += PAWN_DOUBLED_E;
-        f.pawnDoubledS += 1;  // ##ifdef
-        f.pawnDoubledE += 1;  // ##ifdef
+        pawnsS -= PAWN_DOUBLED_S;
+        pawnsE -= PAWN_DOUBLED_E;
+        f.pawnDoubledS -= 1;  // ##ifdef
+        f.pawnDoubledE -= 1;  // ##ifdef
       }
     
       if (rank < lRank)
@@ -4668,10 +4690,10 @@ lozBoard.prototype.evaluate = function (turn) {
       }
     
       if (lRank != 0) {
-        pawnsS -= PAWN_DOUBLED_S;
-        pawnsE -= PAWN_DOUBLED_E;
-        f.pawnDoubledS -= 1;  // ##ifdef
-        f.pawnDoubledE -= 1;  // ##ifdef
+        pawnsS += PAWN_DOUBLED_S;
+        pawnsE += PAWN_DOUBLED_E;
+        f.pawnDoubledS += 1;  // ##ifdef
+        f.pawnDoubledE += 1;  // ##ifdef
       }
     
       if (rank > lRank)
@@ -4734,10 +4756,10 @@ lozBoard.prototype.evaluate = function (turn) {
       }
     
       if ((wLeastL >>> bits & 0xF) == 9 && (wLeastR >>> bits & 0xF) == 9) {
-        pawnsS += PAWN_ISOLATED_S + PAWN_ISOLATED_S * open;
-        pawnsE += PAWN_ISOLATED_E;
-        f.pawnIsolatedS += 1 + 1 * open;  // ##ifdef
-        f.pawnIsolatedE += 1;             // ##ifdef
+        pawnsS -= PAWN_ISOLATED_S + PAWN_ISOLATED_S * open;
+        pawnsE -= PAWN_ISOLATED_E;
+        f.pawnIsolatedS -= 1 + 1 * open;  // ##ifdef
+        f.pawnIsolatedE -= 1;             // ##ifdef
       }
     
       else if ((wLeastL >>> bits & 0xF) > rank && (wLeastR >>> bits & 0xF) > rank) {
@@ -4747,10 +4769,10 @@ lozBoard.prototype.evaluate = function (turn) {
         else if (rank == 2 && (IS_WP[b[sq-23]] || IS_WP[b[sq-25]]) && !IS_P[b[sq-12]] && !IS_P[b[sq-24]] && !IS_BP[b[sq-11]] && !IS_BP[b[sq-13]] && !IS_BP[b[sq-23]] && !IS_BP[b[sq-25]] && !IS_BP[b[sq-37]] && !IS_BP[b[sq-35]])
           backward = false;
         if (backward) {
-          pawnsS += PAWN_BACKWARD_S + PAWN_BACKWARD_S * open;
-          pawnsE += PAWN_BACKWARD_E;
-          f.pawnBackwardS += 1 + 1 * open;  // ##ifdef
-          f.pawnBackwardE += 1;             // ##ifdef
+          pawnsS -= PAWN_BACKWARD_S + PAWN_BACKWARD_S * open;
+          pawnsE -= PAWN_BACKWARD_E;
+          f.pawnBackwardS -= 1 + 1 * open;  // ##ifdef
+          f.pawnBackwardE -= 1;             // ##ifdef
         }
       }
     
@@ -4817,10 +4839,10 @@ lozBoard.prototype.evaluate = function (turn) {
       }
     
       if ((bLeastL >>> bits & 0xF) == 0x0 && (bLeastR >>> bits & 0xF) == 0x0) {
-        pawnsS -= PAWN_ISOLATED_S + PAWN_ISOLATED_S * open;
-        pawnsE -= PAWN_ISOLATED_E;
-        f.pawnIsolatedS -= 1 + 1 * open;  // ##ifdef
-        f.pawnIsolatedE -= 1;             // ##ifdef
+        pawnsS += PAWN_ISOLATED_S + PAWN_ISOLATED_S * open;
+        pawnsE += PAWN_ISOLATED_E;
+        f.pawnIsolatedS += 1 + 1 * open;  // ##ifdef
+        f.pawnIsolatedE += 1;             // ##ifdef
       }
     
       else if ((bLeastL >>> bits & 0xF) < rank && (bLeastR >>> bits & 0xF) < rank) {
@@ -4830,10 +4852,10 @@ lozBoard.prototype.evaluate = function (turn) {
         else if (rank == 7 && (IS_BP[b[sq+23]] || IS_BP[b[sq+25]]) && !IS_P[b[sq+12]] && !IS_P[b[sq+24]] && !IS_WP[b[sq+11]] && !IS_WP[b[sq+13]] && !IS_WP[b[sq+23]] && !IS_WP[b[sq+25]] && !IS_WP[b[sq+37]] && !IS_WP[b[sq+35]])
           backward = false;
         if (backward) {
-          pawnsS -= PAWN_BACKWARD_S + PAWN_BACKWARD_S * open;
-          pawnsE -= PAWN_BACKWARD_E;
-          f.pawnBackwardS -= 1 + 1 * open;  // ##ifdef
-          f.pawnBackwardE -= 1;             // ##ifdef
+          pawnsS += PAWN_BACKWARD_S + PAWN_BACKWARD_S * open;
+          pawnsE += PAWN_BACKWARD_E;
+          f.pawnBackwardS += 1 + 1 * open;  // ##ifdef
+          f.pawnBackwardE += 1;             // ##ifdef
         }
       }
     
@@ -5136,25 +5158,25 @@ lozBoard.prototype.evaluate = function (turn) {
     
     penalty = 0;
     
-    penalty += WSHELTER[(wLeast & wKingMask) >>> wKingBits] * 2;
-    f.wShelter[(wLeast & wKingMask) >>> wKingBits] -= 1 * 2;            // ##ifdef
+    penalty += SHELTER[(wLeast & wKingMask) >>> wKingBits] * 2;
+    f.shelter[(wLeast & wKingMask) >>> wKingBits] -= 1 * 2;            // ##ifdef
     
     if (wKingFile != 8) {
-      penalty += WSHELTER[(wLeastR & wKingMask) >>> wKingBits];
-      f.wShelter[(wLeastR & wKingMask) >>> wKingBits] -= 1;             // ##ifdef
+      penalty += SHELTER[(wLeastR & wKingMask) >>> wKingBits];
+      f.shelter[(wLeastR & wKingMask) >>> wKingBits] -= 1;             // ##ifdef
     }
     
     if (wKingFile != 1) {
-      penalty += WSHELTER[(wLeastL & wKingMask) >>> wKingBits];
-      f.wShelter[(wLeastL & wKingMask) >>> wKingBits] -= 1;             // ##ifdef
+      penalty += SHELTER[(wLeastL & wKingMask) >>> wKingBits];
+      f.shelter[(wLeastL & wKingMask) >>> wKingBits] -= 1;             // ##ifdef
     }
     
     if (penalty == 0) {
-      f.wShelter[(wLeast & wKingMask) >>> wKingBits] += 1 * 2;          // ##ifdef
+      f.shelter[(wLeast & wKingMask) >>> wKingBits] += 1 * 2;          // ##ifdef
       if (wKingFile != 8)                                               // ##ifdef
-        f.wShelter[(wLeastR & wKingMask) >>> wKingBits] += 1;           // ##ifdef
+        f.shelter[(wLeastR & wKingMask) >>> wKingBits] += 1;           // ##ifdef
       if (wKingFile != 1)                                               // ##ifdef
-        f.wShelter[(wLeastL & wKingMask) >>> wKingBits] += 1;           // ##ifdef
+        f.shelter[(wLeastL & wKingMask) >>> wKingBits] += 1;           // ##ifdef
       penalty = KING_PENALTY;
       f.kingPenalty -= 1;                                               // ##ifdef
     }
@@ -5166,17 +5188,17 @@ lozBoard.prototype.evaluate = function (turn) {
     
     penalty = 0;
     
-    penalty += WSTORM[(bMost & wKingMask) >>> wKingBits];
-    f.wStorm[(bMost & wKingMask) >>> wKingBits] -= 1;     // ##ifdef
+    penalty += STORM[(bMost & wKingMask) >>> wKingBits];
+    f.storm[(bMost & wKingMask) >>> wKingBits] -= 1;     // ##ifdef
     
     if (wKingFile != 8) {
-      penalty += WSTORM[(bMostR & wKingMask) >>> wKingBits];
-      f.wStorm[(bMostR & wKingMask) >>> wKingBits] -= 1;  // ##ifdef
+      penalty += STORM[(bMostR & wKingMask) >>> wKingBits];
+      f.storm[(bMostR & wKingMask) >>> wKingBits] -= 1;  // ##ifdef
     }
     
     if (wKingFile != 1) {
-      penalty += WSTORM[(bMostL & wKingMask) >>> wKingBits];
-      f.wStorm[(bMostL & wKingMask) >>> wKingBits] -= 1;  // ##ifdef
+      penalty += STORM[(bMostL & wKingMask) >>> wKingBits];
+      f.storm[(bMostL & wKingMask) >>> wKingBits] -= 1;  // ##ifdef
     }
     
     kingS -= penalty;
@@ -5189,25 +5211,25 @@ lozBoard.prototype.evaluate = function (turn) {
     
     penalty = 0;
     
-    penalty += WSHELTER[9 - ((bLeast & bKingMask) >>> bKingBits)] * 2;
-    f.wShelter[9 - ((bLeast & bKingMask) >>> bKingBits)] += 1 * 2;              // ##ifdef
+    penalty += SHELTER[9 - ((bLeast & bKingMask) >>> bKingBits)] * 2;
+    f.shelter[9 - ((bLeast & bKingMask) >>> bKingBits)] += 1 * 2;              // ##ifdef
     
     if (bKingFile != 8) {
-      penalty += WSHELTER[9 - ((bLeastR & bKingMask) >>> bKingBits)];
-      f.wShelter[9 - ((bLeastR & bKingMask) >>> bKingBits)] += 1;               // ##ifdef
+      penalty += SHELTER[9 - ((bLeastR & bKingMask) >>> bKingBits)];
+      f.shelter[9 - ((bLeastR & bKingMask) >>> bKingBits)] += 1;               // ##ifdef
     }
     
     if (bKingFile != 1) {
-      penalty += WSHELTER[9 - ((bLeastL & bKingMask) >>> bKingBits)];
-      f.wShelter[9 - ((bLeastL & bKingMask) >>> bKingBits)] += 1;               // ##ifdef
+      penalty += SHELTER[9 - ((bLeastL & bKingMask) >>> bKingBits)];
+      f.shelter[9 - ((bLeastL & bKingMask) >>> bKingBits)] += 1;               // ##ifdef
     }
     
     if (penalty == 0) {
-      f.wShelter[9 - ((bLeast & bKingMask) >>> bKingBits)]  -= 1 * 2;           // ##ifdef
+      f.shelter[9 - ((bLeast & bKingMask) >>> bKingBits)]  -= 1 * 2;           // ##ifdef
       if (bKingFile != 8)                                                       // ##ifdef
-        f.wShelter[9 - ((bLeastR & bKingMask) >>> bKingBits)] -= 1;             // ##ifdef
+        f.shelter[9 - ((bLeastR & bKingMask) >>> bKingBits)] -= 1;             // ##ifdef
       if (bKingFile != 1)                                                       // ##ifdef
-        f.wShelter[9 - ((bLeastL & bKingMask) >>> bKingBits)] -= 1;             // ##ifdef
+        f.shelter[9 - ((bLeastL & bKingMask) >>> bKingBits)] -= 1;             // ##ifdef
       penalty = KING_PENALTY;
       f.kingPenalty += 1;                                                       // ##ifdef
     }
@@ -5219,17 +5241,17 @@ lozBoard.prototype.evaluate = function (turn) {
     
     penalty = 0;
     
-    penalty += WSTORM[9 - ((wMost & bKingMask) >>> bKingBits)];
-    f.wStorm[9 - ((wMost & bKingMask) >>> bKingBits)] += 1;           // ##ifdef
+    penalty += STORM[9 - ((wMost & bKingMask) >>> bKingBits)];
+    f.storm[9 - ((wMost & bKingMask) >>> bKingBits)] += 1;           // ##ifdef
     
     if (bKingFile != 8) {
-      penalty += WSTORM[9 - ((wMostR & bKingMask) >>> bKingBits)];
-      f.wStorm[9 - ((wMostR & bKingMask) >>> bKingBits)] += 1;        // ##ifdef
+      penalty += STORM[9 - ((wMostR & bKingMask) >>> bKingBits)];
+      f.storm[9 - ((wMostR & bKingMask) >>> bKingBits)] += 1;        // ##ifdef
     }
     
     if (bKingFile != 1) {
-      penalty += WSTORM[9 - ((wMostL & bKingMask) >>> bKingBits)];
-      f.wStorm[9 - ((wMostL & bKingMask) >>> bKingBits)] += 1;        // ##ifdef
+      penalty += STORM[9 - ((wMostL & bKingMask) >>> bKingBits)];
+      f.storm[9 - ((wMostL & bKingMask) >>> bKingBits)] += 1;        // ##ifdef
     }
     
     kingS += penalty;
@@ -5239,9 +5261,9 @@ lozBoard.prototype.evaluate = function (turn) {
   
   var xx = 0;                                          // ##ifdef
                                                        // ##ifdef
-  for (var zz=0; zz < f.wShelter.length; zz++) {       // ##ifdef
-    xx += f.wShelter[zz] * WSHELTER[zz];               // ##ifdef
-    xx += f.wStorm[zz]   * WSTORM[zz];                 // ##ifdef
+  for (var zz=0; zz < f.shelter.length; zz++) {        // ##ifdef
+    xx += f.shelter[zz] * SHELTER[zz];                 // ##ifdef
+    xx += f.storm[zz]   * STORM[zz];                   // ##ifdef
   }                                                    // ##ifdef
                                                        // ##ifdef
   xx += f.kingPenalty * KING_PENALTY;                  // ##ifdef
@@ -5263,6 +5285,9 @@ lozBoard.prototype.evaluate = function (turn) {
   
   var tightS = 0;
   var tightE = 0;
+  
+  var safetyS = 0;
+  var safetyE = 0;
   
   var attS = 0;
   var attE = 0;
@@ -5338,10 +5363,16 @@ lozBoard.prototype.evaluate = function (turn) {
       to = fr+25; o=b[to]; mob += IS_E[o]; att |= BKZ[to]; tight += TIGHT_WN[o]; tense += TENSE_WN[o];
       to = fr-25; o=b[to]; mob += IS_E[o]; att |= BKZ[to]; tight += TIGHT_WN[o]; tense += TENSE_WN[o];
       
-      mobS += MOBN_S[mob];
-      mobE += MOBN_E[mob];
-      
-      f.mobN[mob] += 1;    // ##ifdef
+      if (mob) {
+        mobS += mob * MOBN_S;
+        mobE += mob * MOBN_E;
+        f.mobN += mob;                  // ##ifdef
+      }
+      else {
+        mobS += MOBN_S0;
+        mobE += MOBN_E0;
+        f.mobN0 += 1;                   // ##ifdef
+      }
       
       tightS += tight * TIGHT_NS;
       tightE += tight * TIGHT_NE;
@@ -5370,9 +5401,9 @@ lozBoard.prototype.evaluate = function (turn) {
           knightsS += outpost;
           knightsS += outpost * IS_WP[b[fr+11]];
           knightsS += outpost * IS_WP[b[fr+13]];
-          f.wOutpost[fr] += 1;                                         // ##ifdef
-          f.wOutpost[fr] += 1 * IS_WP[b[fr+11]];                       // ##ifdef
-          f.wOutpost[fr] += 1 * IS_WP[b[fr+13]];                       // ##ifdef
+          f.outpost[fr] += 1;                                         // ##ifdef
+          f.outpost[fr] += 1 * IS_WP[b[fr+11]];                       // ##ifdef
+          f.outpost[fr] += 1 * IS_WP[b[fr+13]];                       // ##ifdef
         }
       }
       
@@ -5380,6 +5411,12 @@ lozBoard.prototype.evaluate = function (turn) {
       
       imbalS += IMBALN_S[wNumPawns];
       imbalE += IMBALN_E[wNumPawns];
+      
+      if (((bLeastR & frMask) >>> frBits) <= frRank && ((bLeastL & frMask) >>> frBits) <= frRank) {
+        safetyS += SAFETY_NS;
+        safetyE += SAFETY_NE;
+        f.safetyN += 1;  //##ifdef
+      }
       
       //}}}
     }
@@ -5397,10 +5434,16 @@ lozBoard.prototype.evaluate = function (turn) {
       to = fr + 13; while (!b[to]) {att |= BKZ[to]; to += 13; mob++;} att |= BKZ[to]; o=b[to]; tight += TIGHT_WB[o]; tense += TENSE_WB[o];
       to = fr - 13; while (!b[to]) {att |= BKZ[to]; to -= 13; mob++;} att |= BKZ[to]; o=b[to]; tight += TIGHT_WB[o]; tense += TENSE_WB[o];
       
-      mobS += MOBB_S[mob];
-      mobE += MOBB_E[mob];
-      
-      f.mobB[mob] += 1;    // ##ifdef
+      if (mob) {
+        mobS += mob * MOBB_S;
+        mobE += mob * MOBB_E;
+        f.mobB += mob;                  // ##ifdef
+      }
+      else {
+        mobS += MOBB_S0;
+        mobE += MOBB_E0;
+        f.mobB0 += 1;                   // ##ifdef
+      }
       
       tightS += tight * TIGHT_BS;
       tightE += tight * TIGHT_BE;
@@ -5425,6 +5468,12 @@ lozBoard.prototype.evaluate = function (turn) {
       imbalS += IMBALB_S[wNumPawns];
       imbalE += IMBALB_E[wNumPawns];
       
+      if (((bLeastR & frMask) >>> frBits) <= frRank && ((bLeastL & frMask) >>> frBits) <= frRank) {
+        safetyS += SAFETY_BS;
+        safetyE += SAFETY_BE;
+        f.safetyB += 1;  //##ifdef
+      }
+      
       //}}}
     }
   
@@ -5441,13 +5490,20 @@ lozBoard.prototype.evaluate = function (turn) {
       to = fr + 12; while (!b[to]) {att |= BKZ[to]; to += 12; mob++;} att |= BKZ[to]; o=b[to]; tight += TIGHT_WR[o]; tense += TENSE_WR[o];
       to = fr - 12; while (!b[to]) {att |= BKZ[to]; to -= 12; mob++;} att |= BKZ[to]; o=b[to]; tight += TIGHT_WR[o]; tense += TENSE_WR[o];
       
-      mobS += MOBR_S[mob];
-      mobE += MOBR_E[mob];
-      
-      f.mobR[mob] += 1;    // ##ifdef
+      if (mob) {
+        mobS += mob * MOBR_S;
+        mobE += mob * MOBR_E;
+        f.mobR += mob;                  // ##ifdef
+      }
+      else {
+        mobS += MOBR_S0;
+        mobE += MOBR_E0;
+        f.mobR0 += 1;                   // ##ifdef
+      }
       
       f.tightRS += tight;  // ##ifdef
       f.tightRE += tight;  // ##ifdef
+      
       f.tenseRS += tense;  // ##ifdef
       f.tenseRE += tense;  // ##ifdef
       
@@ -5503,6 +5559,12 @@ lozBoard.prototype.evaluate = function (turn) {
       imbalS += IMBALR_S[wNumPawns];
       imbalE += IMBALR_E[wNumPawns];
       
+      if (((bLeastR & frMask) >>> frBits) <= frRank && ((bLeastL & frMask) >>> frBits) <= frRank) {
+        safetyS += SAFETY_RS;
+        safetyE += SAFETY_RE;
+        f.safetyR += 1;  //##ifdef
+      }
+      
       //}}}
     }
   
@@ -5524,10 +5586,16 @@ lozBoard.prototype.evaluate = function (turn) {
       to = fr + 12; while (!b[to]) {att |= BKZ[to]; to += 12; mob++;} att |= BKZ[to]; o=b[to]; tight += TIGHT_WQ[o]; tense += TENSE_WQ[o];
       to = fr - 12; while (!b[to]) {att |= BKZ[to]; to -= 12; mob++;} att |= BKZ[to]; o=b[to]; tight += TIGHT_WQ[o]; tense += TENSE_WQ[o];
       
-      mobS += MOBQ_S[mob];
-      mobE += MOBQ_E[mob];
-      
-      f.mobQ[mob] += 1;    // ##ifdef
+      if (mob) {
+        mobS += mob * MOBQ_S;
+        mobE += mob * MOBQ_E;
+        f.mobQ += mob;                  // ##ifdef
+      }
+      else {
+        mobS += MOBQ_S0;
+        mobE += MOBQ_E0;
+        f.mobQ0 += 1;                   // ##ifdef
+      }
       
       tightS += tight * TIGHT_QS;
       tightE += tight * TIGHT_QE;
@@ -5537,6 +5605,7 @@ lozBoard.prototype.evaluate = function (turn) {
       
       f.tightQS += tight;  // ##ifdef
       f.tightQE += tight;  // ##ifdef
+      
       f.tenseQS += tense;  // ##ifdef
       f.tenseQE += tense;  // ##ifdef
       
@@ -5555,6 +5624,12 @@ lozBoard.prototype.evaluate = function (turn) {
       
       imbalS += IMBALQ_S[wNumPawns];
       imbalE += IMBALQ_E[wNumPawns];
+      
+      if (((bLeastR & frMask) >>> frBits) <= frRank && ((bLeastL & frMask) >>> frBits) <= frRank) {
+        safetyS += SAFETY_QS;
+        safetyE += SAFETY_QE;
+        f.safetyQ += 1;  //##ifdef
+      }
       
       //}}}
     }
@@ -5644,10 +5719,16 @@ lozBoard.prototype.evaluate = function (turn) {
       to = fr+25; o=b[to]; mob += IS_E[o]; att |= WKZ[to]; tight += TIGHT_BN[o]; tense += TENSE_BN[o];
       to = fr-25; o=b[to]; mob += IS_E[o]; att |= WKZ[to]; tight += TIGHT_BN[o]; tense += TENSE_BN[o];
       
-      mobS -= MOBN_S[mob];
-      mobE -= MOBN_E[mob];
-      
-      f.mobN[mob] -= 1;    // ##ifdef
+      if (mob) {
+        mobS -= mob * MOBN_S;
+        mobE -= mob * MOBN_E;
+        f.mobN -= mob;                  // ##ifdef
+      }
+      else {
+        mobS -= MOBN_S0;
+        mobE -= MOBN_E0;
+        f.mobN0 -= 1;                   // ##ifdef
+      }
       
       tightS -= tight * TIGHT_NS;
       tightE -= tight * TIGHT_NE;
@@ -5657,6 +5738,7 @@ lozBoard.prototype.evaluate = function (turn) {
       
       f.tightNS -= tight;  // ##ifdef
       f.tightNE -= tight;  // ##ifdef
+      
       f.tenseNS -= tense;  // ##ifdef
       f.tenseNE -= tense;  // ##ifdef
       
@@ -5676,9 +5758,9 @@ lozBoard.prototype.evaluate = function (turn) {
           knightsS -= outpost;
           knightsS -= outpost * IS_BP[b[fr-11]];
           knightsS -= outpost * IS_BP[b[fr-13]];
-          f.wOutpost[wbmap(fr)] -= 1;                                  // ##ifdef
-          f.wOutpost[wbmap(fr)] -= 1 * IS_BP[b[fr-11]];                // ##ifdef
-          f.wOutpost[wbmap(fr)] -= 1 * IS_BP[b[fr-13]];                // ##ifdef
+          f.outpost[wbmap(fr)] -= 1;                                  // ##ifdef
+          f.outpost[wbmap(fr)] -= 1 * IS_BP[b[fr-11]];                // ##ifdef
+          f.outpost[wbmap(fr)] -= 1 * IS_BP[b[fr-13]];                // ##ifdef
         }
       }
       
@@ -5686,6 +5768,12 @@ lozBoard.prototype.evaluate = function (turn) {
       
       imbalS -= IMBALN_S[bNumPawns];
       imbalE -= IMBALN_E[bNumPawns];
+      
+      if (((wLeastR & frMask) >>> frBits) >= frRank && ((wLeastL & frMask) >>> frBits) >= frRank) {
+        safetyS -= SAFETY_NS;
+        safetyE -= SAFETY_NE;
+        f.safetyN -= 1;  //##ifdef
+      }
       
       //}}}
     }
@@ -5703,10 +5791,16 @@ lozBoard.prototype.evaluate = function (turn) {
       to = fr + 13; while (!b[to]) {att |= WKZ[to]; to += 13; mob++;} att |= WKZ[to]; o=b[to]; tight += TIGHT_BB[o]; tense += TENSE_BB[o];
       to = fr - 13; while (!b[to]) {att |= WKZ[to]; to -= 13; mob++;} att |= WKZ[to]; o=b[to]; tight += TIGHT_BB[o]; tense += TENSE_BB[o];
       
-      mobS -= MOBB_S[mob];
-      mobE -= MOBB_E[mob];
-      
-      f.mobB[mob] -= 1;    // ##ifdef
+      if (mob) {
+        mobS -= mob * MOBB_S;
+        mobE -= mob * MOBB_E;
+        f.mobB -= mob;                  // ##ifdef
+      }
+      else {
+        mobS -= MOBB_S0;
+        mobE -= MOBB_E0;
+        f.mobB0 -= 1;                   // ##ifdef
+      }
       
       tightS -= tight * TIGHT_BS;
       tightE -= tight * TIGHT_BE;
@@ -5716,6 +5810,7 @@ lozBoard.prototype.evaluate = function (turn) {
       
       f.tightBS -= tight;  // ##ifdef
       f.tightBE -= tight;  // ##ifdef
+      
       f.tenseBS -= tense;  // ##ifdef
       f.tenseBE -= tense;  // ##ifdef
       
@@ -5730,6 +5825,12 @@ lozBoard.prototype.evaluate = function (turn) {
       
       imbalS -= IMBALB_S[bNumPawns];
       imbalE -= IMBALB_E[bNumPawns];
+      
+      if (((wLeastR & frMask) >>> frBits) >= frRank && ((wLeastL & frMask) >>> frBits) >= frRank) {
+        safetyS -= SAFETY_BS;
+        safetyE -= SAFETY_BE;
+        f.safetyB -= 1;  //##ifdef
+      }
       
       //}}}
     }
@@ -5747,10 +5848,16 @@ lozBoard.prototype.evaluate = function (turn) {
       to = fr + 12; while (!b[to]) {att |= WKZ[to]; to += 12; mob++;} att |= WKZ[to]; o=b[to]; tight += TIGHT_BR[o]; tense += TENSE_BR[o];
       to = fr - 12; while (!b[to]) {att |= WKZ[to]; to -= 12; mob++;} att |= WKZ[to]; o=b[to]; tight += TIGHT_BR[o]; tense += TENSE_BR[o];
       
-      mobS -= MOBR_S[mob];
-      mobE -= MOBR_E[mob];
-      
-      f.mobR[mob] -= 1;    // ##ifdef
+      if (mob) {
+        mobS -= mob * MOBR_S;
+        mobE -= mob * MOBR_E;
+        f.mobR -= mob;                  // ##ifdef
+      }
+      else {
+        mobS -= MOBR_S0;
+        mobE -= MOBR_E0;
+        f.mobR0 -= 1;                   // ##ifdef
+      }
       
       tightS -= tight * TIGHT_RS;
       tightE -= tight * TIGHT_RE;
@@ -5760,6 +5867,7 @@ lozBoard.prototype.evaluate = function (turn) {
       
       f.tightRS -= tight;  // ##ifdef
       f.tightRE -= tight;  // ##ifdef
+      
       f.tenseRS -= tense;  // ##ifdef
       f.tenseRE -= tense;  // ##ifdef
       
@@ -5809,6 +5917,12 @@ lozBoard.prototype.evaluate = function (turn) {
       imbalS -= IMBALR_S[bNumPawns];
       imbalE -= IMBALR_E[bNumPawns];
       
+      if (((wLeastR & frMask) >>> frBits) >= frRank && ((wLeastL & frMask) >>> frBits) >= frRank) {
+        safetyS -= SAFETY_RS;
+        safetyE -= SAFETY_RE;
+        f.safetyR -= 1;  //##ifdef
+      }
+      
       //}}}
     }
   
@@ -5830,10 +5944,16 @@ lozBoard.prototype.evaluate = function (turn) {
       to = fr + 12; while (!b[to]) {att |= WKZ[to]; to += 12; mob++;} att |= WKZ[to]; o=b[to]; tight += TIGHT_BQ[o]; tense += TENSE_BQ[o];
       to = fr - 12; while (!b[to]) {att |= WKZ[to]; to -= 12; mob++;} att |= WKZ[to]; o=b[to]; tight += TIGHT_BQ[o]; tense += TENSE_BQ[o];
       
-      mobS -= MOBQ_S[mob];
-      mobE -= MOBQ_E[mob];
-      
-      f.mobQ[mob] -= 1;    // ##ifdef
+      if (mob) {
+        mobS -= mob * MOBQ_S;
+        mobE -= mob * MOBQ_E;
+        f.mobQ -= mob;                  // ##ifdef
+      }
+      else {
+        mobS -= MOBQ_S0;
+        mobE -= MOBQ_E0;
+        f.mobQ0 -= 1;                   // ##ifdef
+      }
       
       tightS -= tight * TIGHT_QS;
       tightE -= tight * TIGHT_QE;
@@ -5843,6 +5963,7 @@ lozBoard.prototype.evaluate = function (turn) {
       
       f.tightQS -= tight;  // ##ifdef
       f.tightQE -= tight;  // ##ifdef
+      
       f.tenseQS -= tense;  // ##ifdef
       f.tenseQE -= tense;  // ##ifdef
       
@@ -5861,6 +5982,12 @@ lozBoard.prototype.evaluate = function (turn) {
       
       imbalS -= IMBALQ_S[bNumPawns];
       imbalE -= IMBALQ_E[bNumPawns];
+      
+      if (((wLeastR & frMask) >>> frBits) >= frRank && ((wLeastL & frMask) >>> frBits) >= frRank) {
+        safetyS -= SAFETY_QS;
+        safetyE -= SAFETY_QE;
+        f.safetyQ -= 1;  //##ifdef
+      }
       
       //}}}
     }
@@ -5899,30 +6026,31 @@ lozBoard.prototype.evaluate = function (turn) {
   f.attB = f.attWB - f.attBB                                        // ##ifdef
   f.attR = f.attWR - f.attBR                                        // ##ifdef
   f.attQ = f.attWQ - f.attBQ                                        // ##ifdef
+                                                                    // ##ifdef
   var xxS = 0;                                                      // ##ifdef
   for (var zz=0; zz<144; zz++)                                      // ##ifdef
-    xxS += f.wOutpost[zz] * WOUTPOST[zz];                           // ##ifdef
+    xxS += f.outpost[zz] * WOUTPOST[zz];                            // ##ifdef
   if (Math.abs(knightsS - xxS) > 0.000001)                          // ##ifdef
     console.log('outpost',knightsS,xxS,this.fen(this.turn));        // ##ifdef
                                                                     // ##ifdef
   var xxS = 0;                                                      // ##ifdef
   var xxE = 0;                                                      // ##ifdef
-  for (var zz=0; zz<f.mobN.length; zz++) {                          // ##ifdef
-    xxS += f.mobN[zz] * MOBN_S[zz];                                 // ##ifdef
-    xxE += f.mobN[zz] * MOBN_E[zz];                                 // ##ifdef
-  }                                                                 // ##ifdef
-  for (var zz=0; zz<f.mobB.length; zz++) {                          // ##ifdef
-    xxS += f.mobB[zz] * MOBB_S[zz];                                 // ##ifdef
-    xxE += f.mobB[zz] * MOBB_E[zz];                                 // ##ifdef
-  }                                                                 // ##ifdef
-  for (var zz=0; zz<f.mobR.length; zz++) {                          // ##ifdef
-    xxS += f.mobR[zz] * MOBR_S[zz];                                 // ##ifdef
-    xxE += f.mobR[zz] * MOBR_E[zz];                                 // ##ifdef
-  }                                                                 // ##ifdef
-  for (var zz=0; zz<f.mobQ.length; zz++) {                          // ##ifdef
-    xxS += f.mobQ[zz] * MOBQ_S[zz];                                 // ##ifdef
-    xxE += f.mobQ[zz] * MOBQ_E[zz];                                 // ##ifdef
-  }                                                                 // ##ifdef
+  xxS += f.mobN  * MOBN_S;                                          // ##ifdef
+  xxE += f.mobN  * MOBN_E;                                          // ##ifdef
+  xxS += f.mobN0 * MOBN_S0;                                         // ##ifdef
+  xxE += f.mobN0 * MOBN_E0;                                         // ##ifdef
+  xxS += f.mobB  * MOBB_S;                                          // ##ifdef
+  xxE += f.mobB  * MOBB_E;                                          // ##ifdef
+  xxS += f.mobB0 * MOBB_S0;                                         // ##ifdef
+  xxE += f.mobB0 * MOBB_E0;                                         // ##ifdef
+  xxS += f.mobR  * MOBR_S;                                          // ##ifdef
+  xxE += f.mobR  * MOBR_E;                                          // ##ifdef
+  xxS += f.mobR0 * MOBR_S0;                                         // ##ifdef
+  xxE += f.mobR0 * MOBR_E0;                                         // ##ifdef
+  xxS += f.mobQ  * MOBQ_S;                                          // ##ifdef
+  xxE += f.mobQ  * MOBQ_E;                                          // ##ifdef
+  xxS += f.mobQ0 * MOBQ_S0;                                         // ##ifdef
+  xxE += f.mobQ0 * MOBQ_E0;                                         // ##ifdef
   if (Math.abs(mobS - xxS) > 0.000001)                              // ##ifdef
     console.log('mobility s',mobS,xxS,this.fen(this.turn));         // ##ifdef
   if (Math.abs(mobE - xxE) > 0.000001)                              // ##ifdef
@@ -5957,6 +6085,21 @@ lozBoard.prototype.evaluate = function (turn) {
     console.log('tense s',tenseS,xxS,this.fen(this.turn));          // ##ifdef
   if (Math.abs(tenseE - xxE) > 0.000001)                            // ##ifdef
     console.log('tense e',tenseE,xxE,this.fen(this.turn));          // ##ifdef
+                                                                    // ##ifdef
+  var xxS = 0;                                                      // ##ifdef
+  var xxE = 0;                                                      // ##ifdef
+  xxS += f.safetyN * SAFETY_NS;                                     // ##ifdef
+  xxE += f.safetyN * SAFETY_NE;                                     // ##ifdef
+  xxS += f.safetyB * SAFETY_BS;                                     // ##ifdef
+  xxE += f.safetyB * SAFETY_BE;                                     // ##ifdef
+  xxS += f.safetyR * SAFETY_RS;                                     // ##ifdef
+  xxE += f.safetyR * SAFETY_RE;                                     // ##ifdef
+  xxS += f.safetyQ * SAFETY_QS;                                     // ##ifdef
+  xxE += f.safetyQ * SAFETY_QE;                                     // ##ifdef
+  if (Math.abs(safetyS - xxS) > 0.000001)                           // ##ifdef
+    console.log('safety s',safetyS,xxS,this.fen(this.turn));        // ##ifdef
+  if (Math.abs(safetyE - xxE) > 0.000001)                            // ##ifdef
+    console.log('safety e',safetyE,xxE,this.fen(this.turn));        // ##ifdef
   
   attS = myround(myround(attS * 1000) / 1000);
   
@@ -6121,6 +6264,9 @@ lozBoard.prototype.evaluate = function (turn) {
   evalS += kingS;
   evalE += kingE;
   
+  evalS += safetyS;
+  evalE += safetyE;
+  
   var e = (evalS * (TPHASE - phase) + evalE * phase) / TPHASE;
   
   e = myround(e) | 0;
@@ -6137,6 +6283,7 @@ lozBoard.prototype.evaluate = function (turn) {
     uci.send('info string','mobility =    ',mobS,mobE);
     uci.send('info string','tightness =   ',tightS,tightE);
     uci.send('info string','tension =     ',tenseS,tenseE);
+    uci.send('info string','safety =      ',safetyS,safetyE);
     uci.send('info string','attacks =     ',attS,attE);
     uci.send('info string','imbalance =   ',imbalS,imbalE);
     uci.send('info string','king safety = ',kingS,kingE);
@@ -6150,10 +6297,16 @@ lozBoard.prototype.evaluate = function (turn) {
   
   //}}}
 
-  if (turn == WHITE)
+  if (turn == WHITE) {
+    //if (this.runningEvalE > 200 && !wNumPawns && bNumPawns)
+      //e = e * 0.5;
     return e;
-  else
+  }
+  else {
+    //if (this.runningEvalE > 200 && !wNumPawns && bNumPawns)
+      //e = e * 0.5;
     return -e;
+  }
 }
 
 //}}}
