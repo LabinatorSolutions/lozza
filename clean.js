@@ -4,7 +4,7 @@
 // A Javascript chess engine inspired by Fabien Letouzey's Fruit 2.1.
 //
 
-var BUILD       = "2.5xray";
+var BUILD       = "2.5xray5";
 var USEPAWNHASH = 1;
 var LICHESS     = 0;
 
@@ -915,11 +915,11 @@ var MOBQ_S               = 2;
 var MOBQ_E               = 6;
 var MOBQ_S0              = 4;
 var MOBQ_E0              = -1;
-var XRAY_BS              = 2;
-var XRAY_BE              = 3;
-var XRAY_RS              = -3;
-var XRAY_RE              = -1;
-var XRAY_QS              = -4;
+var XRAY_BS              = 5;
+var XRAY_BE              = 5;
+var XRAY_RS              = 5;
+var XRAY_RE              = 5;
+var XRAY_QS              = 5;
 var XRAY_QE              = 5;
 
 const WPAWN_PSTS = [
