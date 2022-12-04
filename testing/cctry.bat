@@ -8,14 +8,14 @@ set e2=released
 set elo0=0
 set elo1=5
 
-set tc=10+0.1
+set tc=20+0.2
 
 set thisver=2.5
 set lastver=2.4
 
 set games=20000
 
-set threads=1
+set threads=2
 
 rem ******** config end
 
@@ -37,6 +37,7 @@ copy /q ..\..\..\top ..
 
 set a=%@random[1,9999999]
 
+copy ..\lozza.js
 findstr -V ##ifdef ..\lozza.js > coalface.js
 findstr -V ##ifdef ..\history\%thisver\lozza.js > candidate.js
 findstr -V ##ifdef ..\history\%lastver\lozza.js > released.js
@@ -61,9 +62,9 @@ set s=-sprt elo0=%elo0 elo1=%elo1 alpha=0.05 beta=0.05
 set v=-ratinginterval 10
 set m=-recover -concurrency %threads
 
-echo %e1.js v %e2.js of %games games or [%elo0,%elo1] at %tc
+echo %e1.js v %e2.js of %games games or [%elo0,%elo1] at %tc on %threads threads
 
-"C:\Program Files (x86)\Cute Chess\cutechess-cli" %ee1 %ee2 %t %r %d %o %f %v %m %s
+"C:\Program Files (x86)\Cute Chess\cutechess-cli" %ee1 %ee2 %t %r %d %o %v %m %s
 
 rem add -debug to show all uci comms
 
