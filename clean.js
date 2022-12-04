@@ -4,7 +4,7 @@
 // A Javascript chess engine inspired by Fabien Letouzey's Fruit 2.1.
 //
 
-var BUILD       = "2.5xray5";
+var BUILD       = "2.5dr";
 var USEPAWNHASH = 1;
 var LICHESS     = 0;
 
@@ -874,8 +874,8 @@ var ROOK7TH_S            = -7;
 var ROOK7TH_E            = 27;
 var ROOKOPEN_S           = 21;
 var ROOKOPEN_E           = -2;
-var ROOK_DOUBLED_S       = 0;
-var ROOK_DOUBLED_E       = 0;
+var ROOK_DOUBLED_S       = 10;
+var ROOK_DOUBLED_E       = 10;
 var QUEEN7TH_S           = -18;
 var QUEEN7TH_E           = 23;
 var TRAPPED_S            = 39;
@@ -5302,10 +5302,10 @@ lozBoard.prototype.evaluate = function (turn) {
       imbalS += IMBALB_S[wNumPawns];
       imbalE += IMBALB_E[wNumPawns];
       
-      if (bCanBeAttacked && XRAY[bKingSq][BISHOP][fr]) {
-       xrayS += XRAY_BS;
-       xrayE += XRAY_BE;
-      }
+      //if (bCanBeAttacked && XRAY[bKingSq][BISHOP][fr]) {
+       //xrayS += XRAY_BS;
+       //xrayE += XRAY_BE;
+      //}
       
       //}}}
     }
@@ -5375,17 +5375,17 @@ lozBoard.prototype.evaluate = function (turn) {
       imbalS += IMBALR_S[wNumPawns];
       imbalE += IMBALR_E[wNumPawns];
       
-      if (bCanBeAttacked && XRAY[bKingSq][ROOK][fr]) {
-       xrayS += XRAY_RS;
-       xrayE += XRAY_RE;
-      }
-      
-      //if (frMask & rookFiles) {
-        //rooksS += ROOK_DOUBLED_S;
-        //rooksE += ROOK_DOUBLED_E;
+      //if (bCanBeAttacked && XRAY[bKingSq][ROOK][fr]) {
+       //xrayS += XRAY_RS;
+       //xrayE += XRAY_RE;
       //}
-      //else
-        //rookFiles |= frMask;
+      
+      if (frMask & rookFiles) {
+        rooksS += ROOK_DOUBLED_S;
+        rooksE += ROOK_DOUBLED_E;
+      }
+      else
+        rookFiles |= frMask;
       
       //}}}
     }
@@ -5438,10 +5438,10 @@ lozBoard.prototype.evaluate = function (turn) {
       imbalS += IMBALQ_S[wNumPawns];
       imbalE += IMBALQ_E[wNumPawns];
       
-      if (bCanBeAttacked && XRAY[bKingSq][QUEEN][fr]) {
-       xrayS += XRAY_QS;
-       xrayE += XRAY_QE;
-      }
+      //if (bCanBeAttacked && XRAY[bKingSq][QUEEN][fr]) {
+       //xrayS += XRAY_QS;
+       //xrayE += XRAY_QE;
+      //}
       
       //queenFiles |= frMask;
       //if (frMask & rookFiles) {
@@ -5610,10 +5610,10 @@ lozBoard.prototype.evaluate = function (turn) {
       imbalS -= IMBALB_S[bNumPawns];
       imbalE -= IMBALB_E[bNumPawns];
       
-      if (wCanBeAttacked && XRAY[wKingSq][BISHOP][fr]) {
-       xrayS -= XRAY_BS;
-       xrayE -= XRAY_BE;
-      }
+      //if (wCanBeAttacked && XRAY[wKingSq][BISHOP][fr]) {
+       //xrayS -= XRAY_BS;
+       //xrayE -= XRAY_BE;
+      //}
       
       //}}}
     }
@@ -5683,17 +5683,17 @@ lozBoard.prototype.evaluate = function (turn) {
       imbalS -= IMBALR_S[bNumPawns];
       imbalE -= IMBALR_E[bNumPawns];
       
-      if (wCanBeAttacked && XRAY[wKingSq][ROOK][fr]) {
-       xrayS -= XRAY_RS;
-       xrayE -= XRAY_RE;
-      }
-      
-      //if (frMask & rookFiles) {
-        //rooksS -= ROOK_DOUBLED_S;
-        //rooksE -= ROOK_DOUBLED_E;
+      //if (wCanBeAttacked && XRAY[wKingSq][ROOK][fr]) {
+       //xrayS -= XRAY_RS;
+       //xrayE -= XRAY_RE;
       //}
-      //else
-        //rookFiles |= frMask;
+      
+      if (frMask & rookFiles) {
+        rooksS -= ROOK_DOUBLED_S;
+        rooksE -= ROOK_DOUBLED_E;
+      }
+      else
+        rookFiles |= frMask;
       
       //}}}
     }
@@ -5746,10 +5746,10 @@ lozBoard.prototype.evaluate = function (turn) {
       imbalS -= IMBALQ_S[bNumPawns];
       imbalE -= IMBALQ_E[bNumPawns];
       
-      if (wCanBeAttacked && XRAY[wKingSq][QUEEN][fr]) {
-       xrayS -= XRAY_QS;
-       xrayE -= XRAY_QE;
-      }
+      //if (wCanBeAttacked && XRAY[wKingSq][QUEEN][fr]) {
+       //xrayS -= XRAY_QS;
+       //xrayE -= XRAY_QE;
+      //}
       
       //}}}
     }
@@ -5919,8 +5919,8 @@ lozBoard.prototype.evaluate = function (turn) {
   evalS += kingS;
   evalE += kingE;
   
-  evalS += xrayS;
-  evalE += xrayE;
+  //evalS += xrayS;
+  //evalE += xrayE;
   
   var e = (evalS * (TPHASE - phase) + evalE * phase) / TPHASE;
   
@@ -5939,7 +5939,7 @@ lozBoard.prototype.evaluate = function (turn) {
     uci.send('info string','tightness =   ',tightS,tightE);
     uci.send('info string','tension =     ',tenseS,tenseE);
     uci.send('info string','attacks =     ',attS,attE);
-    uci.send('info string','xray =        ',xrayS,xrayE);
+    //uci.send('info string','xray =        ',xrayS,xrayE);
     uci.send('info string','imbalance =   ',imbalS,imbalE);
     uci.send('info string','king safety = ',kingS,kingE);
     uci.send('info string','queens =      ',queensS,queensE);
