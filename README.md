@@ -47,7 +47,7 @@ You can try them here:-
 
 https://op12no2.github.io/lozza-ui
 
-# Testing and tuning
+## Testing and tuning
 
 There are various scripts in the testing directory that can be run with NodeJS. There are also some Python scripts that evaluate small networks, but to date integratioon into Lozza has failed. Lozza is tuned using "Texel tuning". But instead of win-loss-draw labels, the loss function measures ```sigmoid(eval) - sigmoid(50ms search result)```. Training data is currently a subset of Andrew Grant's (Ethereal) "data dump" and Alexandru Moșoi's (Zurichess) ```quiet-labeled.epd```. There is a web-based PERFT script that can be run here:-
 
