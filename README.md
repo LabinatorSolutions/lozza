@@ -53,7 +53,43 @@ There are various scripts in the testing directory that can be run with Node.js.
 
 https://op12no2.github.io/lozza-ui/perft.htm
 
+I use Windows, but any platform with a Node.js executable is suitable for testing and tuning.
+
+In a Node.js script you can call Lozza's functional interface directly (e.g. gdtuner.js) or call Lozza's UCI interface like this (e.g. perft.js):-
+
+```
+var depth = 10;
+onmessage({data: 'ucinewgame\nposition startpos'});  // separate multiple UCI commands with \n
+onmessage({data: 'go depth ' + depth});
+```
+
+After a search, the best move is in ```lozza.stats.bestMove``` in binary form (see constants). You can format it like this:-
+
+```
+console.log(lozza.board.formatMove(lozza.stats.bestMove, UCI_FMT);  // e.g. g1f3
+console.log(lozza.board.formatMove(lozza.stats.bestMove, SAN_FMT);  // e.g. Nf3
+```
+
+To type UCI commands into Lozza directly, just fire it up with Node.js:-
+
+```
+> cd _location of lozza.js_
+> node lozza
+```
+
+Lozza has some UCI command extensions and shortcuts detailed here:-
+
+https://op12no2.github.io/lozza-ui/consolehelp.htm
+
+That may well be out of date. Check the ```switch``` statement in the ```onmessage``` function for the coalface.
+
+There is also a web-based UCI console here:-
+
+https://op12no2.github.io/lozza-ui/console.htm
+
 ## Play Lozza offline in chess user interfaces
+
+Lozza can be used in popular chesss user interfaces like Banksia, Winboard, Arena and CuteChess. Download the latest release and then follow the instructions in the ```readme.txt``` file.
 
 https://github.com/op12no2/lozza/releases
   
