@@ -99,6 +99,8 @@ https://www.chessprogramming.org/Fruit - Fruit
 
 https://www.chessprogramming.org/Main_Page - Chess programming wiki
 
+http://talkchess.com - TalkChess forums
+
 http://ccrl.chessdom.com/ccrl/4040 - CCRL rating list
 
 https://www.chessprogramming.org/Texel%27s_Tuning_Method - Texel tuning
