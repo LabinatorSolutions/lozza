@@ -10,7 +10,7 @@ Lozza code is folded using {{{ and }}} (emacs convention) and most easily read u
 
 All you need is lozza.js from the root of the repo. 
 
-Note that lozza.js has tuning and debug code marked with ##ifdef, which will _signigicantly affect performance_. It is potentially useful during development, but can be removed like this:-
+Note that lozza.js has tuning and debug code marked with ```##ifdef```, which will _signigicantly affect performance_. It is potentially useful during development, but can be removed like this:-
 
 ```
 Windows: findstr -V ##ifdef lozza.js > clean.js
