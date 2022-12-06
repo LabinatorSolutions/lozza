@@ -13,8 +13,8 @@ All you need is lozza.js from the root of the repo.
 Note that lozza.js has tuning and debug code marked with ##ifdef, which will _signigicantly affect performance_. It is potentially useful during development, but can be removed like this:-
 
 ```
-Windows: findstr -V ##ifdef lozza.js > mylozza.js
-Linux:   grep -v \#\#ifdef lozza.js > mylozza.js
+Windows: findstr -V ##ifdef lozza.js > clean.js
+Linux:   grep -v \#\#ifdef lozza.js > clean.js
 ```
 
 Here is a little example to do a 10 ply search:-
@@ -78,3 +78,5 @@ https://cutechess.com - Cute Chess
 http://www.talkchess.com/forum3/viewtopic.php?f=7&t=75350 - Andrew Grant's "data dump"
 
 https://bitbucket.org/zurichess/tuner/downloads - Alexandru Moșoi's quiet-labeled.epd
+
+https://nodejs.org - Node JS
