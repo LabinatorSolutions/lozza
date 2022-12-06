@@ -49,7 +49,7 @@ https://op12no2.github.io/lozza-ui
 
 ## Testing and tuning
 
-There are various scripts in the testing directory that can be run with NodeJS. There are also some Python scripts that evaluate small networks, but to date integratioon into Lozza has failed. Lozza is tuned using "Texel tuning". But instead of win-loss-draw labels, the loss function measures ```sigmoid(eval) - sigmoid(50ms search result)```. Training data is currently a subset of Andrew Grant's (Ethereal) "data dump" and Alexandru Moșoi's (Zurichess) ```quiet-labeled.epd```. There is a web-based PERFT script that can be run here:-
+There are various scripts in the testing directory that can be run with Node.js. There are also some Python scripts that evaluate small networks, but to date integration into Lozza has failed. Lozza is tuned using "Texel tuning". But instead of win-loss-draw labels, the loss function measures ```sigmoid(eval) - sigmoid(50ms search result)```. Training data is currently a subset of Andrew Grant's (Ethereal) "data dump" and Alexandru Moșoi's (Zurichess) ```quiet-labeled.epd```. There is a web-based PERFT script that can be run here:-
 
 https://op12no2.github.io/lozza-ui/perft.htm
 
@@ -79,4 +79,4 @@ http://www.talkchess.com/forum3/viewtopic.php?f=7&t=75350 - Andrew Grant's "data
 
 https://bitbucket.org/zurichess/tuner/downloads - Alexandru Moșoi's quiet-labeled.epd
 
-https://nodejs.org - Node JS
+https://nodejs.org - Node.js
