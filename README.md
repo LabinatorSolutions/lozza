@@ -107,6 +107,8 @@ https://www.chessprogramming.org/Texel%27s_Tuning_Method - Texel tuning
 
 https://github.com/AndyGrant/Ethereal/blob/master/Tuning.pdf - A nice overview of gradient descent
 
+https://github.com/glinscott/nnue-pytorch/blob/master/docs/nnue.md - Tomasz Sobczyk's (@sopel) NNUE overview.
+
 http://wbec-ridderkerk.nl/html/UCIProtocol.html - UCI protocol
 
 https://github.com/davidbau/seedrandom - Random number generator used for Zobrist hashing
