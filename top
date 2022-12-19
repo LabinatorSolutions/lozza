@@ -22,6 +22,8 @@
 'lozza\trunk\history\2.4\release\lozza.bat'
 'lozza\trunk\history\2.4\release\readme.txt'
 
+'lozza\trunk\history\2.3\lozza.js'
+
 'lozza\trunk\history\2.2\lozza.js'
 'lozza\trunk\history\2.2\gdtuner.js'
 
@@ -37,13 +39,8 @@
 
 //}}}
 
-'lozza\trunk\testing\nndata.js'
-'lozza\trunk\testing\nn768.py'
-'lozza\trunk\testing\data\quiet-labeled0.py'
-
 'lozza\trunk\testing\gdtuner.js'
-'lozza\trunk\testing\gdtuner.txt'    - ints
-'lozza\trunk\testing\fgdtuner.txt'   - reals
+'lozza\trunk\testing\gdtuner.txt'
 'lozza\trunk\testing\tunings.js'
 
 'lozza\trunk\testing\perft.js'
@@ -52,20 +49,17 @@
 
 'lozza\trunk\testing\makeepd.bat'
 'lozza\trunk\testing\split.js'
-'lozza\trunk\testing\eval_sf.js'
+'lozza\trunk\testing\addeval.js'
 'lozza\trunk\testing\random.js'
-'lozza\trunk\testing\deadends.js'
 
 'lozza\trunk\testing\cctry.bat'
 'lozza\trunk\testing\engines.json'
-'lozza\trunk\testing\cctry.pgn'
+
+'lozza\trunk\testing\nntuner.js'
+'lozza\trunk\testing\nndata.js'
+'lozza\trunk\testing\nn768.py'
 
 'lozza\trunk\testing\nettuner.js'
-'lozza\trunk\testing\nettuner4.txt'
-'lozza\trunk\testing\nettuner8.txt'
-'lozza\trunk\testing\nettuner12.txt'
-'lozza\trunk\testing\nettuner16.txt'
-'lozza\trunk\testing\nettuner32.txt'
 
 'lozza\trunk\testing\linux\getlozza'
 'lozza\trunk\testing\linux\cctry'

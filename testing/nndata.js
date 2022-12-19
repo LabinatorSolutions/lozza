@@ -1,6 +1,6 @@
 
-var epdFile  = 'data/quiet-labeled0.epd';
-var csvFile  = 'data/quiet-labeled0.csv';
+var epdFile  = 'data/quiet-labeled0r.epd';
+var csvFile  = 'data/quiet-labeled0r.csv';
 var wdlIndex = 5;
 
 //{{{  constants
@@ -173,7 +173,8 @@ rl.on('line', function (line) {
     return;
 
   var board = parts[0];
-  var wdl   = getprob(parts[wdlIndex]);
+  //var wdl   = getprob(parts[wdlIndex]);
+  var wdl   = parts[wdlIndex+1];
 
   var b = decodeFEN(board).toString();
   b = b.replace(/(\r\n|\n|\r)/gm,'');
