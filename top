@@ -41,6 +41,7 @@
 
 'lozza\trunk\testing\gdtuner.js'
 'lozza\trunk\testing\gdtuner.txt'
+'lozza\trunk\testing\0gdtuner.txt'
 'lozza\trunk\testing\tunings.js'
 
 'lozza\trunk\testing\perft.js'
@@ -50,6 +51,7 @@
 'lozza\trunk\testing\makeepd.bat'
 'lozza\trunk\testing\split.js'
 'lozza\trunk\testing\addeval.js'
+'lozza\trunk\testing\addsfeval.js'
 'lozza\trunk\testing\random.js'
 
 'lozza\trunk\testing\cctry.bat'

@@ -8,10 +8,10 @@
 // This file includes debug code that is stripped out on release.        // ##ifdef
 //                                                                        // ##ifdef
 
-var BUILD       = "2.5mon";
-var BUILD       = "2.5mon";  // ##ifdef
+var BUILD       = "2.5";
+var BUILD       = "2.5";  // ##ifdef
 var USEPAWNHASH = 1;
-var USEPAWNHASH = 0;         // ##ifdef
+var USEPAWNHASH = 0;      // ##ifdef
 var LICHESS     = 0;
 
 {{{  history
@@ -1333,7 +1333,6 @@ const IMBALR_S = [90,20,-20,-28,-31,-26,-12,2,19];
 const IMBALR_E = [-54,-38,-7,11,27,44,54,64,87];
 const IMBALQ_S = [-10,-52,-33,-1,18,20,24,16,-2];
 const IMBALQ_E = [-100,-58,-24,-13,-3,24,48,72,51];
-
 
 }}}
 {{{  pst lists
