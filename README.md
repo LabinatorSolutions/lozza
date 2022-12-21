@@ -49,7 +49,7 @@ https://op12no2.github.io/lozza-ui
 
 ## Testing and tuning
 
-There are various scripts in the testing directory that can be run with Node.js. There are also some Python scripts that evaluate small networks, but to date integration into Lozza has failed. Lozza is tuned using "Texel tuning", but instead of win-loss-draw labels, the loss function measures ```sigmoid(eval) - sigmoid(50ms search result)```. Training data is currently a subset of Andrew Grant's (Ethereal) "data dump" and Alexandru Moșoi's (Zurichess) ```quiet-labeled.epd```. There is a web-based PERFT script that can be run here:-
+There are various scripts in the testing directory that can be run with Node.js. Training data used is Alexandru Moșoi's (Zurichess) ```quiet-labeled.epd```. There is a web-based PERFT script that can be run here:-
 
 https://op12no2.github.io/lozza-ui/perft.htm
 
@@ -105,17 +105,11 @@ http://ccrl.chessdom.com/ccrl/4040 - CCRL rating list
 
 https://www.chessprogramming.org/Texel%27s_Tuning_Method - Texel tuning
 
-https://github.com/AndyGrant/Ethereal/blob/master/Tuning.pdf - A nice overview of gradient descent
-
-https://github.com/glinscott/nnue-pytorch/blob/master/docs/nnue.md - Tomasz Sobczyk's (@sopel) NNUE overview.
-
 http://wbec-ridderkerk.nl/html/UCIProtocol.html - UCI protocol
 
 https://github.com/davidbau/seedrandom - Random number generator used for Zobrist hashing
 
 https://cutechess.com - Cute Chess
-
-http://www.talkchess.com/forum3/viewtopic.php?f=7&t=75350 - Andrew Grant's "data dump"
 
 https://bitbucket.org/zurichess/tuner/downloads - Alexandru Moșoi's quiet-labeled.epd
 
