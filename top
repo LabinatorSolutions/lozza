@@ -29,7 +29,7 @@
 
 'lozza\trunk\history\2.0\lozza.js'
 
-'lozza\trunk\testing\lozza.js'
+'lozza\trunk\testing\currentlytesting.js'
 'lozza\trunk\testing\coalface.js'
 'lozza\trunk\testing\candidate.js'
 'lozza\trunk\testing\released.js'
@@ -41,7 +41,6 @@
 
 'lozza\trunk\testing\gdtuner.js'
 'lozza\trunk\testing\gdtuner.txt'
-'lozza\trunk\testing\0gdtuner.txt'
 'lozza\trunk\testing\tunings.js'
 
 'lozza\trunk\testing\perft.js'
@@ -49,23 +48,10 @@
 'lozza\trunk\testing\eval_flip.js'
 
 'lozza\trunk\testing\makeepd.bat'
-'lozza\trunk\testing\split.js'
-'lozza\trunk\testing\addeval.js'
-'lozza\trunk\testing\addsfeval.js'
 'lozza\trunk\testing\random.js'
 
 'lozza\trunk\testing\cctry.bat'
 'lozza\trunk\testing\engines.json'
-
-'lozza\trunk\testing\nntuner.js'
-'lozza\trunk\testing\nndata.js'
-'lozza\trunk\testing\nn768.py'
-
-'lozza\trunk\testing\nettuner.js'
-
-'lozza\trunk\testing\linux\getlozza'
-'lozza\trunk\testing\linux\cctry'
-'lozza\trunk\testing\linux\engines.json'
 
 //{{{  lozzaui
 
@@ -107,6 +93,7 @@
 
 //}}}
 //{{{  winboard
+
 'c:\winboard\winboard\wb.bat'
 
 //}}}
@@ -115,7 +102,4 @@
 'toynet\trunk\toynet.js'
 
 //}}}
-
-'myc\public_html\index.php'
-'myc\public_html\styles.css'
 

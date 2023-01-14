@@ -1,3 +1,1336 @@
+{{{  split.js
+
+if (process.argv[2])
+  var epdfile = process.argv[2];
+else
+  var epdfile = 'eth';
+
+var split   = 1000000;
+var o       = '';
+var seq     = 0;         // change if needed
+
+var thisPosition = 0;
+
+const fs       = require('fs');
+const readline = require('readline');
+
+const rl = readline.createInterface({
+    input: fs.createReadStream('data/'+epdfile+'.epd'),
+    output: process.stdout,
+    crlfDelay: Infinity,
+    terminal: false
+});
+
+rl.on('line', function (line) {
+
+  thisPosition += 1;
+
+  if (thisPosition % split == 0) {
+    fs.writeFileSync('data/'+outfile+seq+'.epd',o);
+    console.log('data/'+epdfile+seq+'.epd');
+    o = '';
+    seq++;
+  }
+
+  o += line+'\r\n';
+});
+
+rl.on('close', function(){
+  if (o) {
+    fs.writeFileSync('data/'+outfile+seq+'.epd',o);
+    console.log('data/'+epdfile+seq+'.epd');
+  }
+});
+
+}}}
+{{{  addsfeval.js
+//
+// Copy clean.js above here.
+//
+
+var epdin    = 'data/eth0.epd';
+var epdout   = 'data/eth0e.epd';
+
+var fs        = lozza.uci.nodefs;
+var uci       = lozza.uci;
+var board     = lozza.board;
+
+var out = '';
+var count = 0;
+
+fs.writeFileSync(epdout,'');
+
+const readline = require('readline');
+
+const rl = readline.createInterface({
+    input: fs.createReadStream(epdin),
+    output: process.stdout,
+    crlfDelay: Infinity,
+    terminal: false
+});
+
+onmessage({data: "ucinewgame"});
+
+fs.writeFileSync(epdout,'');
+
+rl.on('line', function (line) {
+  {{{  process epds
+  
+  count++;
+  if (count % 1000 == 0) {
+    fs.appendFileSync(epdout,out);
+    console.log(count);
+    out = ''
+  }
+  
+  //if (count > 1000)
+    //return;
+  
+  if (!line.length) {
+    return;
+  }
+  
+  line = line.replace(/(\r\n|\n|\r|;)/gm,'');
+  
+  if (!line.length) {
+    return;
+  }
+  
+  var parts = line.split(' ');
+  
+  if (parts.length < 4) {
+    return;
+  }
+  
+  var fen = parts[0] + ' ' + parts[1] + ' ' + parts[2] + ' ' + parts[3] + ' 0 1';
+  
+  //onmessage({data: "ucinewgame"});
+  onmessage({data: "position fen " + fen});
+  
+  //console.log(line);
+  
+  onmessage({data: "go movetime 50"});
+  
+  if (lozza.board.turn == BLACK)
+    lozza.stats.bestScore = -lozza.stats.bestScore;  // undo negamax.
+  
+  if (lozza.stats.bestScore != 9999999999)
+    out += line + ' ' + lozza.stats.bestScore + '\r\n';
+  else
+    console.log('skipping',fen);
+  
+  }}}
+});
+
+rl.on('close', function(){
+  {{{  done
+  
+  if (out) {
+    fs.appendFileSync(epdout,out);
+    out = ''
+  }
+  
+  console.log('done');
+  
+  process.exit();
+  
+  }}}
+});
+
+}}}
+{{{  addeval.js
+//
+// Copy clean.js above here.
+//
+
+var epdin    = 'data/eth0.epd';
+var epdout   = 'data/eth0e.epd';
+
+var fs        = lozza.uci.nodefs;
+var uci       = lozza.uci;
+var board     = lozza.board;
+
+var out = '';
+var count = 0;
+
+fs.writeFileSync(epdout,'');
+
+const readline = require('readline');
+
+const rl = readline.createInterface({
+    input: fs.createReadStream(epdin),
+    output: process.stdout,
+    crlfDelay: Infinity,
+    terminal: false
+});
+
+onmessage({data: "ucinewgame"});
+
+fs.writeFileSync(epdout,'');
+
+rl.on('line', function (line) {
+  {{{  process epds
+  
+  count++;
+  if (count % 1000 == 0) {
+    fs.appendFileSync(epdout,out);
+    console.log(count);
+    out = ''
+  }
+  
+  //if (count > 1000)
+    //return;
+  
+  if (!line.length) {
+    return;
+  }
+  
+  line = line.replace(/(\r\n|\n|\r|;)/gm,'');
+  
+  if (!line.length) {
+    return;
+  }
+  
+  var parts = line.split(' ');
+  
+  if (parts.length < 4) {
+    return;
+  }
+  
+  var fen = parts[0] + ' ' + parts[1] + ' ' + parts[2] + ' ' + parts[3] + ' 0 1';
+  
+  //onmessage({data: "ucinewgame"});
+  onmessage({data: "position fen " + fen});
+  
+  //console.log(line);
+  
+  onmessage({data: "go movetime 50"});
+  
+  if (lozza.board.turn == BLACK)
+    lozza.stats.bestScore = -lozza.stats.bestScore;  // undo negamax.
+  
+  if (lozza.stats.bestScore != 9999999999)
+    out += line + ' ' + lozza.stats.bestScore + '\r\n';
+  else
+    console.log('skipping',fen);
+  
+  }}}
+});
+
+rl.on('close', function(){
+  {{{  done
+  
+  if (out) {
+    fs.appendFileSync(epdout,out);
+    out = ''
+  }
+  
+  console.log('done');
+  
+  process.exit();
+  
+  }}}
+});
+
+}}}
+{{{  nettuner.js
+
+var epdfile        = 'data/eth2.epd';  // assumed to have been nade with quiet.js
+var netInputSize   = 768;
+var netHiddenSize  = 512;
+var numEpochs      = 20000;
+var learningRate   = 0.1;
+var batchSize      = 1000;
+//var useBias        = 0;
+
+{{{  constants
+
+const NWHITE = 0;
+const NBLACK = 1;
+
+const PAWN   = 1;
+const KNIGHT = 2;
+const BISHOP = 3;
+const ROOK   = 4;
+const QUEEN  = 5;
+const KING   = 6;
+
+var chPce = [];
+var chCol = [];
+var chNum = [];
+
+chPce['k'] = KING;
+chCol['k'] = NBLACK;
+chPce['q'] = QUEEN;
+chCol['q'] = NBLACK;
+chPce['r'] = ROOK;
+chCol['r'] = NBLACK;
+chPce['b'] = BISHOP;
+chCol['b'] = NBLACK;
+chPce['n'] = KNIGHT;
+chCol['n'] = NBLACK;
+chPce['p'] = PAWN;
+chCol['p'] = NBLACK;
+chPce['K'] = KING;
+chCol['K'] = NWHITE;
+chPce['Q'] = QUEEN;
+chCol['Q'] = NWHITE;
+chPce['R'] = ROOK;
+chCol['R'] = NWHITE;
+chPce['B'] = BISHOP;
+chCol['B'] = NWHITE;
+chPce['N'] = KNIGHT;
+chCol['N'] = NWHITE;
+chPce['P'] = PAWN;
+chCol['P'] = NWHITE;
+
+chNum['8'] = 8;
+chNum['7'] = 7;
+chNum['6'] = 6;
+chNum['5'] = 5;
+chNum['4'] = 4;
+chNum['3'] = 3;
+chNum['2'] = 2;
+chNum['1'] = 1;
+
+}}}
+{{{  functions
+
+var epds    = [];
+var outputs = [];
+var debug   = 0;
+
+{{{  myround
+
+function myround(x) {
+  return Math.sign(x) * Math.round(Math.abs(x));
+}
+
+}}}
+{{{  decodeFEN
+//
+// Also accumulates hidden.in nnue style and creates a list of input
+// vector elements that are 1.0 for calculating and accumulating gradients
+// without scanning the whole input vector.
+//
+
+function decodeFEN(board) {
+
+  var x = 0;
+
+  for (var h=0; h < netHiddenSize; h++) {
+    var hidden = neth[h];
+    hidden.in = 0.0;
+  }
+
+  for (var i=0; i<netInputSize; i++)
+    neti[i] = 0.0;
+
+  inNum = 0;
+
+  var sq = 0;
+
+  for (var j=0; j < board.length; j++) {
+
+    var ch = board.charAt(j);
+
+    if (ch == '/')
+      continue;
+
+    var num = chNum[ch];
+    var col = 0;
+    var pce = 0;
+
+    if (typeof(num) == 'undefined') {
+      {{{  decode ch
+      
+      pce = chPce[ch];
+      col = chCol[ch];
+      
+      }}}
+      {{{  check stuff
+      
+      if (debug) {
+      
+        if (sq < 0) {
+          console.log('sq<0',sq);
+          process.exit();
+        }
+        else if (sq > 63) {
+          console.log('sq>63',sq);
+          process.exit();
+        }
+        else if (pce < 1) {
+          console.log('pce<0',pce);
+          process.exit();
+        }
+        else if (pce > 6) {
+          console.log('pce>5',pce);
+          process.exit();
+        }
+        else if (typeof(pce) == 'undefined') {
+          console.log('pceundef',pce);
+          process.exit();
+        }
+        else if (col < 0) {
+          console.log('col<0',col);
+          process.exit();
+        }
+        else if (col > 1) {
+          console.log('col>1',col);
+          process.exit();
+        }
+        else if (typeof(col) == 'undefined') {
+          console.log('colundef',col);
+          process.exit();
+        }
+      }
+      
+      }}}
+      {{{  map to model
+      
+      if (col == NWHITE)
+        x = 0   + (pce-1) * 64 + sq;
+      else
+        x = 384 + (pce-1) * 64 + sq;
+      
+      if (debug) {
+        if (isNaN(x)) {
+          console.log('xnan',x);
+          process.exit();
+        }
+        if (x >= 768) {
+          console.log('x>768',x);
+          process.exit();
+        }
+        if (x < 0) {
+          console.log('x-ve',x);
+          process.exit();
+        }
+      }
+      
+      }}}
+      neti[x] = 1.0;
+      for (var h=0; h < netHiddenSize; h++) {
+        var hidden = neth[h];
+        hidden.in += hidden.weights[x];
+      }
+      inList[inNum] = x;
+      inNum++;
+      sq++;
+    }
+    else {
+      sq += num;
+    }
+  }
+
+  return;
+}
+
+}}}
+{{{  network
+
+var netOutputSize  = 1;    // output layer.
+
+{{{  build net
+
+function netNode (weightsSize) {
+  this.in          = 0;
+  this.gin         = 0;
+  this.out         = 0;
+  this.gout        = 0;
+  this.weights     = Array(weightsSize);
+  this.gweights    = Array(weightsSize);
+  this.gweightssum = Array(weightsSize);
+  this.adagrad     = Array(weightsSize);
+  //this.bias        = 0;
+  //this.gbias       = 0;
+  //this.gbiassum    = 0;
+  //this.biasag      = 0;
+}
+
+var neti = Array(netInputSize);
+
+var neth = Array(netHiddenSize);
+for (var h=0; h < netHiddenSize; h++) {
+  neth[h] = new netNode(netInputSize);
+}
+
+var neto = Array(netOutputSize);
+for (var o=0; o < netOutputSize; o++) {
+  neto[o] = new netNode(netHiddenSize);
+}
+
+var inList = Array(32);
+var inNum  = 0;
+
+}}}
+
+{{{  sigmoid
+
+function sigmoid(x) {
+  return (1.0 / (1.0 + Math.exp(-x)));
+}
+
+function dsigmoid(x) {
+  return sigmoid(x) * (1.0 - sigmoid(x));
+}
+
+}}}
+{{{  relu
+
+function relu(x) {
+  return Math.max(0.0,x);
+}
+
+function drelu(x) {
+  return 1.0;
+}
+
+}}}
+{{{  linear
+
+function linear(x) {
+  return x;
+}
+
+function dlinear(x) {
+  return 1.0;
+}
+
+}}}
+{{{  leelaEval
+
+function leelaEval(s) {
+
+  s = (s - 0.5) + 2;
+
+  return 111.714640912 * Math.tan(1.5620688421 * s);
+
+}
+
+}}}
+{{{  netLoss
+
+function netLoss(target) {
+
+  var x = 0.0;
+
+  for (var o=0; o < netOutputSize; o++) {
+    x += (target[o] - neto[o].out) * (target[o] - neto[o].out);
+  }
+
+  return x;
+}
+
+}}}
+{{{  netInitWeights()
+
+function netInitWeights() {
+
+  for (var h=0; h < netHiddenSize; h++) {
+    var hidden = neth[h];
+    for (var i=0; i < netInputSize; i++) {
+      hidden.weights[i] = 1 * (Math.random() * 2 - 1);
+      hidden.adagrad[i] = 0;
+    }
+    //hidden.bias   = 0;
+    //hidden.biasag = 0;
+  }
+
+  for (var o=0; o < netOutputSize; o++) {
+    var output = neto[o];
+    for (var h=0; h < netHiddenSize; h++) {
+      output.weights[h] = 1 * (Math.random() * 2 - 1);
+      output.adagrad[h] = 0;
+    }
+    //output.bias   = 0;
+    //output.biasag = 0;
+  }
+}
+
+}}}
+{{{  netResetGradientSums()
+
+function netResetGradientSums() {
+
+  for (var o=0; o < netOutputSize; o++) {
+    var output = neto[o];
+    for (var h=0; h < netHiddenSize; h++) {
+      output.gweightssum[h] = 0.0;
+    }
+    //output.gbiassum = 0.0;
+  }
+
+  for (var h=0; h < netHiddenSize; h++) {
+    var hidden = neth[h];
+    for (var i=0; i < netInputSize; i++) {
+      hidden.gweightssum[i] = 0.0;
+    }
+    //hidden.gbiassum = 0.0;
+  }
+}
+
+}}}
+{{{  netForward()             nnue
+//
+//  hidden.in is accumulated by decodeFen().
+//
+
+function netForward() {
+
+  for (var h=0; h < netHiddenSize; h++) {
+    var hidden = neth[h];
+    hidden.out = relu(hidden.in);
+  }
+
+  for (var o=0; o < netOutputSize; o++) {
+    var output = neto[o];
+    output.in = 0;
+    for (var h=0; h < netHiddenSize; h++) {
+      output.in += output.weights[h] * neth[h].out;
+    }
+    output.out = sigmoid(output.in);
+  }
+}
+
+}}}
+{{{  netCalcGradients()       nnue
+
+function netCalcGradients(targets) {
+
+  if (targets.length != netOutputSize) {
+    console.log('netCallGradients','output vector length must be',netOutputSize,'your length is',targets.length);
+    process.exit;
+  }
+
+  for (var o=0; o < netOutputSize; o++) {
+    var output = neto[o];
+    output.gout = 2 * (output.out - targets[o]);
+    output.gin  = dsigmoid(output.in) * output.gout;
+  }
+
+  for (var o=0; o < netOutputSize; o++) {
+    var output = neto[o];
+    for (var h=0; h < netHiddenSize; h++) {
+      var hidden = neth[h];
+      output.gweights[h] = output.gin * hidden.out;
+    }
+    //output.gbias = output.gin * 1;
+  }
+
+  for (var h=0; h < netHiddenSize; h++) {
+    var hidden = neth[h];
+    hidden.gout = 0;
+    for (var o=0; o < netOutputSize; o++) {
+      var output = neto[o];
+      hidden.gout += output.gin * output.weights[h];
+    }
+    hidden.gin = drelu(hidden.in) * hidden.gout;
+  }
+
+  for (var h=0; h < netHiddenSize; h++) {
+    var hidden = neth[h];
+    for (var i=0; i < inNum; i++) {
+      hidden.gweights[inList[i]] = hidden.gin * neti[inList[i]];
+    }
+    //hidden.gbias = hidden.gin * 1;
+  }
+}
+
+}}}
+{{{  netAccumulateGradients() nnue
+
+function netAccumulateGradients() {
+
+  for (var o=0; o < netOutputSize; o++) {
+    var output = neto[o];
+    for (var h=0; h < netHiddenSize; h++) {
+      output.gweightssum[h] += output.gweights[h];
+    }
+    //output.gbiassum += output.gbias;
+  }
+
+  for (var h=0; h < netHiddenSize; h++) {
+    var hidden = neth[h];
+    for (var i=0; i < inNum; i++) {
+      hidden.gweightssum[inList[i]] += hidden.gweights[inList[i]];
+    }
+    //hidden.gbiassum += hidden.gbias;
+  }
+}
+
+}}}
+{{{  netApplyGradients()
+
+function netApplyGradients() {
+
+  var gr = 0;
+  var lr = 0;
+
+  for (var o=0; o < netOutputSize; o++) {
+    var output = neto[o];
+    for (var h=0; h < netHiddenSize; h++) {
+      gr = output.gweightssum[h] / batchSize;
+      output.adagrad[h] += gr * gr;
+      lr = learningRate / Math.sqrt(output.adagrad[h] + 1e-8);
+      output.weights[h] -= lr * gr;
+    }
+    //gr = output.gbiassum / batchSize;
+    //output.biasag += gr * gr;
+    //lr = learningRate / Math.sqrt(output.biasag + 1e-8);
+    //output.bias -= lr * gr;
+  }
+
+  for (var h=0; h < netHiddenSize; h++) {
+    var hidden = neth[h];
+    for (var i=0; i < netInputSize; i++) {
+      gr = hidden.gweightssum[i] / batchSize;
+      hidden.adagrad[i] += gr * gr;
+      lr = learningRate / Math.sqrt(hidden.adagrad[i] + 1e-8);
+      hidden.weights[i] -= lr * gr;
+    }
+    //gr = hidden.gbiassum / batchSize;
+    //hidden.biasag += gr * gr;
+    //lr = learningRate / Math.sqrt(hidden.biasag + 1e-8);
+    //hidden.bias -= lr * gr;
+  }
+}
+
+}}}
+{{{  netSaveWeights
+
+function netSaveWeights (loss) {
+
+  var d   = new Date();
+  var out = '//{{{  network weights\r\n\r\n';
+
+  out += '// last update ' + d;
+  out += '\r\n';
+
+  out += '// epds = ' + epdfile;
+  out += '\r\n';
+
+  out += '// hidden layer size = ' + netHiddenSize;
+  out += '\r\n';
+
+  out += '// loss = ' + loss;
+  out += '\r\n';
+
+  for (var h=0; h < netHiddenSize; h++) {
+    out = out + 'this.h1['+h+'].weights = [' + neth[h].weights.toString();
+    out = out + '];\r\n';
+    //out = out + 'this.h1.bias = ' + neth[h].bias + ';\r\n';
+  }
+
+  for (var o=0; o < netOutputSize; o++) {
+    out = out + 'this.o1.weights = [' + neto[o].weights.toString();
+    out = out + '];\r\n';
+    //out = out + 'this.o1.bias = ' + neto[o].bias + ';\r\n';
+  }
+
+  out = out + '\r\n//}}}\r\n\r\n';
+
+  fs.writeFileSync('nettuner' + netHiddenSize + '.txt',out);
+}
+
+}}}
+
+}}}
+{{{  grunt
+
+function grunt () {
+
+  console.log('positions =',epds.length);
+
+  {{{  check decoding
+  
+  process.stdout.write('checking decoding...\r');
+  
+  debug = 1;
+  
+  var t1 = Date.now();
+  
+  for (var i=0; i < epds.length/100|0; i++) {
+  
+    var epd = epds[i];
+  
+    decodeFEN(epd.board);
+  }
+  
+  var t2 = Date.now();
+  
+  debug = 0;
+  
+  console.log('decoding ok',(t2-t1),'ms',epds.length/100|0,'epds');
+  
+  }}}
+  {{{  tune
+  
+  var numBatches = epds.length / batchSize | 0;
+  var loss       = 0;
+  
+  console.log('positions =',epds.length);
+  console.log('input layer size =',netInputSize);
+  console.log('hidden layer size =',netHiddenSize);
+  console.log('batch size =',batchSize);
+  console.log('batches per epoch =',numBatches);
+  console.log('learning rate =',learningRate);
+  //console.log('use bias =',useBias);
+  
+  netInitWeights();
+  
+  for (var epoch=0; epoch < numEpochs; epoch++) {
+    {{{  get loss
+    
+    if (epoch % 10 == 0) {
+    
+      loss = 0;
+    
+      for (var i=0; i < epds.length; i++) {
+    
+        var epd = epds[i];
+    
+        decodeFEN(epd.board);
+    
+        netForward();
+    
+        var targets = [epd.prob];
+    
+        loss += netLoss(targets);
+      }
+    
+      loss = loss / epds.length;
+    
+      console.log ('epoch =',epoch,'loss =',loss);
+    
+      netSaveWeights(loss);
+    }
+    
+    }}}
+    {{{  batched epoch
+    
+    for (var batch=0; batch < numBatches; batch++) {
+    
+      if (batch % 100 == 0)
+        process.stdout.write('epoch ' + epoch + ', batch ' + batch + '\r');
+    
+      netResetGradientSums();
+    
+      for (var i = batch*batchSize; i < (batch+1)*batchSize; i++) {
+    
+        var epd = epds[i];
+    
+        decodeFEN(epd.board);
+    
+        netForward()
+    
+        var targets = [epd.prob];
+    
+        netCalcGradients(targets);
+        netAccumulateGradients();
+      }
+    
+      netApplyGradients();
+    }
+    
+    }}}
+  }
+  
+  console.log('done');
+  
+  }}}
+}
+
+}}}
+
+}}}
+{{{  kick it off
+
+var thisPosition = 0;
+
+const fs       = require('fs');
+const readline = require('readline');
+
+const rl = readline.createInterface({
+    input: fs.createReadStream(epdfile),
+    output: process.stdout,
+    crlfDelay: Infinity,
+    terminal: false
+});
+
+rl.on('line', function (line) {
+
+  thisPosition += 1;
+
+  if (thisPosition % 100000 == 0)
+    process.stdout.write(thisPosition+'\r');
+
+  line = line.replace(/(\r\n|\n|\r)/gm,'');
+
+  const parts = line.split(' ');
+
+  if (!parts.length)
+    return;
+
+  epds.push({board:   parts[0],
+             turn:    parts[1],
+             rights:  parts[2],
+             ep:      parts[3],
+             prob:    parseFloat(parts[4])});
+});
+
+rl.on('close', function(){
+  grunt();
+});
+
+}}}
+
+}}}
+{{{  nn768.py
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torchvision
+from torch.utils.data import Dataset, DataLoader
+import numpy as np
+import math
+from json import JSONEncoder
+import json
+
+class EncodeTensor(JSONEncoder,Dataset):
+    def default(self, obj):
+        if isinstance(obj, torch.Tensor):
+            return obj.cpu().detach().numpy().tolist()
+        return super(NpEncoder, self).default(obj)
+
+class data768(Dataset):
+    def __init__(self):
+        xy = np.loadtxt('c:/projects/lozza/trunk/testing/data/quiet-labeled0.csv',delimiter=",",dtype=np.float32)
+        self.x = torch.from_numpy(xy[:,1:])
+        self.y = torch.from_numpy(xy[:,[0]])
+        self.n_samples = xy.shape[0]
+
+    def __getitem__(self,index):
+        return self.x[index],self.y[index]
+
+    def __len__(self):
+        return self.n_samples
+
+
+batch_size = 1000
+lr = 0.01
+num_epochs=10000
+
+dataset = data768()
+
+total_samples = len(dataset)
+
+dataloader = DataLoader(dataset=dataset,batch_size=batch_size,shuffle=True)
+trainloader = DataLoader(dataset=dataset,batch_size=total_samples,shuffle=False)
+
+num_batches = math.ceil(total_samples / batch_size)
+
+print('batch_size',batch_size)
+print('lr',lr)
+print('total_samples',total_samples)
+
+class Net(torch.nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.l1 = nn.Linear(768,20)
+        #self.l2 = nn.Linear(8, 8)
+        #self.l3 = nn.Linear(8, 4)
+        self.l4 = nn.Linear(20, 1)
+
+    def forward(self, x):
+        x = torch.relu(self.l1(x))
+        #x = torch.relu(self.l2(x))
+        #x = torch.relu(self.l3(x))
+        x = torch.sigmoid(self.l4(x))
+        return x
+
+
+model = Net()
+
+with open('c:/projects/lozza/trunk/testing/data/quiet-labeled0.json', 'w') as fp:
+     json.dump(model.state_dict(), fp, cls=EncodeTensor)
+
+criterion = nn.MSELoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+n_total_steps = len(dataloader)
+
+print('num batches',n_total_steps)
+
+for epoch in range(num_epochs):
+
+    for i, (x, y) in enumerate(dataloader):
+        outputs = model(x)
+        loss = criterion(outputs, y)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        if (i+1) % 100 == 0:
+            print (f'Epoch={epoch+1}, Batch {i+1}, Loss={loss.item():.4f}')
+
+    if (epoch+1) % 10 == 0:
+        with torch.no_grad():
+            for i, (x, y) in enumerate(trainloader):
+                outputs = model(x)
+                loss2 = criterion(outputs, y)
+                print (f'Epoch={epoch+1}, Overall Loss={loss2.item():.4f}')
+
+}}}
+{{{  nndata.js
+
+var epdFile  = 'data/quiet-labeled0r.epd';
+var csvFile  = 'data/quiet-labeled0r.csv';
+var wdlIndex = 5;
+
+{{{  constants
+
+const WHITE = 0;
+const BLACK = 1;
+
+const PAWN   = 0;
+const KNIGHT = 1;
+const BISHOP = 2;
+const ROOK   = 3;
+const QUEEN  = 4;
+const KING   = 5;
+
+var chPce = [];
+var chCol = [];
+var chNum = [];
+
+chPce['k'] = KING;
+chCol['k'] = BLACK;
+chPce['q'] = QUEEN;
+chCol['q'] = BLACK;
+chPce['r'] = ROOK;
+chCol['r'] = BLACK;
+chPce['b'] = BISHOP;
+chCol['b'] = BLACK;
+chPce['n'] = KNIGHT;
+chCol['n'] = BLACK;
+chPce['p'] = PAWN;
+chCol['p'] = BLACK;
+chPce['K'] = KING;
+chCol['K'] = WHITE;
+chPce['Q'] = QUEEN;
+chCol['Q'] = WHITE;
+chPce['R'] = ROOK;
+chCol['R'] = WHITE;
+chPce['B'] = BISHOP;
+chCol['B'] = WHITE;
+chPce['N'] = KNIGHT;
+chCol['N'] = WHITE;
+chPce['P'] = PAWN;
+chCol['P'] = WHITE;
+
+chNum['8'] = 8;
+chNum['7'] = 7;
+chNum['6'] = 6;
+chNum['5'] = 5;
+chNum['4'] = 4;
+chNum['3'] = 3;
+chNum['2'] = 2;
+chNum['1'] = 1;
+
+}}}
+{{{  functions
+
+{{{  decodeFEN
+
+function decodeFEN(board) {
+
+  var x  = 0;
+  var sq = 0;
+  var b  = Array(768).fill(0);
+
+  for (var j=0; j < board.length; j++) {
+
+    var ch = board.charAt(j);
+
+    if (ch == '/')
+      continue;
+
+    var num = chNum[ch];
+    var col = 0;
+    var pce = 0;
+
+    if (typeof(num) == 'undefined') {
+      if (chCol[ch] == WHITE)
+        x = 0   + chPce[ch] * 64 + sq;
+      else if (chCol[ch] == BLACK)
+        x = 384 + chPce[ch] * 64 + sq;
+      else
+        console.log('colour');
+      b[x] = 1;
+      sq++;
+    }
+    else {
+      sq += num;
+    }
+  }
+
+  return b;
+}
+
+}}}
+{{{  getprob
+
+function getprob (r) {
+  if (r == '1/2-1/2')
+    return 0.5;
+  else if (r == '1-0')
+    return 1.0;
+  else if (r == '0-1')
+    return 0.0;
+  else if (r == '"1/2-1/2"')
+    return 0.5;
+  else if (r == '"1-0"')
+    return 1.0;
+  else if (r == '"0-1"')
+    return 0.0;
+  else
+    console.log('unknown result',r);
+}
+
+}}}
+
+}}}
+
+var thisPosition = 0;
+var o            = '';
+
+const fs       = require('fs');
+const readline = require('readline');
+
+const rl = readline.createInterface({
+    input: fs.createReadStream(epdFile),
+    output: process.stdout,
+    crlfDelay: Infinity,
+    terminal: false
+});
+
+fs.writeFileSync(csvFile, '');
+
+{{{  test
+
+var fen  = 'P7/8/8/8/8/8/8/8';
+var test = decodeFEN(fen)
+if (test[0] != 1) {
+  console.log(fen);
+  process.exit();
+}
+
+var fen  = 'p7/8/8/8/8/8/8/8';
+var test = decodeFEN(fen)
+if (test[384] != 1) {
+  console.log(fen);
+  process.exit();
+}
+
+var fen  = '1N6/8/8/8/8/8/8/8';
+var test = decodeFEN(fen)
+if (test[65] != 1) {
+  console.log(fen);
+  process.exit();
+}
+
+
+}}}
+
+rl.on('line', function (line) {
+
+  thisPosition += 1;
+
+  if (thisPosition % 100000 == 0)
+    process.stdout.write(thisPosition+'\r');
+
+  line = line.replace(/(\r\n|\n|\r|;)/gm,'');
+
+  const parts = line.split(' ');
+
+  if (!parts.length)
+    return;
+
+  var board = parts[0];
+  //var wdl   = getprob(parts[wdlIndex]);
+  var wdl   = parts[wdlIndex+1];
+
+  var b = decodeFEN(board).toString();
+  b = b.replace(/(\r\n|\n|\r)/gm,'');
+
+  o += wdl + ',' + b + '\r\n';
+
+  if (thisPosition % 10000 == 0) {
+    fs.appendFileSync(csvFile, o);
+    o = '';
+    //process.exit();
+  }
+
+});
+
+rl.on('close', function(){
+  if (o)
+    fs.appendFileSync(csvFile, o);
+  process.exit();
+});
+
+}}}
+{{{  nntuner.js
+
+{{{  fold clue
+
+}}}
+
+const SAMPLES = 725000;
+const LR      = 0.001;
+const ILAYER  = 768;
+
+var csvFile = 'data/quiet-labeled0r.csv';
+
+var pos     = 0;
+var samples = new Array(SAMPLES);
+var evals   = new Int16Array(SAMPLES);
+var x       = null;
+var epoch   = 1;
+
+const fs       = require('fs');
+const readline = require('readline');
+
+{{{  funcs
+
+var wMat = Array(ILAYER);
+
+{{{  init
+
+function init (w) {
+
+  for (var i=0; i < w.length; i++)
+    w[i] = (Math.random()-0.5) * 2;
+}
+
+}}}
+{{{  forward
+
+function forward (w,x) {
+
+  var sum = 0;
+
+  for (var i=0; i < w.length; i++)
+    sum += w[i] * x[i];
+
+  return sum;
+}
+
+}}}
+{{{  backward
+
+function backward (w,x,e) {
+
+  for (var i=0; i < w.length; i++)
+    w[i] -= x[i] * e * LR;
+}
+
+}}}
+{{{  tuner
+
+function tuner() {
+
+  init(wMat);
+
+  while (epoch) {
+
+    for (var s=0; s<SAMPLES; s++) {
+      var x = samples[s];
+      var y = evals[s];
+      var o = forward(wMat,x);
+      backward(wMat,x,o-y);
+    }
+
+    if (epoch % 10 == 0) {
+      var los = loss();
+      console.log(epoch,los);
+      if (epoch > 0) {
+        for (var i=0; i < 0; i++) {
+          var s = (Math.random() * SAMPLES) | 0;
+          console.log(epoch,s,eval[s],forward(inp[s]));
+        }
+      }
+    }
+    else
+      process.stdout.write(epoch+'\r');
+
+    epoch += 1;
+  }
+}
+
+}}}
+{{{  loss
+
+function loss () {
+
+  var los = 0;
+
+  for (var s=0; s<SAMPLES; s++) {
+    var x = samples[s];
+    var y = evals[s];
+    var o = forward(wMat,x);
+    var e = o - y;
+    los += e * e;
+  }
+
+  return los / SAMPLES;
+}
+
+}}}
+
+}}}
+
+const rl = readline.createInterface({
+    input: fs.createReadStream(csvFile),
+    output: process.stdout,
+    crlfDelay: Infinity,
+    terminal: false
+});
+
+rl.on('line', function (line) {
+
+  if (pos % 100000 == 0)
+    process.stdout.write(pos+'\r');
+
+  line = line.replace(/(\r\n|\n|\r)/gm,'');
+
+  const parts = line.split(',');
+
+  if (!parts.length)
+    return;
+
+  if (parts.length != ILAYER+1)
+    console.log('line format?',line);
+
+  x = new Uint8Array(ILAYER);
+  for (var i=0; i<ILAYER; i++) {
+    x[i] = parseInt(parts[i+1]);
+    if (x[i] != 1 && x[i] != 0)
+      console.log('decoded format?',pos,i,x[i]);
+  }
+  samples[pos] = x;
+  evals[pos]   = parseInt(parts[0]);
+
+  pos += 1;
+});
+
+rl.on('close', function(){
+  console.log('samples =',SAMPLES,pos,evals.length,samples.length);
+  tuner();
+});
+
+}}}
 {{{  2.5 with little eval tweaks
 //
 // https://github.com/op12no2/lozza
