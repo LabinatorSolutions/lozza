@@ -4,11 +4,11 @@ A Javascript chess engine inspired by Fabien Letouzey's Fruit 2.1.
 
 It's easy to use Lozza in your web projects by firing it up a web worker and then communicating using the UCI protocol.
 
-Lozza code is folded using {{{ and }}} (emacs convention) and most easily read using an editor with a folding capability.
+Lozza code is folded using ```{{{``` and ```}}}``` (emacs convention) and most easily read using an editor with a folding capability.
 
 ## Basic use
 
-All you need is lozza.js from the root of the repo. 
+All you need is ```lozza.js``` from the root of the repo. 
 
 Here is a little example to do a 10 ply search:-
 
@@ -42,13 +42,22 @@ https://op12no2.github.io/lozza-ui
 
 ## Testing and tuning
 
-There are various scripts in the testing directory that can be run with Node.js. Training data used is Alexandru Moșoi's (Zurichess) ```quiet-labeled.epd```. There is a web-based PERFT script that can be run here:-
+There are various scripts in the testing directory that can be run with ```Node.js```. For example:-
+
+```
+cd test
+node gdtuner
+```
+
+Training data used is Alexandru Moșoi's (Zurichess) ```quiet-labeled.epd```. 
+
+There is a web-based PERFT script that can be run here:-
 
 https://op12no2.github.io/lozza-ui/perft.htm
 
-I use Windows, but any platform with a Node.js executable is suitable for testing and tuning.
+I use Windows, but any platform with a ```Node.js``` executable is suitable for testing and tuning.
 
-In a Node.js script you can call Lozza's functional interface directly (e.g. see gdtuner.js) or call Lozza's UCI interface like this (e.g. see perft.js):-
+In a ```Node.js``` script you can call Lozza's functional interface directly (e.g. see ```gdtuner.js``) or call Lozza's UCI interface like this (e.g. see ```perft.js```):-
 
 ```
 var depth = 10;
@@ -63,7 +72,7 @@ console.log(lozza.board.formatMove(lozza.stats.bestMove, UCI_FMT);  // e.g. g1f3
 console.log(lozza.board.formatMove(lozza.stats.bestMove, SAN_FMT);  // e.g. Nf3
 ```
 
-To type UCI commands into Lozza directly, just fire it up with Node.js:-
+To type UCI commands into Lozza directly, just fire it up with ```Node.js```:-
 
 ```
 > cd _location of lozza.js_
