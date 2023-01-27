@@ -4,8 +4,8 @@
 // A Javascript chess engine inspired by Fabien Letouzey's Fruit 2.1.
 //
 
-var BUILD       = "2.5";
-var USEPAWNHASH = 1;
+var BUILD   = "2.5";
+var RELEASE = 1;
 
 //{{{  history
 /*
@@ -49,13 +49,6 @@ else if ((typeof WorkerGlobalScope) == 'undefined') {
 function myround(x) {
   return Math.sign(x) * Math.round(Math.abs(x));
 }
-
-//}}}
-//{{{  wbmap
-//
-// Removed on release.
-//
-
 
 //}}}
 
@@ -4409,14 +4402,6 @@ var TENSE_BQ = IS_WQ;
 
 lozBoard.prototype.evaluate = function (turn) {
 
-  //{{{  init feature coefficients
-  //
-  // Removed on release.
-  //
-  
-  
-  //}}}
-
   //this.hashCheck(turn);
 
   //{{{  init
@@ -4536,7 +4521,7 @@ lozBoard.prototype.evaluate = function (turn) {
   var idx   = this.ploHash & PTTMASK;
   var flags = this.pttFlags[idx];
   
-  if (USEPAWNHASH && (flags & PTT_EXACT) && this.pttLo[idx] == this.ploHash && this.pttHi[idx] == this.phiHash) {
+  if (RELEASE && (flags & PTT_EXACT) && this.pttLo[idx] == this.ploHash && this.pttHi[idx] == this.phiHash) {
     //{{{  get tt
     
     pawnsS = this.pttScoreS[idx];
@@ -5885,8 +5870,10 @@ lozBoard.prototype.evaluate = function (turn) {
   evalS += trappedS;
   evalE += trappedE;
   
-  evalS += tempoS;
-  evalE += tempoE;
+  if (RELEASE) {
+    evalS += tempoS;
+    evalE += tempoE;
+  }
   
   evalS += attS;
   evalE += attE;
@@ -5914,7 +5901,8 @@ lozBoard.prototype.evaluate = function (turn) {
   
   var e = (evalS * (TPHASE - phase) + evalE * phase) / TPHASE;
   
-  e = myround(e) | 0;
+  if (RELEASE)
+    e = myround(e) | 0;
   
   //}}}
   //{{{  verbose
@@ -7256,13 +7244,6 @@ if (lozzaHost == HOST_NODEJS) {
     process.exit();
   });
 }
-
-//}}}
-//{{{  sanity checks
-//
-// Removed on release.
-//
-
 
 //}}}
 

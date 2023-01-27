@@ -2,6 +2,8 @@
 // Copy lozza.js above here.
 //
 
+RELEASE = 0;
+
 //{{{  lozza globals
 
 fs    = lozza.uci.nodefs;

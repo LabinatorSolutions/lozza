@@ -2,7 +2,7 @@
 // Copy dev lozza.js above here.
 //
 
-USEPAWNHASH = 0;
+RELEASE = 0;
 
 var DOSEARCH    = 0;
 var SEARCHDEPTH = 3;

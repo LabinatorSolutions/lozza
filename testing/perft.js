@@ -2,7 +2,8 @@
 // Copy lozza.js above here.
 //
 
-UILAG = 999999999999999;
+RELEASE = 0;
+UILAG   = 999999999999999;
 
 // ccc-n from http://www.talkchess.com/forum/viewtopic.php?t=47318
 
