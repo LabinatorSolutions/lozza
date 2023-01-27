@@ -57,7 +57,7 @@ https://op12no2.github.io/lozza-ui/perft.htm
 
 I use Windows, but any platform with a ```Node.js``` executable is suitable for testing and tuning.
 
-In a ```Node.js``` script you can call Lozza's functional interface directly (e.g. see ```gdtuner.js``) or call Lozza's UCI interface like this (e.g. see ```perft.js```):-
+In a ```Node.js``` script you can call Lozza's functional interface directly (e.g. see ```gdtuner.js```) or call Lozza's UCI interface like this (e.g. see ```perft.js```):-
 
 ```
 var depth = 10;
