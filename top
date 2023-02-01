@@ -10,8 +10,6 @@
 
 //{{{  other lozzas
 
-'lozza\trunk\clean.js'
-
 'lozza\trunk\history\2.5\lozza.js'
 'lozza\trunk\history\2.5\gdtuner.js'
 
@@ -39,9 +37,8 @@
 
 //}}}
 
-'lozza\trunk\testing\gdtuner.js'
-'lozza\trunk\testing\gdtuner.txt'
-'lozza\trunk\testing\tunings.js'
+'lozza\trunk\testing\tuner.js'
+'lozza\trunk\testing\tuner.txt'
 
 'lozza\trunk\testing\perft.js'
 'lozza\trunk\testing\eval.js'
