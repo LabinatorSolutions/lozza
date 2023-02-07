@@ -4,7 +4,7 @@ rem ******** config start
 
 set id=
 
-set tc=60+0.6
+set tc=20+0.2
 
 set e1=coalface
 set e2=candidate

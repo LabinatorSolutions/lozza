@@ -9,18 +9,21 @@
 
 see!!!!!!
 nnue
+weak pawns
+
+add tt to qs.
 don't time out if no best move yet.
 reset best move on fail low.
-move (pv etc) reporting code to go() from search().
+move (pv etc) reporting code to go() from search() and add upper/lower bound.
 dont send extra node uci stuff.
 dont send extra tt stuff - send before returning best move.
 reduce search depth on fail high, reset on fail low.
-automate tuning go() using a script that minimises nodes for depth N search.
 change uci reporting delays to node count delays.
 reshape qsearch to be like eth.
 check for kk, kn etc in draw test.
 use 0 not CONTEMPT.
-weak pawns
+
+automate tuning go() using a script that minimises nodes for depth N search.
 
 //}}}
 
@@ -58,6 +61,7 @@ weak pawns
 'lozza\trunk\testing\tuner.js'
 'lozza\trunk\testing\tuner.txt'
 
+'lozza\trunk\testing\stuner.js'
 'lozza\trunk\testing\tunex.js'
 'lozza\trunk\testing\perft.js'
 'lozza\trunk\testing\eval.js'
