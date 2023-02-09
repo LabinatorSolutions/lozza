@@ -84,7 +84,7 @@ https://op12no2.github.io/lozza-ui/consolehelp.htm
 
 That may well be out of date. Check the ```switch``` statement in the ```onmessage``` function for the coalface.
 
-You can supply UCI commands on invocation like this:-
+You can supply UCI commands on invocation like this for example:-
 
 ```
 > cd _location of lozza.js_
@@ -98,10 +98,10 @@ The ```bench``` command allows a quick check for tweaks that should not affect s
 
 ```
 > cd _location of lozza.js_
-> node lozza bench q
+> node lozza bench quit
 nodes 4625388
 _tweak something_
-> node lozza bench q
+> node lozza bench quit
 nodes 4625388
 ```
 
