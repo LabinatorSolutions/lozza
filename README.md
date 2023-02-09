@@ -64,6 +64,15 @@ var depth = 10;
 onmessage({data: 'ucinewgame\nposition startpos'});  // separate multiple UCI commands with \n
 onmessage({data: 'go depth ' + depth});
 ```
+
+Lozza has a little utility function called ```docmd``` to make this a little easier:-
+
+```
+var depth = 10;
+docmd('ucinewgame\nposition startpos');  // separate multiple UCI commands with \n
+docmd('go depth ' + depth);
+```
+
 After a search, the best move is in ```lozza.stats.bestMove``` in binary form (see constants). You can format it like this:-
 
 ```
@@ -94,7 +103,7 @@ There is also a web-based UCI console here:-
 
 https://op12no2.github.io/lozza-ui/console.htm
 
-The ```bench``` command allows a quick check for tweaks that should not affect search. It's a node count across various FENs are depth 9 and takes a few seconds to run:-
+The ```bench``` command allows a quick check for tweaks that should not affect search. It's a node count across various FENs at depth 9 and takes a few seconds to run:-
 
 ```
 > cd _location of lozza.js_
