@@ -46,7 +46,7 @@ There are various scripts in the testing directory that can be run with ```Node.
 
 ```
 cd test
-node gdtuner
+node tuner
 ```
 
 Training data used is Alexandru Moșoi's (Zurichess) ```quiet-labeled.epd```. 
@@ -57,14 +57,13 @@ https://op12no2.github.io/lozza-ui/perft.htm
 
 I use Windows, but any platform with a ```Node.js``` executable is suitable for testing and tuning.
 
-In a ```Node.js``` script you can call Lozza's functional interface directly (e.g. see ```gdtuner.js```) or call Lozza's UCI interface like this (e.g. see ```perft.js```):-
+In a ```Node.js``` script you can call Lozza's functional interface directly (e.g. see ```tuner.js```) or call Lozza's UCI interface like this (e.g. see ```perft.js```):-
 
 ```
 var depth = 10;
 onmessage({data: 'ucinewgame\nposition startpos'});  // separate multiple UCI commands with \n
 onmessage({data: 'go depth ' + depth});
 ```
-
 After a search, the best move is in ```lozza.stats.bestMove``` in binary form (see constants). You can format it like this:-
 
 ```
@@ -85,13 +84,32 @@ https://op12no2.github.io/lozza-ui/consolehelp.htm
 
 That may well be out of date. Check the ```switch``` statement in the ```onmessage``` function for the coalface.
 
+You can supply UCI commands on invocation like this:-
+
+```
+> cd _location of lozza.js_
+> node lozza ucinewgame "position startpos" "go depth 10"
+```
 There is also a web-based UCI console here:-
 
 https://op12no2.github.io/lozza-ui/console.htm
 
+The ```bench``` command allows a quick check for tweaks that should not affect search. It's a node count across various FENs are depth 9 and takes a few seconds to run:-
+
+```
+> cd _location of lozza.js_
+> node lozza bench q
+nodes 4625388
+_tweak something_
+> node lozza bench q
+nodes 4625388
+```
+
+The node counts should match, like they do above.
+
 ## Play Lozza offline in chess user interfaces
 
-Lozza can be used in popular chesss user interfaces like Banksia, Winboard, Arena and CuteChess. Download the latest release and then follow the instructions in the ```readme.txt``` file.
+Lozza can be used in popular chesss user interfaces like Banksia, Winboard, Arena and CuteChess. Download the latest release and then follow the instructions in the ```readme.txt``` file.  Any platform that supports ```Node.js``` can be targetted. 
 
 https://github.com/op12no2/lozza/releases
   
