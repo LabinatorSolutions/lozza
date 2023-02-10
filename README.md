@@ -108,13 +108,13 @@ The ```bench``` command allows a quick check for tweaks that should not affect s
 ```
 > cd _location of lozza.js_
 > node lozza bench quit
-nodes 4625388
+nodes 4625388 8993
 _tweak something_
 > node lozza bench quit
-nodes 4625388
+nodes 4625388 9121
 ```
 
-The node counts should match, like they do above.
+The node counts should match, like they do above. The times will vary from run to run even without any changes to the code.
 
 ## Play Lozza offline in chess user interfaces
 
