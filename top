@@ -11,17 +11,17 @@ see!!!!!!
 nnue
 weak pawns
 
+better history
 add tt to qs.
-don't time out if no best move yet.
-reset best move on fail low.
 move (pv etc) reporting code to go() from search() and add upper/lower bound.
 dont send extra node uci stuff.
 dont send extra tt stuff - send before returning best move.
-reduce search depth on fail high, reset on fail low.
+reduce search depth on fail high, reset/bump? on fail low.
 change uci reporting delays to node count delays.
 reshape qsearch to be like eth.
 check for kk, kn etc in draw test.
 use 0 not CONTEMPT.
+don't round pawn/att eval terms.
 
 automate tuning go() using a script that minimises nodes for depth N search.
 

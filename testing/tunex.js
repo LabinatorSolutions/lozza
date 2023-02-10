@@ -2,18 +2,13 @@
 // Copy dev lozza.js above here.
 //
 
+SILENT = 1;
+
 //{{{  lozza globals
 
 fs    = lozza.uci.nodefs;
 uci   = lozza.uci;
 board = lozza.board;
-
-//}}}
-//{{{  functions
-
-function u(x) {
-  onmessage({data: x});
-}
 
 //}}}
 //{{{  get the epds
@@ -75,10 +70,10 @@ for (var i=0; i < num; i++) {
   console.log('id',i);
   console.log('fen',fen);
 
-  u('ucinewgame');
-  u('position fen ' + fen);
-  u('id ' + i);
-  u('go depth 12');
+  docmd('ucinewgame');
+  docmd('position fen ' + fen);
+  docmd('id ' + i);
+  docmd('go depth 12');
 
   console.log('nodes',lozza.stats.nodes);
 

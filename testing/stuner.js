@@ -2,7 +2,7 @@
 // Copy lozza.js above here.
 //
 
-UILAG = 999999999999999;
+SILENT = 1;
 
 //{{{  epds
 
@@ -313,10 +313,6 @@ var epds = [
 
 //}}}
 
-function u(x) {
-  onmessage({data: x});
-}
-
 for (var BPRUNE=300; BPRUNE <= 1000; BPRUNE+=100) {
 
   //{{{  score
@@ -331,10 +327,10 @@ for (var BPRUNE=300; BPRUNE <= 1000; BPRUNE+=100) {
     var moves = epd[1];
     var id    = epd[2];
   
-    u('ucinewgame');
-    u('position fen ' + fen);
-    u('id ' + id);
-    u('go depth 9');
+    docmd('ucinewgame');
+    docmd('position fen ' + fen);
+    docmd('id ' + id);
+    docmd('go depth 9');
   
     var move  = lozza.board.formatMove(lozza.stats.bestMove,SAN_FMT);
     var match = moves.includes(move);

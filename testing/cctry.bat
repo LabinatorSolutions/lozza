@@ -4,12 +4,12 @@ rem ******** config start
 
 set id=
 
-set tc=20+0.2
+set tc=60+0.6
 
 set e1=coalface
 set e2=candidate
 
-set threads=2
+set threads=6
 
 set elo0=0
 set elo1=5
