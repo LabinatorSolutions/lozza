@@ -9,7 +9,7 @@ set tc=60+0.6
 set e1=coalface
 set e2=candidate
 
-set threads=6
+set threads=4
 
 set elo0=0
 set elo1=5
