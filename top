@@ -10,15 +10,19 @@
 see!!!!!!
 nnue
 weak pawns
+use let more
 
-allow qs tt put if entry from previous search regardless of depth
-better history
+upgrade node.
+allow qs tt put if entry from older search regardless of depth.
+better history.
 reduce search depth on fail high, reset/bump? on fail low.
 reshape qsearch to be like eth.
-check for kk, kn etc in draw test.
 don't round pawn/att eval terms.
 
 automate tuning search using a script that minimises nodes for depth N search while maintaining bm score on EPD set.
+
+retune w/o eval final rounding.
+retune fixing material at std values (w/o final rounding).
 
 //}}}
 
@@ -28,6 +32,10 @@ automate tuning search using a script that minimises nodes for depth N search wh
 
 'lozza\trunk\history\2.5\lozza.js'
 'lozza\trunk\history\2.5\gdtuner.js'
+
+'lozza\trunk\history\2.5\release\lozza.js'
+'lozza\trunk\history\2.5\release\lozza.bat'
+'lozza\trunk\history\2.5\release\readme.txt'
 
 'lozza\trunk\history\2.4\lozza.js'
 'lozza\trunk\history\2.4\gdtuner.js'

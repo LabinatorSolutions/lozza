@@ -7,7 +7,7 @@ set id=
 set tc=60+0.6
 
 set e1=coalface
-set e2=candidate
+set e2=released
 
 set threads=4
 
