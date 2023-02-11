@@ -14,8 +14,8 @@ set threads=4
 set elo0=0
 set elo1=5
 
-set thisver=2.5
-set lastver=2.4
+set thisver=2.6
+set lastver=2.5
 
 set games=20000
 
