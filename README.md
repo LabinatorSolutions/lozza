@@ -45,7 +45,7 @@ https://op12no2.github.io/lozza-ui
 There are various scripts in the testing directory that can be run with ```Node.js```. For example:-
 
 ```
-cd test
+cd testing
 node tuner
 ```
 
