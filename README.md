@@ -57,7 +57,7 @@ https://op12no2.github.io/lozza-ui/perft.htm
 
 I use Windows, but any platform with a ```Node.js``` executable is suitable for testing and tuning.
 
-In a ```Node.js``` script you can call Lozza's functional interface directly (e.g. see ```tuner.js```) or call Lozza's UCI interface like this (e.g. see ```perft.js```):-
+In a ```Node.js``` or web script you can call Lozza's functional interface directly (e.g. see ```tuner.js```) or call Lozza's UCI interface like this (e.g. see ```perft.js```):-
 
 ```
 var depth = 10;
@@ -103,7 +103,7 @@ There is also a web-based UCI console here:-
 
 https://op12no2.github.io/lozza-ui/console.htm
 
-The ```bench``` command allows a quick check for tweaks that should not affect search. It's a node count across various FENs at depth 9 and takes a few seconds to run:-
+The ```bench``` command allows a quick check after tweaks that should not affect search. It's a node count across various FENs at depth 9 and takes a few seconds to run:-
 
 ```
 > cd _location of lozza.js_
