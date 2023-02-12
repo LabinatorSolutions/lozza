@@ -6,7 +6,13 @@ It's easy to use Lozza in your web projects by firing it up a web worker and the
 
 Lozza code is folded using ```{{{``` and ```}}}``` (emacs convention) and most easily read using an editor with a folding capability.
 
-## Basic use
+## Play Lozza offline in chess user interfaces
+
+As a UCI engine Lozza can be used in popular chesss user interfaces like Banksia, Winboard, Arena and CuteChess. Download the latest release and then follow the instructions in the ```readme.txt``` file.  Any platform that supports ```Node.js``` can be targetted. 
+
+https://github.com/op12no2/lozza/releases
+
+## Basic use in web pages
 
 All you need is ```lozza.js``` from the root of the repo. 
 
@@ -115,12 +121,6 @@ nodes 4625388 9121
 ```
 
 The node counts should match, like they do above. The times will vary from run to run even without any changes to the code.
-
-## Play Lozza offline in chess user interfaces
-
-Lozza can be used in popular chesss user interfaces like Banksia, Winboard, Arena and CuteChess. Download the latest release and then follow the instructions in the ```readme.txt``` file.  Any platform that supports ```Node.js``` can be targetted. 
-
-https://github.com/op12no2/lozza/releases
   
 ## Acknowledgements
 
