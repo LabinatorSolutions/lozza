@@ -18,6 +18,7 @@ better history.
 reduce search depth on fail high, reset/bump? on fail low.
 reshape qsearch to be like eth.
 don't round pawn/att eval terms.
+staged move generation
 
 automate tuning search using a script that minimises nodes for depth N search while maintaining bm score on EPD set.
 
@@ -73,8 +74,8 @@ retune fixing material at std values (w/o final rounding).
 'lozza\trunk\testing\makeepd.bat'
 'lozza\trunk\testing\random.js'
 
-'lozza\trunk\testing\cctry.bat'
-'lozza\trunk\testing\engines.json'
+'lozza\trunk\testing\cctry.bat'     -- tweak on release
+'lozza\trunk\testing\engines.json'  -- tweak on release
 
 //{{{  lozzaui
 

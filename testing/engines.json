@@ -1,22 +1,37 @@
 [
 {
   "name": "coalface",
-  "command": "node c:\\projects\\lozza\\trunk\\testing\\coalface.js",
+  "command": "node c:\\projects\\lozza\\trunk\\lozza.js",
   "protocol": "uci"
 },
 {
   "name": "candidate",
-  "command": "node c:\\projects\\lozza\\trunk\\testing\\candidate.js",
+  "command": "node c:\\projects\\lozza\\trunk\\history\\2.6\\lozza.js",
   "protocol": "uci"
 },
 {
-  "name": "released",
-  "command": "node c:\\projects\\lozza\\trunk\\testing\\released.js",
+  "name": "lozza2.5",
+  "command": "node c:\\projects\\lozza\\trunk\\history\\2.5\\release\\lozza.js",
   "protocol": "uci"
 },
 {
-  "name": "tt",
-  "command": "node c:\\projects\\lozza\\trunk\\testing\\tt.js",
+  "name": "lozza2.4",
+  "command": "node c:\\projects\\lozza\\trunk\\history\\2.4\\release\\lozza.js",
+  "protocol": "uci"
+},
+{
+  "name": "tt5.1",
+  "command": "node c:\\projects\\lozza\\trunk\\testing\\engines\\tt.js",
+  "protocol": "uci"
+},
+{
+  "name": "leorik2.3",
+  "command": "c:\\projects\\lozza\\trunk\\testing\\engines\\leorik-2.3.exe",
+  "protocol": "uci"
+},
+{
+  "name": "Nawito22.07",
+  "command": "c:\\projects\\lozza\\trunk\\testing\\engines\\Nawito-22.07-windows-x64.exe",
   "protocol": "uci"
 }
 ]
