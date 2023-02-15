@@ -1,4 +1,10 @@
 
+//{{{  colours and pirces
+
+const WHITE 0;
+const BLACK 1;
+
+//}}}
 //{{{  squares
 
 const A8=0n;  B8=1n;  C8=2n,  D8=3n,  E8=4n,  F8=5n,  G8=6n,  H8=7n;
@@ -24,6 +30,7 @@ const COORDS = [
 //}}}
 //{{{  attacks
 
+const PAWN_ATTACKS = Array([new BigUInt64Array(64),new BigUInt64Array(64)];
 
 //}}}
 //{{{  bitboard functions
