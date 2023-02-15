@@ -85,33 +85,30 @@ function print_bb(bb, title='', sq=-1, ch='x') {
 
 const g_white_pawn_attacks = new BigUint64Array(64);
 const g_black_pawn_attacks = new BigUint64Array(64);
+const g_knight_attacks     = new BigUint64Array(64);
+const g_king_attacks       = new BigUint64Array(64);
 
 function gen_white_pawn_attacks() {
 
   for (let sq=0; sq<64; sq++) {
-    let sq_bb = mask(sq);
-    let att_bb = 0n;
-    if (!(sq_bb & g_file_masks.a))
-      att_bb |= (sq_bb >> 9n);
-    if (!(sq_bb & g_file_masks.h))
-      att_bb |= (sq_bb >> 7n);
-    g_white_pawn_attacks[sq] = att_bb;
+    g_white_pawn_attacks[sq] = 0n;
+    if (!(mask(sq) & g_file_masks.a))
+      g_white_pawn_attacks[sq] |= mask(sq-9);
+    if (!(mask(sq) & g_file_masks.h))
+      g_white_pawn_attacks[sq] |= mask(sq-7);
   }
 }
 
 function gen_black_pawn_attacks() {
 
   for (let sq=0; sq<64; sq++) {
-    let sq_bb = mask(sq);
-    let att_bb = 0n;
-    if (!(sq_bb & g_file_masks.a))
-      att_bb |= (sq_bb << 7n);
-    if (!(sq_bb & g_file_masks.h))
-      att_bb |= (sq_bb << 9n);
-    g_black_pawn_attacks[sq] = att_bb;
+    g_black_pawn_attacks[sq] = 0n;
+    if (!(mask(sq) & g_file_masks.a))
+      g_black_pawn_attacks[sq] |= mask(sq+7);
+    if (!(mask(sq) & g_file_masks.h))
+      g_black_pawn_attacks[sq] |= mask(sq+9);
   }
 }
-
 
 //}}}
 //{{{  io
@@ -132,5 +129,13 @@ const g_coords = [
 gen_white_pawn_attacks();
 gen_black_pawn_attacks();
 
-print_bb(g_white_pawn_attacks[g_sq.a2]);
+print_bb(g_white_pawn_attacks[g_sq.a2],'a2',g_sq.a2,'P');
+print_bb(g_white_pawn_attacks[g_sq.b2],'b2',g_sq.b2,'P');
+print_bb(g_white_pawn_attacks[g_sq.g2],'g2',g_sq.g2,'P');
+print_bb(g_white_pawn_attacks[g_sq.h2],'h2',g_sq.h2,'P');
+
+print_bb(g_black_pawn_attacks[g_sq.a7],'a7',g_sq.a7,'p');
+print_bb(g_black_pawn_attacks[g_sq.b7],'b7',g_sq.b7,'p');
+print_bb(g_black_pawn_attacks[g_sq.g7],'g7',g_sq.g7,'p');
+print_bb(g_black_pawn_attacks[g_sq.h7],'h7',g_sq.h7,'p');
 
