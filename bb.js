@@ -1,3 +1,7 @@
+//
+// this is about 10 times slower than native bit ops, so abort.
+// BitInts are even worse.
+//
 
 //{{{  utils
 
@@ -5,13 +9,12 @@ String.prototype.setch = function(i, r) {
   return this.substring(0,i) + r + this.substring(i + r.length);
 }
 
+function mask (n) {
+  return 1 << n;
+}
+
 //}}}
-//{{{  bitboards
-
-const g_white = 0;
-const g_black = 1;
-
-//{{{  g_sq
+//{{{  bitboard class
 
 const g_sq = {
   a8: 0,  b8: 1,  c8: 2,  d8: 3,  e8: 4,  f8: 5,  g8: 6,  h8: 7,
@@ -24,118 +27,148 @@ const g_sq = {
   a1: 56, b1: 57, c1: 58, d1: 59, e1: 60, f1: 61, g1: 62, h1: 63
 }
 
-//}}}
-//{{{  g_file_masks
+const g_files = {a:  0, b:  1, c:  2, d:  3, e:  4, f:  5, g:  6, h:  7};
+const g_ranks = {r0: 0, r1: 1, r2: 2, r3: 3, r4: 4, r5: 5, r6: 6, r7: 7};
 
-const g_file_masks = {
- a: BigInt('0b0000000100000001000000010000000100000001000000010000000100000001'),
- b: BigInt('0b0000001000000010000000100000001000000010000000100000001000000010'),
- c: BigInt('0b0000010000000100000001000000010000000100000001000000010000000100'),
- d: BigInt('0b0000100000001000000010000000100000001000000010000000100000001000'),
- e: BigInt('0b0001000000010000000100000001000000010000000100000001000000010000'),
- f: BigInt('0b0010000000100000001000000010000000100000001000000010000000100000'),
- g: BigInt('0b0100000001000000010000000100000001000000010000000100000001000000'),
- h: BigInt('0b1000000010000000100000001000000010000000100000001000000010000000')
+const g_rank = [
+  7,7,7,7,7,7,7,7,
+  6,6,6,6,6,6,6,6,
+  5,5,5,5,5,5,5,5,
+  4,4,4,4,4,4,4,4,
+  3,3,3,3,3,3,3,3,
+  2,2,2,2,2,2,2,2,
+  1,1,1,1,1,1,1,1,
+  0,0,0,0,0,0,0,0
+];
+
+const g_file = [
+  0,1,2,3,4,5,6,7,
+  0,1,2,3,4,5,6,7,
+  0,1,2,3,4,5,6,7,
+  0,1,2,3,4,5,6,7,
+  0,1,2,3,4,5,6,7,
+  0,1,2,3,4,5,6,7,
+  0,1,2,3,4,5,6,7,
+  0,1,2,3,4,5,6,7
+];
+
+function bitboard (hi=0,lo=0) {
+  this.b = new Uint32Array(2);
+  this.b[0] = lo;
+  this.b[1] = hi;
+  return this;
 }
 
-//            hgfedcbahgfedcbahgfedcbahgfedcbahgfedcbahgfedcbahgfedcbahgfedcba
-//            1111111122222222333333334444444455555555666666667777777788888888
-
-//}}}
-//{{{  g_rank_masks
-
-const g_rank_masks = {
-  r1: BigInt('0xFF00000000000000'),
-  r2: BigInt('0x00FF000000000000'),
-  r3: BigInt('0x0000FF0000000000'),
-  r4: BigInt('0x000000FF00000000'),
-  r5: BigInt('0x00000000FF000000'),
-  r6: BigInt('0x0000000000FF0000'),
-  r7: BigInt('0x000000000000FF00'),
-  r7: BigInt('0x00000000000000FF'),
+bitboard.prototype.mask = function(sq) {
+  if (sq < 32)
+    this.b[0] = 1 << sq;
+  else
+    this.b[1] = 1 << (32-sq);
 }
 
-//}}}
-
-function mask(sq) {
-  return 1n << BigInt(sq);
+bitboard.prototype.set = function(sq) {
+  if (sq < 32)
+    this.b[0] |= 1 << sq;
+  else
+    this.b[1] |= 1 << (32-sq);
 }
 
-function serialise_bb(bb, one='1', zero='0') {
-  let s = '';
+bitboard.prototype.get = function(sq) {
+  if (sq < 32)
+    return this.b[0] & (1 << sq);
+  else
+    return this.b[1] & (1 << (32-sq));
+}
+
+bitboard.prototype.print = function() {
   for (let sq=0; sq<64; sq++) {
-    s += mask(sq) & bb ? one : zero;
+    let s = this.get(sq) ? '1 ' : '. ';
+    if (((sq) % 8) == 0)
+      process.stdout.write(g_rank[sq]+1 + ' ');
+    process.stdout.write(s);
+    if (((sq+1) % 8) == 0)
+      process.stdout.write('\r\n');
   }
-  return s;
-}
-
-function print_bb(bb, title='', sq=-1, ch='x') {
-  console.log(title);
-  let s = serialise_bb(bb,'1','.');
-  if (sq >= 0)
-    s = s.setch(sq,ch);
-  for (let r=0; r<8; r++)
-    console.log(8-r,s.substr(r*8,8).split('').join(' '));
   console.log('  a b c d e f g h');
-  console.log(bb);
+  console.log(this.b[1],this.b[0]);
 }
 
 //}}}
 //{{{  attacks
 
-const g_white_pawn_attacks = new BigUint64Array(64);
-const g_black_pawn_attacks = new BigUint64Array(64);
-const g_knight_attacks     = new BigUint64Array(64);
-const g_king_attacks       = new BigUint64Array(64);
+//{{{  util masks
+
+const g_sq_masks   = Array(64)
+const g_rank_masks = Array(8)
+const g_file_masks = Array(8)
+
+function gen_utility_masks() {
+
+  for (let r=0; r<8; r++) {
+    g_rank_masks[r] = new bitboard();
+  }
+  for (let sq=0; sq<64; sq++) {
+    g_rank_masks[g_rank[sq]].set(sq);
+  }
+
+  for (let f=0; f<8; f++) {
+    g_file_masks[f] = new bitboard();
+  }
+  for (let sq=0; sq<64; sq++) {
+    g_file_masks[g_file[sq]].set(sq);
+  }
+
+  for (let sq=0; sq<64; sq++) {
+    g_sq_masks[sq] = new bitboard();
+    g_sq_masks[sq].set(sq);
+  }
+}
+
+gen_utility_masks();
+
+//}}}
+//{{{  pawn attacks
+
+const g_white_pawn_attacks = new Array(64);
 
 function gen_white_pawn_attacks() {
 
   for (let sq=0; sq<64; sq++) {
-    g_white_pawn_attacks[sq] = 0n;
-    if (!(mask(sq) & g_file_masks.a))
-      g_white_pawn_attacks[sq] |= mask(sq-9);
-    if (!(mask(sq) & g_file_masks.h))
-      g_white_pawn_attacks[sq] |= mask(sq-7);
+    g_white_pawn_attacks[sq] = new bitboard();
+    if (g_file[sq] != g_files.a)
+      g_white_pawn_attacks[sq].set(sq-9);
+    if (g_file[sq] != g_files.h)
+      g_white_pawn_attacks[sq].set(sq-7);
   }
 }
+
+gen_white_pawn_attacks();
+
+const g_black_pawn_attacks = new Array(64);
 
 function gen_black_pawn_attacks() {
 
   for (let sq=0; sq<64; sq++) {
-    g_black_pawn_attacks[sq] = 0n;
-    if (!(mask(sq) & g_file_masks.a))
-      g_black_pawn_attacks[sq] |= mask(sq+7);
-    if (!(mask(sq) & g_file_masks.h))
-      g_black_pawn_attacks[sq] |= mask(sq+9);
+    g_black_pawn_attacks[sq] = new bitboard();
+    if (g_file[sq] != g_files.a)
+      g_black_pawn_attacks[sq].set(sq+7);
+    if (g_file[sq] != g_files.h)
+      g_black_pawn_attacks[sq].set(sq+9);
   }
 }
 
-//}}}
-//{{{  io
-
-const g_coords = [
-  'a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8', 'h8',
-  'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7',
-  'a6', 'b6', 'c6', 'd6', 'e6', 'f6', 'g6', 'h6',
-  'a5', 'b5', 'c5', 'd5', 'e5', 'f5', 'g5', 'h5',
-  'a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4',
-  'a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'h3',
-  'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2',
-  'a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1'
-];
-
-//}}}
-
-gen_white_pawn_attacks();
 gen_black_pawn_attacks();
 
-print_bb(g_white_pawn_attacks[g_sq.a2],'a2',g_sq.a2,'P');
-print_bb(g_white_pawn_attacks[g_sq.b2],'b2',g_sq.b2,'P');
-print_bb(g_white_pawn_attacks[g_sq.g2],'g2',g_sq.g2,'P');
-print_bb(g_white_pawn_attacks[g_sq.h2],'h2',g_sq.h2,'P');
+//}}}
 
-print_bb(g_black_pawn_attacks[g_sq.a7],'a7',g_sq.a7,'p');
-print_bb(g_black_pawn_attacks[g_sq.b7],'b7',g_sq.b7,'p');
-print_bb(g_black_pawn_attacks[g_sq.g7],'g7',g_sq.g7,'p');
-print_bb(g_black_pawn_attacks[g_sq.h7],'h7',g_sq.h7,'p');
+//}}}
+
+g_black_pawn_attacks[g_sq.a7].print();
+g_black_pawn_attacks[g_sq.e7].print();
+g_black_pawn_attacks[g_sq.h7].print();
+
+var t = Date.now();
+for (var x=0; x < 500000; x++)
+  gen_white_pawn_attacks();
+console.log(Date.now()-t);
 
