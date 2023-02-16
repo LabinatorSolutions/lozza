@@ -2420,6 +2420,7 @@ lozChess.prototype.perft = function () {
     var err = 'ERROR ' + error;
 
   this.stats.nodes = moves;
+  this.stats.moves = spec.moves;
 
   if (lozzaHost == HOST_WEB)
     this.uci.send('info string',spec.id,spec.depth,moves,spec.moves,err,this.board.fen());

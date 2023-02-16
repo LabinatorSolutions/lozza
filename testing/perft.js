@@ -5,28 +5,12 @@
 // A Javascript chess engine inspired by Fabien Letouzey's Fruit 2.1.
 //
 
-var BUILD   = "2.5";
+var BUILD   = "2.6";
 var RELEASE = 1;
 var SILENT  = 0;
 
 //{{{  history
 /*
-
-2.5 09/02/23 Add bench command using Ethereal FENs. nodes 4625388.
-2.5 09/02/23 Use TT in qsearch, but do not overwrite existing entries with depth > 0.
-2.5 05/02/23 Clear best move on fail low and don't allow timeout until there is a best move.
-2.5 03/02/23 Return/store bestScore not oAlpha on fail low in search.
-2.5 03/02/23 Increase/decrease alpha/beta on fail high/low duing ID.
-2.5 03/02/23 Update best move on fail high.
-2.5 01/02/23 Round the pawn and attack values before the phase calculation. Retune.
-2.5 01/02/23 Don't use end game tempo. Retune.
-2.5 14/01/23 Retune using +- mode.
-2.5 29/12/22 Add eval to TT.
-2.5 28/12/22 Add doubled rooks to eval.
-2.5 23/11/22 Simplify mobility weights for small tuning dataset.
-2.5 21/11/22 Add basic pawn chain feature to eval.
-2.5 21/11/22 Retune using Zurichess's quiet-labeled.epd.
-2.5 22/11/22 Make eval weights more visible (and in testing/tuner.js).
 
 */
 
@@ -39,16 +23,13 @@ var HOST_CONSOLE = 2;
 var HOSTS        = ['Web','Node','Console'];
 
 var lozzaHost = HOST_WEB;
-var UILAG     = 500;
 
 if ((typeof process) != 'undefined') {
   lozzaHost = HOST_NODEJS;
-  UILAG     = 10000;
 }
 
 else if ((typeof WorkerGlobalScope) == 'undefined') {
   lozzaHost = HOST_CONSOLE;
-  UILAG     = 10000;
 }
 
 //}}}
@@ -78,7 +59,6 @@ var MAX_MOVES       = 250;
 var INFINITY        = 30000;              // limited by lozza.board.ttScore bits.
 var MATE            = 20000;
 var MINMATE         = MATE - 2*MAX_PLY;
-var CONTEMPT        = 0;
 var NULL_Y          = 1;
 var NULL_N          = 0;
 var INCHECK_UNKNOWN = MATE + 1;
@@ -1660,15 +1640,10 @@ lozChess.prototype.position = function () {
 
 lozChess.prototype.go = function() {
 
-  //this.stats.init();
-  //this.stats.update();
-
   var board = this.board;
   var spec  = this.uci.spec;
 
   //{{{  sort out spec
-  
-  //this.uci.send('info hashfull',myround(1000*board.hashUsed/TTSIZE));
   
   var totTime = 0;
   var movTime = 0;
@@ -1699,13 +1674,7 @@ lozChess.prototype.go = function() {
       incTime = spec.bInc;
     }
   
-    //totTime = myround(totTime * (movesToGo - 1) / movesToGo);
     movTime = myround(totTime / movesToGo) + incTime;
-  
-    //if (this.uci.numMoves <= 3) {
-      //movTime *= 2;
-    //}
-  
     movTime = movTime * 0.95;
   
     if (movTime > 0)
@@ -1725,6 +1694,8 @@ lozChess.prototype.go = function() {
   var score       = 0;
   var delta       = 0;
   var depth       = 0;
+  var lastScore   = 0;
+  var lastDepth   = 0;
 
   for (ply=1; ply <= maxPly; ply++) {
 
@@ -1748,47 +1719,99 @@ lozChess.prototype.go = function() {
       if (this.stats.timeOut)
         break;
 
-      if (score > alpha && score < beta)
-        break;
+      lastScore = score;
+      lastDepth = depth;
 
-      if (Math.abs(score) >= MINMATE && Math.abs(score) <= MATE)
+      //{{{  better?
+      
+      if (score > alpha && score < beta) {
+      
+        this.report('cp',score,depth);
+      
         break;
-
-      //console.log(depth,alpha,beta,delta,score);
+      }
+      
+      //}}}
+      //{{{  mate?
+      
+      if (Math.abs(score) >= MINMATE && Math.abs(score) <= MATE) {
+      
+        var mateScore = (MATE - Math.abs(score)) / 2 | 0;
+        if (score < 0)
+          mateScore = -mateScore;
+      
+        this.report('mate',mateScore,depth);
+      
+        break;
+      }
+      
+      //}}}
 
       delta += delta / 2 | 0;
 
+      //{{{  lower bound?
+      
       if (score <= alpha) {
+      
         alpha = Math.max(-INFINITY, score - delta);
         beta  = Math.min(INFINITY, ((alpha + beta) / 2) | 0);
+      
+        this.report('lowerbound',score,depth);
+      
         this.stats.bestMove = 0;
       }
+      
+      //}}}
+      //{{{  upper bound?
+      
       else if (score >= beta) {
+      
         alpha = Math.max(-INFINITY, ((alpha + beta) / 2) | 0);
         beta  = Math.min(INFINITY,  score + delta);
+      
+        this.report('upperbound',score,depth);
+      
         //depth = Math.max(1,depth-1);
       }
+      
+      //}}}
     }
 
     if (this.stats.timeOut)
       break;
   }
 
-  this.stats.update();
-  this.stats.stop();
+  if (lozzaHost == HOST_WEB) {
+    this.stats.stop();
+    this.report('end',lastScore,lastDepth);
+    board.makeMove(this.rootNode,this.stats.bestMove);
+  }
 
   bestMoveStr = board.formatMove(this.stats.bestMove,UCI_FMT);
 
-  if (lozzaHost == HOST_WEB)
-    board.makeMove(this.rootNode,this.stats.bestMove);
-
   this.uci.send('bestmove',bestMoveStr);
+}
+
+//}}}
+//{{{  .report
+
+lozChess.prototype.report = function(units,value,depth) {
+
+  var depthStr = 'depth ' + depth + ' seldepth ' + this.stats.selDepth;
+  var scoreStr = 'score ' + units + ' ' + value;
+  var nodeStr  = this.stats.nodeStr();
+  var hashStr  = 'hashfull ' + (1000 * this.board.hashUsed / TTSIZE | 0);
+  var pvStr    = 'pv ' + this.board.getPVStr(this.rootNode,this.stats.bestMove,depth);
+
+  this.uci.send('info', depthStr, scoreStr, nodeStr, hashStr, pvStr);
 }
 
 //}}}
 //{{{  .search
 
 lozChess.prototype.search = function (node, depth, turn, alpha, beta) {
+
+  this.stats.nodes++;
 
   //{{{  housekeeping
   
@@ -1798,8 +1821,6 @@ lozChess.prototype.search = function (node, depth, turn, alpha, beta) {
   }
   
   //}}}
-
-  this.stats.nodes++;
 
   var board          = this.board;
   var nextTurn       = ~turn & COLOR_MASK;
@@ -1850,9 +1871,9 @@ lozChess.prototype.search = function (node, depth, turn, alpha, beta) {
     if (node.base < BASE_LMR)
       numSlides++;
 
-    //{{{  send current move to UCI
+    //{{{  send current move to UCI?
     
-    if (this.stats.splits > 3)
+    if (this.stats.nodes > 10000000)
       this.uci.send('info currmove ' + board.formatMove(move,SAN_FMT) + ' currmovenumber ' + numLegalMoves);
     
     //}}}
@@ -1910,32 +1931,7 @@ lozChess.prototype.search = function (node, depth, turn, alpha, beta) {
 
         alpha = bestScore;
 
-        //{{{  update best move & send score to UI
-        
         this.stats.bestMove = bestMove;
-        
-        var absScore = Math.abs(bestScore);
-        var units    = 'cp';
-        var uciScore = bestScore;
-        var mv       = board.formatMove(bestMove,board.mvFmt);
-        var pvStr    = board.getPVStr(node,bestMove,depth);
-        
-        if (absScore >= MINMATE && absScore <= MATE) {
-          if (lozzaHost != HOST_NODEJS)
-            pvStr += '#';
-          var units    = 'mate';
-          var uciScore = (MATE - absScore) / 2 | 0;
-          if (score < 0)
-            uciScore = -uciScore;
-        }
-        
-        this.uci.send('info',this.stats.nodeStr(),'depth',this.stats.ply,'seldepth',this.stats.selDepth,'score',units,uciScore,'pv',pvStr);
-        //this.stats.update();
-        
-        if (this.stats.splits > 5)
-          this.uci.send('info hashfull',myround(1000*board.hashUsed/TTSIZE));
-        
-        //}}}
 
         if (bestScore >= beta) {
           node.addKiller(bestScore, bestMove);
@@ -1971,6 +1967,8 @@ lozChess.prototype.search = function (node, depth, turn, alpha, beta) {
 
 lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK, inCheck) {
 
+  this.stats.nodes++;
+
   //{{{  housekeeping
   
   if (!node.childNode) {
@@ -1978,7 +1976,7 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
     return;
   }
   
-  this.stats.lazyUpdate();
+  this.stats.checkTime();
   if (this.stats.timeOut)
     return;
   
@@ -1986,8 +1984,6 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
     this.stats.selDepth = node.ply;
   
   //}}}
-
-  this.stats.nodes++;
 
   var board    = this.board;
   var nextTurn = ~turn & COLOR_MASK;
@@ -2015,14 +2011,8 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
   //}}}
   //{{{  check for draws
   
-  if (board.repHi - board.repLo > 100)
-    return CONTEMPT;
-  
-  for (var i=board.repHi-5; i >= board.repLo; i -= 2) {
-  
-    if (board.repLoHash[i] == board.loHash && board.repHiHash[i] == board.hiHash)
-      return CONTEMPT;
-  }
+  if (board.isDraw())
+    return 0;
   
   //}}}
   //{{{  horizon
@@ -2269,8 +2259,8 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
     }
   
     else {
-      //board.ttPut(TT_EXACT, depth, CONTEMPT, 0, node.ply, alpha, beta, eval);
-      return CONTEMPT;
+      //board.ttPut(TT_EXACT, depth, 0, 0, node.ply, alpha, beta, eval);
+      return 0;
     }
   }
   
@@ -2291,11 +2281,9 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
 
 lozChess.prototype.qSearch = function (node, depth, turn, alpha, beta, sq) {
 
+  this.stats.nodes++;
+
   //{{{  housekeeping
-  
-  //this.stats.checkTime();
-  //if (this.stats.timeOut)
-    //return;
   
   if (node.ply > this.stats.selDepth)
     this.stats.selDepth = node.ply;
@@ -2306,8 +2294,6 @@ lozChess.prototype.qSearch = function (node, depth, turn, alpha, beta, sq) {
   
   //}}}
 
-  this.stats.nodes++;
-
   var board         = this.board;
   var numLegalMoves = 0;
   var move          = 0;
@@ -2315,6 +2301,9 @@ lozChess.prototype.qSearch = function (node, depth, turn, alpha, beta, sq) {
   var phase         = 0;
   var nextTurn      = ~turn & COLOR_MASK;
   var to            = 0;
+
+  if (board.isDraw())
+    return 0;
 
   var score = board.ttGet(node, 0, alpha, beta);  // sets/clears node.hashMove and node.hashEval.
 
@@ -2424,8 +2413,6 @@ lozChess.prototype.perft = function () {
 
   var moves = this.perftSearch(this.rootNode, spec.depth, this.board.turn, spec.inner);
 
-  this.stats.update();
-
   var error = moves - spec.moves;
 
   if (error == 0)
@@ -2434,8 +2421,10 @@ lozChess.prototype.perft = function () {
     var err = 'ERROR ' + error;
 
   this.stats.nodes = moves;
+  this.stats.moves = spec.moves;
 
-  this.uci.send('info string',spec.id,spec.depth,moves,spec.moves,err,this.board.fen());
+  if (lozzaHost == HOST_WEB)
+    this.uci.send('info string',spec.id,spec.depth,moves,spec.moves,err,this.board.fen());
 }
 
 //}}}
@@ -2501,9 +2490,6 @@ lozChess.prototype.perftSearch = function (node, depth, turn, inner) {
         this.uci.send('info string',fmove,numNodes);
     }
   }
-
-  if (depth > 2)
-    this.stats.lazyUpdate();
 
   return totalNodes;
 }
@@ -4499,34 +4485,34 @@ lozBoard.prototype.evaluate = function (turn) {
   //todo - lots more here and drawish.
   
   if (numPieces == 2)                                                                  // K v K.
-    return CONTEMPT;
+    return 0;
   
   if (numPieces == 3 && (wNumKnights || wNumBishops || bNumKnights || bNumBishops))    // K v K+N|B.
-    return CONTEMPT;
+    return 0;
   
   if (numPieces == 4 && (wNumKnights || wNumBishops) && (bNumKnights || bNumBishops))  // K+N|B v K+N|B.
-    return CONTEMPT;
+    return 0;
   
   if (numPieces == 4 && (wNumKnights == 2 || bNumKnights == 2))                        // K v K+NN.
-    return CONTEMPT;
+    return 0;
   
   if (numPieces == 5 && wNumKnights == 2 && (bNumKnights || bNumBishops))              //
-    return CONTEMPT;                                                                   //
+    return 0;                                                                   //
                                                                                        // K+N|B v K+NN
   if (numPieces == 5 && bNumKnights == 2 && (wNumKnights || wNumBishops))              //
-    return CONTEMPT;                                                                   //
+    return 0;                                                                   //
   
   if (numPieces == 5 && wNumBishops == 2 && bNumBishops)                               //
-    return CONTEMPT;                                                                   //
+    return 0;                                                                   //
                                                                                        // K+B v K+BB
   if (numPieces == 5 && bNumBishops == 2 && wNumBishops)                               //
-    return CONTEMPT;                                                                   //
+    return 0;                                                                   //
   
   if (numPieces == 4 && wNumRooks && bNumRooks)                                        // K+R v K+R.
-    return CONTEMPT;
+    return 0;
   
   if (numPieces == 4 && wNumQueens && bNumQueens)                                      // K+Q v K+Q.
-    return CONTEMPT;
+    return 0;
   
   //}}}
 
@@ -6351,6 +6337,37 @@ lozBoard.prototype.cleanPhase = function (p) {
 }
 
 //}}}
+//{{{  .isDraw
+
+lozBoard.prototype.isDraw = function () {
+
+  if (this.repHi - this.repLo > 100)
+    return true;
+
+  for (var i=this.repHi-5; i >= this.repLo; i -= 2) {
+
+    if (this.repLoHash[i] == this.loHash && this.repHiHash[i] == this.hiHash)
+      return true;
+  }
+
+  var numPieces = this.wCount + this.bCount;
+
+  if (numPieces == 2)
+    return true;
+
+  var wNumBishops = this.wCounts[BISHOP];
+  var wNumKnights = this.wCounts[KNIGHT];
+
+  var bNumBishops = this.bCounts[BISHOP];
+  var bNumKnights = this.bCounts[KNIGHT];
+
+  if (numPieces == 3 && (wNumKnights || wNumBishops || bNumKnights || bNumBishops))  // K v K+N|B.
+    return true;
+
+  return false;
+}
+
+//}}}
 
 //}}}
 //{{{  lozNode class
@@ -6789,29 +6806,13 @@ function lozStats () {
 lozStats.prototype.init = function () {
 
   this.startTime = Date.now();
-  this.splitTime = 0;
   this.nodes     = 0;  // per analysis
   this.ply       = 0;  // current ID root ply
-  this.splits    = 0;
   this.moveTime  = 0;
   this.maxNodes  = 0;
   this.timeOut   = 0;
   this.selDepth  = 0;
   this.bestMove  = 0;
-}
-
-//}}}
-//{{{  .lazyUpdate
-
-lozStats.prototype.lazyUpdate = function () {
-
-  this.checkTime();
-
-  if (Date.now() - this.splitTime > UILAG) {
-    this.splits++;
-    this.update();
-    this.splitTime = Date.now();
-  }
 }
 
 //}}}
@@ -6835,17 +6836,6 @@ lozStats.prototype.nodeStr = function () {
   var nps = (this.nodes * 1000) / tim | 0;
 
   return 'nodes ' + this.nodes + ' time ' + tim + ' nps ' + nps;
-}
-
-//}}}
-//{{{  .update
-
-lozStats.prototype.update = function () {
-
-  var tim = Date.now() - this.startTime;
-  var nps = (this.nodes * 1000) / tim | 0;
-
-  lozza.uci.send('info',this.nodeStr());
 }
 
 //}}}
@@ -6877,6 +6867,18 @@ function lozUCI () {
   this.numMoves  = 0;
 
   this.options = {};
+}
+
+//}}}
+//{{{  .argv
+
+lozUCI.prototype.argv = function () {
+
+  if (process.argv.length > 2) {
+    for (let i=2; i < process.argv.length; i++)
+      docmd(process.argv[i]);
+  }
+
 }
 
 //}}}
@@ -6982,7 +6984,6 @@ lozUCI.prototype.getArr = function (key, to) {
 
 //}}}
 //{{{  .onmessage
-
 
 //{{{  bench fens
 
@@ -7295,6 +7296,7 @@ onmessage = function(e) {
       SILENT = 1;
       
       var nodes = 0;
+      var time  = 0;
       
       for (var i=0; i < BENCHFENS.length; i++) {
       
@@ -7305,12 +7307,15 @@ onmessage = function(e) {
         docmd('id ' + i);
         docmd('go depth 9');
       
+        lozza.stats.stop();
+      
+        time  += lozza.stats.time;
         nodes += lozza.stats.nodes;
       }
       
       SILENT = 0;
       
-      uci.send('nodes', nodes);
+      uci.send('nodes', nodes, 'time', time);
       
       break;
       
@@ -7357,6 +7362,8 @@ if (lozzaHost == HOST_NODEJS) {
   process.stdin.on('end', function() {
     process.exit();
   });
+
+  lozza.uci.argv();  // process command line args.
 }
 
 //}}}
@@ -7426,11 +7433,26 @@ var qp = [
   ['fen r6r/1P4P1/2kPPP2/8/8/3ppp2/1p4p1/R3K2R                  w KQ   - 0 1', 'depth 6 moves 975944981','ob5']
 ];
 
+var t1 = Date.now();
+
+var n = 0;
+
 for (var i=0; i < qp.length; i++) {
+  var p = qp[i];
   docmd('ucinewgame');
-  docmd('position ' + qp[i][0]);
-  docmd('id ' + qp[i][2]);
-  docmd('perft inner 0 ' + qp[i][1]);
-  console.log(qp[i][2],qp[i][0],qp[i][1],lozza.stats.nodes);
+  docmd('position ' + p[0]);
+  docmd('id ' + p[2]);
+  docmd('perft inner 0 ' + p[1]);
+  console.log(p[2],p[0],lozza.stats.moves,lozza.stats.nodes,lozza.stats.moves-lozza.stats.nodes);
+  n += lozza.stats.nodes;
 }
+
+var t2 = Date.now();
+
+var sec = (t2-t1)/1000;
+var nps = n / sec;
+
+console.log('nodes =',n,'sec =',sec|0,'nps =',nps|0);
+
+process.exit();
 

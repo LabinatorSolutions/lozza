@@ -1,7 +1,3 @@
-//
-// this is about 10 times slower than native bit ops, so abort.
-// BitInts are even worse.
-//
 
 //{{{  utils
 
@@ -166,9 +162,4 @@ gen_black_pawn_attacks();
 g_black_pawn_attacks[g_sq.a7].print();
 g_black_pawn_attacks[g_sq.e7].print();
 g_black_pawn_attacks[g_sq.h7].print();
-
-var t = Date.now();
-for (var x=0; x < 500000; x++)
-  gen_white_pawn_attacks();
-console.log(Date.now()-t);
 

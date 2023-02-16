@@ -12,15 +12,19 @@ nnue
 weak pawns
 use let more
 
+dont return from null move if mate score
+check killers do anything.
+check history does anything.
+try etheral shaped stuff - search - pruning - history etc.
+don't include promotions in qs.
+simplify qs.
 upgrade node.
 allow qs tt put if entry from older search regardless of depth.
 better history.
 reduce search depth on fail high, reset/bump? on fail low.
-reshape qsearch to be like eth.
 don't round pawn/att eval terms.
-staged move generation
-
-automate tuning search using a script that minimises nodes for depth N search while maintaining bm score on EPD set.
+staged move generation. (shorter sorts).
+try hash move beta cutoff w/o move gen.
 
 retune w/o eval final rounding.
 retune fixing material at std values (w/o final rounding).
@@ -30,6 +34,8 @@ retune fixing material at std values (w/o final rounding).
 'lozza\trunk\lozza.js'
 
 //{{{  other lozzas
+
+'lozza\trunk\bb.js'
 
 'lozza\trunk\history\2.5\lozza.js'
 'lozza\trunk\history\2.5\gdtuner.js'
@@ -65,8 +71,6 @@ retune fixing material at std values (w/o final rounding).
 'lozza\trunk\testing\tuner.js'
 'lozza\trunk\testing\tuner.txt'
 
-'lozza\trunk\testing\stuner.js'
-'lozza\trunk\testing\tunex.js'
 'lozza\trunk\testing\perft.js'
 'lozza\trunk\testing\eval.js'
 'lozza\trunk\testing\eval_flip.js'

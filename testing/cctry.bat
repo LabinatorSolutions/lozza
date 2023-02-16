@@ -1,18 +1,20 @@
 @echo off
 
-set tc=20+0.2
+rem engines: coal, cand, loz25, loz24, leo23, tt51.
 
-set e1=coalface
-set e2=leorik2.3
+set e1=coal
+set e2=cand
 
-set threads=2
+set tc=120+1.2
+set threads=6
 
 set elo0=0
 set elo1=5
 
 set games=20000
 
-copy /q ..\..\..\top ..
+copy ..\..\..\top ..
+copy ..\lozza.js
 
 set a=%@random[1,9999999]
 
@@ -27,7 +29,11 @@ set v=-ratinginterval 10
 set m=-recover -concurrency %threads
 set f=-pgnout cctry.pgn min fi
 
-set args=%ee1 %ee2 %t %r %d %o %v %m %s
+if exist cctry.pgn del cctry.pgn
+
+set args=%ee1 %ee2 %t %r %d %o %v %m %s %f
+
+echo %args
 
 "C:\Program Files (x86)\Cute Chess\cutechess-cli" %args
 
