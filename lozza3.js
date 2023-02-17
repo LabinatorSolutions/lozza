@@ -776,17 +776,17 @@ function uciServer(data) {
 
   for (let i=0; i < commands.length; i++ ) {
 
-    let command = commands[i].trim();
+    const command = commands[i].trim();
 
     if (!command)
       continue;
 
-    let tokens = command.split(' ');
+    const tokens = command.split(' ');
 
     if (!tokens.length)
       continue;
 
-    let c = tokens[0].trim();
+    const c = tokens[0].trim();
 
     if (!c)
       continue;
@@ -800,7 +800,7 @@ function uciServer(data) {
 
 function uciExec (tokens) {
 
-  let c = tokens[0].toLowerCase();
+  const c = tokens[0].toLowerCase();
 
   switch (c) {
 
@@ -838,6 +838,7 @@ function uciExecPerft (tokens) {
 function uciExecPosition (tokens) {
 
   switch(tokens[1].toLowerCase()) {
+
     case 'startpos':
     case 's':
       setBoardFromFENParts('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR', 'w', 'KQkq', '-');
