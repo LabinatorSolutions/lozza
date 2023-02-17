@@ -49,6 +49,8 @@ function pieceChar(p) {
 //}}}
 //{{{  board representation
 
+//{{{  constants
+
 const SLIDE = {
   pawn1: 16,
   pawn2: 32,
@@ -82,6 +84,29 @@ const SQUARE = {
   a2: 0x10, b2: 0x11, c2: 0x12, d2: 0x13, e2: 0x14, f2: 0x15, g2: 0x16, h2: 0x17,
   a1: 0x00, b1: 0x01, c1: 0x02, d1: 0x03, e1: 0x04, f1: 0x05, g1: 0x06, h1: 0x07
 }
+
+const WHITE_RIGHTS_KING  = 0x00000001;
+const WHITE_RIGHTS_QUEEN = 0x00000002;
+const BLACK_RIGHTS_KING  = 0x00000004;
+const BLACK_RIGHTS_QUEEN = 0x00000008;
+const WHITE_RIGHTS       = WHITE_RIGHTS_QUEEN | WHITE_RIGHTS_KING;
+const BLACK_RIGHTS       = BLACK_RIGHTS_QUEEN | BLACK_RIGHTS_KING;
+
+/*const MASK_RIGHTS =  [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+                     15, 15, ~8, 15, 15, 15, ~12,15, 15, ~4, 15, 15,
+                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+                     15, 15, ~2, 15, 15, 15, ~3, 15, 15, ~1, 15, 15,
+                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15];
+*/
+
+//}}}
 
 const gBoard = Array(128).fill(0);
 
@@ -125,21 +150,30 @@ gBoard[SQUARE.h7] = BLACK | PAWN;
 
 //}}}
 
-let gTurn           = WHITE;
-let gTurnIndex      = colourIndex(WHITE);
-let gTurnMultiplier = colourMultiplier(WHITE);
-let gRights         = 0;                            // hack init
-let gEnPass         = 0;
+let gTurn   = WHITE;
+let gRights = WHITE_RIGHTS | BLACK_RIGHTS;
+let gEnPass = 0;
+
+//{{{  sq88
 
 function sq88(r, f) {
   return 16 * r + f;
 }
 
+//}}}
+//{{{  offboard
+
 function offboard (sq) {
   return sq & 0x88;
 }
 
+//}}}
+//{{{  printBoard
+
 function printBoard() {
+
+  //{{{  gBoard
+  
   for (let r=7; r>=0; r--) {
     process.stdout.write((r+1) + ' ');
     for (let f=0; f<8; f++) {
@@ -148,15 +182,250 @@ function printBoard() {
     }
     process.stdout.write('\r\n');
   }
+  
   console.log('  a b c d e f g h');
+  
+  //}}}
+  //{{{  gTurn
+  
+  if (gTurn == WHITE)
+    process.stdout.write('w ');
+  
+  else
+    process.stdout.write('b ');
+  
+  //}}}
+  //{{{  gRights
+  
+  if (!gRights)
+    process.stdout.write('- ');
+  
+  else {
+    if (gRights & WHITE_RIGHTS_KING)
+      process.stdout.write('K');
+  
+    if (gRights & WHITE_RIGHTS_QUEEN)
+      process.stdout.write('Q');
+  
+    if (gRights & BLACK_RIGHTS_KING)
+      process.stdout.write('k');
+  
+    if (gRights & BLACK_RIGHTS_QUEEN)
+      process.stdout.write('q');
+  }
+  
+  //}}}
+  //{{{  gEnPass
+  
+  process.stdout.write(' -');
+  
+  process.stdout.write('\r\n');
+  
+  //}}}
 }
+
+//}}}
+//{{{  setBoardFromFENParts
+
+function setBoardFromFENParts(b,t,r,e) {
+
+  let nw = 0;
+  let nb = 0;
+
+  //{{{  gBoard
+  
+  gBoard.fill(0);
+  
+  let rank = 7;
+  let file = 0;
+  
+  for (let i=0; i < b.length; i++) {
+  
+    let ch = b.charAt(i);
+  
+    switch (ch) {
+      //{{{  1-8
+      
+      case '1':
+        file += 1;
+        break;
+      
+      case '2':
+        file += 2;
+        break;
+      
+      case '3':
+        file += 3;
+        break;
+      
+      case '4':
+        file += 4;
+        break;
+      
+      case '5':
+        file += 5;
+        break;
+      
+      case '6':
+        file += 6;
+        break;
+      
+      case '7':
+        file += 7;
+        break;
+      
+      case '8':
+        file += 8;
+        break;
+      
+      //}}}
+      //{{{  /
+      
+      case '/':
+        rank--;
+        file = 0;
+        break;
+      
+      //}}}
+      //{{{  white
+      
+      case 'P':
+        gBoard[sq88(rank,file)] = WHITE|PAWN;
+        file++;
+        nw++;
+        break;
+      
+      case 'N':
+        gBoard[sq88(rank,file)] = WHITE|KNIGHT;
+        file++;
+        nw++;
+        break;
+      
+      case 'B':
+        gBoard[sq88(rank,file)] = WHITE|BISHOP;
+        file++;
+        nw++;
+        break;
+      
+      case 'R':
+        gBoard[sq88(rank,file)] = WHITE|ROOK;
+        file++;
+        nw++;
+        break;
+      
+      case 'Q':
+        gBoard[sq88(rank,file)] = WHITE|QUEEN;
+        file++;
+        nw++;
+        break;
+      
+      case 'K':
+        gBoard[sq88(rank,file)] = WHITE|KING;
+        nw++;
+        file++;
+        break;
+      
+      //}}}
+      //{{{  black
+      
+      case 'p':
+        gBoard[sq88(rank,file)] = BLACK|PAWN;
+        file++;
+        nb++;
+        break;
+      
+      case 'n':
+        gBoard[sq88(rank,file)] = BLACK|KNIGHT;
+        file++;
+        nb++;
+        break;
+      
+      case 'b':
+        gBoard[sq88(rank,file)] = BLACK|BISHOP;
+        file++;
+        nb++;
+        break;
+      
+      case 'r':
+        gBoard[sq88(rank,file)] = BLACK|ROOK;
+        file++;
+        nb++;
+        break;
+      
+      case 'q':
+        gBoard[sq88(rank,file)] = BLACK|QUEEN;
+        file++;
+        nb++;
+        break;
+      
+      case 'k':
+        gBoard[sq88(rank,file)] = BLACK|KING;
+        file++;
+        nb++;
+        break;
+      
+      //}}}
+    }
+  }
+  
+  //}}}
+  //{{{  gTurn
+  
+  gTurn = WHITE;
+  
+  if (t == 'b')
+    gTurn = BLACK;
+  
+  //}}}
+  //{{{  gRights
+  
+  gRights = 0;
+  
+  for (let i=0; i < r.length; i++) {
+  
+    let ch = r.charAt(i);
+  
+    switch (ch) {
+  
+      case 'K':
+        gRights |= WHITE_RIGHTS_KING;
+        break;
+  
+      case 'Q':
+        gRights |= WHITE_RIGHTS_QUEEN;
+        break;
+  
+      case 'k':
+        gRights |= BLACK_RIGHTS_KING;
+        break;
+  
+      case 'q':
+        gRights |= BLACK_RIGHTS_QUEEN;
+        break;
+    }
+  }
+  
+  //}}}
+  //{{{  gEnPass
+  
+  gEnPass = 0;
+  
+  //}}}
+
+  setPieceListsFromBoard(nw,nb);
+}
+
+//}}}
 
 //}}}
 //{{{  piece list representation
 
 let gWhitePieces = Array(17);
 
+//{{{  init white piece list
+
 gWhitePieces[0]  = 16;
+
 gWhitePieces[1]  = SQUARE.e1;
 gWhitePieces[2]  = SQUARE.a1;
 gWhitePieces[3]  = SQUARE.b1;
@@ -174,9 +443,14 @@ gWhitePieces[14] = SQUARE.f2;
 gWhitePieces[15] = SQUARE.g2;
 gWhitePieces[16] = SQUARE.h2;
 
+//}}}
+
 let gBlackPieces = Array(17);
 
+//{{{  init black piece list
+
 gBlackPieces[0]  = 16;
+
 gBlackPieces[1]  = SQUARE.e8;
 gBlackPieces[2]  = SQUARE.a8;
 gBlackPieces[3]  = SQUARE.b8;
@@ -194,7 +468,11 @@ gBlackPieces[14] = SQUARE.f7;
 gBlackPieces[15] = SQUARE.g7;
 gBlackPieces[16] = SQUARE.h7;
 
+//}}}
+
 const gPieceLists = [gWhitePieces, gBlackPieces];
+
+//{{{  printPieceLists
 
 function printPieceLists() {
 
@@ -210,6 +488,50 @@ function printPieceLists() {
 
   process.stdout.write('\r\n');
 }
+
+//}}}
+//{{{  setPieceListsFromBoard
+
+function setPieceListsFromBoard(nw,nb) {
+
+  gWhitePieces = Array(nw+1);
+  gBlackPieces = Array(nb+1);
+
+  gWhitePieces[0] = nw;
+  gBlackPieces[0] = nb;
+
+  let wNext = 2;
+  let bNext = 2;
+
+  for (let r=0; r < 8; r++) {
+    for (let f=0; f < 8; f++) {
+
+      const sq = sq88(r,f);
+
+      const piece   = gBoard[sq]
+      const colour  = pieceColour(piece);
+      const flavour = pieceFlavour(piece);
+
+      if (piece) {
+        if (colour == WHITE) {
+          if (flavour == KING)
+            gWhitePieces[1] = sq;
+          else
+            gWhitePieces[wNext++] = sq;
+        }
+
+        else {
+          if (flavour == KING)
+            gBlackPieces[1] = sq;
+          else
+            gBlackPieces[bNext++] = sq;
+        }
+      }
+    }
+  }
+}
+
+//}}}
 
 //}}}
 //{{{  move representation
@@ -254,11 +576,11 @@ function getMoveToPiece(move) {
 
 function generateMoves() {
 
-  const pieceList = gPieceLists[gTurnIndex];
-
-  let numMoves  = gNextMoveIndex;
-  let numPieces = pieceList[0];
-  let index     = 1
+  const ci         = colourIndex(gTurn);
+  const pieceList  = gPieceLists[ci];
+  const startIndex = gNextMoveIndex;
+  let numPieces    = pieceList[0];
+  let index        = 1
 
   generateKingMoves(pieceList[index]);
 
@@ -291,7 +613,7 @@ function generateMoves() {
     index++;
   }
 
-  return(gNextMoveIndex - numMoves);
+  return(gNextMoveIndex - startIndex);
 }
 
 //}}}
@@ -445,7 +767,6 @@ function uciServer(data) {
   data = data.replace(/(\r)/gm,"");
   data = data.replace(/\s+/g,' ');
   data = data.trim();
-  data = data.toLowerCase();
 
   let commands = data.split('\n');
 
@@ -478,7 +799,7 @@ function uciServer(data) {
 
 function uciExec (tokens) {
 
-  let c = tokens[0];
+  let c = tokens[0].toLowerCase();
 
   switch (c) {
 
@@ -492,6 +813,11 @@ function uciExec (tokens) {
       printPieceLists();
       break;
 
+    case 'position':
+    case 'p':
+      uciExecPosition(tokens);
+      break;
+
     case 'perft':
       uciExecPerft(tokens);
       break;
@@ -503,6 +829,22 @@ function uciExec (tokens) {
 
 function uciExecPerft (tokens) {
 
+}
+
+//}}}
+//{{{  uciExecPosition
+
+function uciExecPosition (tokens) {
+
+  switch(tokens[1].toLowerCase()) {
+    case 'startpos':
+    case 's':
+      setBoardFromFENParts('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR', 'w', 'KQkq', '-');
+      break;
+
+    default:
+      setBoardFromFENParts(tokens[2],tokens[3],tokens[4],tokens[5]);
+  }
 }
 
 //}}}
@@ -523,6 +865,4 @@ process.stdin.on('readable', function() {
 process.stdin.on('end', function() {
   process.exit();
 });
-
-console.log(generateMoves());
 
