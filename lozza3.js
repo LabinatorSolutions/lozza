@@ -177,7 +177,7 @@ function printBoard() {
   for (let r=7; r>=0; r--) {
     process.stdout.write((r+1) + ' ');
     for (let f=0; f<8; f++) {
-      sq = sq88(r,f);
+      const sq = sq88(r,f);
       process.stdout.write(pieceChar(gBoard[sq]) + ' ');
     }
     process.stdout.write('\r\n');
@@ -241,7 +241,7 @@ function setBoardFromFENParts(b,t,r,e) {
   
   for (let i=0; i < b.length; i++) {
   
-    let ch = b.charAt(i);
+    const ch = b.charAt(i);
   
     switch (ch) {
       //{{{  1-8
@@ -383,7 +383,7 @@ function setBoardFromFENParts(b,t,r,e) {
   
   for (let i=0; i < r.length; i++) {
   
-    let ch = r.charAt(i);
+    const ch = r.charAt(i);
   
     switch (ch) {
   
@@ -579,6 +579,7 @@ function generateMoves() {
   const ci         = colourIndex(gTurn);
   const pieceList  = gPieceLists[ci];
   const startIndex = gNextMoveIndex;
+
   let numPieces    = pieceList[0];
   let index        = 1
 
@@ -588,12 +589,12 @@ function generateMoves() {
   index++;
 
   while (numPieces) {
-    let sq = pieceList[index];
+    const sq = pieceList[index];
     if (sq < 0) {
       index++;
       continue;
     }
-    let piece = gBoard[sq];
+    const piece = gBoard[sq];
     switch (pieceFlavour(piece)) {
       case PAWN:
         generatePawnMoves(sq)
@@ -636,9 +637,9 @@ function generateKingMove(from,to) {
   if (offboard(to))
     return 0;
 
-  let piece   = gBoard[to];
-  let flavour = pieceFlavour(piece);
-  let colour  = pieceColour(piece);
+  const piece   = gBoard[to];
+  const flavour = pieceFlavour(piece);
+  const colour  = pieceColour(piece);
 
   if (piece && (colour == gTurn || flavour == KING))
     return 0;
@@ -668,9 +669,9 @@ function generateKnightMove(from, to) {
   if (offboard(to))
     return 0;
 
-  let piece   = gBoard[to];
-  let flavour = pieceFlavour(piece);
-  let colour  = pieceColour(piece);
+  const piece   = gBoard[to];
+  const flavour = pieceFlavour(piece);
+  const colour  = pieceColour(piece);
 
   if (piece && (colour == gTurn || flavour == KING))
     return 0;
@@ -698,9 +699,9 @@ function generateBishopMove(from, to) {
   if (offboard(to))
     return 0;
 
-  let piece   = gBoard[to];
-  let flavour = pieceFlavour(piece);
-  let colour  = pieceColour(piece);
+  const piece   = gBoard[to];
+  const flavour = pieceFlavour(piece);
+  const colour  = pieceColour(piece);
 
   if (piece && (colour == gTurn || flavour == KING))
     return 0;
@@ -728,7 +729,7 @@ function generatePawnSlide(from, to) {
   if (offboard(to))
     return 0;
 
-  let piece = gBoard[to];
+  const piece = gBoard[to];
 
   if (piece)
     return 0;
@@ -743,9 +744,9 @@ function generatePawnCapture(from, to) {
   if (offboard(to))
     return 0;
 
-  let piece   = gBoard[to];
-  let flavour = pieceFlavour(piece);
-  let colour  = pieceColour(piece);
+  const piece   = gBoard[to];
+  const flavour = pieceFlavour(piece);
+  const colour  = pieceColour(piece);
 
   if (!piece || (piece && (colour == gTurn || flavour == KING)))
     return 0;
@@ -768,7 +769,7 @@ function uciServer(data) {
   data = data.replace(/\s+/g,' ');
   data = data.trim();
 
-  let commands = data.split('\n');
+  const commands = data.split('\n');
 
   if (!commands.length)
     return;
