@@ -1,30 +1,11 @@
 
-const MAX_PLY = 100;
+//{{{  constants
 
-//{{{  utils
-
-function assert(a,b,s) {
-  if (a != b)
-    console.log(a,b,'*******',s);
-}
-
-//}}}
-//{{{  piece representation
+const MAX_PLY   = 100;
+const MAX_MOVES = 260;
 
 const WHITE = 0;
 const BLACK = 8;
-
-function colourToggle (colour) {
-  return colour & 8;                     // WHITE (0) or BLACK (8)
-}
-
-function colourIndex (colour) {
-  return colour >>> 3                    // 0 or 1
-}
-
-function colourMultiplier (colour) {
-  return (-colour >> 31) | 1;            // 1 or -1.
-}
 
 const PAWN   = 1;
 const KNIGHT = 2;
@@ -33,25 +14,7 @@ const ROOK   = 4;
 const QUEEN  = 5;
 const KING   = 6;
 
-function pieceFlavour(p) {
-  return p & 7;
-}
-
-function pieceColour(p) {
-  return p & 8;
-}
-
-function pieceChar(p) {
-  const ch = ['.','P','N','B','R','Q','K','X','X','p','n','b','r','q','k'];
-  return ch[p];
-}
-
-//}}}
-//{{{  board representation
-
-//{{{  constants
-
-const SLIDE = {
+const WHITE_OFFSETS = {
   pawn1: 16,
   pawn2: 32,
   pawn3: 15,
@@ -74,6 +37,29 @@ const SLIDE = {
   hop8:  -18
 };
 
+const BLACK_OFFSETS = {
+  pawn1: -16,
+  pawn2: -32,
+  pawn3: -15,
+  pawn4: -17,
+  orth1: -16,
+  orth2: 16,
+  orth3: -1,
+  orth4: 1,
+  diag1: -15,
+  diag2: -17,
+  diag3: 15,
+  diag4: 17,
+  hop1:  -31,
+  hop2:  -33,
+  hop3:  -14,
+  hop4:  -18,
+  hop5:  31,
+  hop6:  33,
+  hop7:  14,
+  hop8:  18
+};
+
 const SQUARE = {
   a8: 0x70, b8: 0x71, c8: 0x72, d8: 0x73, e8: 0x74, f8: 0x75, g8: 0x76, h8: 0x77,
   a7: 0x60, b7: 0x61, c7: 0x62, d7: 0x63, e7: 0x64, f7: 0x65, g7: 0x66, h7: 0x67,
@@ -85,74 +71,101 @@ const SQUARE = {
   a1: 0x00, b1: 0x01, c1: 0x02, d1: 0x03, e1: 0x04, f1: 0x05, g1: 0x06, h1: 0x07
 }
 
-const WHITE_RIGHTS_KING  = 0x00000001;
-const WHITE_RIGHTS_QUEEN = 0x00000002;
-const BLACK_RIGHTS_KING  = 0x00000004;
-const BLACK_RIGHTS_QUEEN = 0x00000008;
-const WHITE_RIGHTS       = WHITE_RIGHTS_QUEEN | WHITE_RIGHTS_KING;
-const BLACK_RIGHTS       = BLACK_RIGHTS_QUEEN | BLACK_RIGHTS_KING;
 
-/*const MASK_RIGHTS =  [15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-                     15, 15, ~8, 15, 15, 15, ~12,15, 15, ~4, 15, 15,
-                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-                     15, 15, ~2, 15, 15, 15, ~3, 15, 15, ~1, 15, 15,
-                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15];
-*/
+//}}}
+//{{{  utils
+
+function assert(a,b,s) {
+  if (a != b)
+    console.log(a,b,'*******',s);
+}
+
+//}}}
+//{{{  global classes
+
+//{{{  wStruct
+
+function wStruct () {
+
+  this.pieces    = Array(16);
+  this.maxPieces = 16;
+  this.numPieces = 16;
+
+  this.kRights = false;
+  this.wRights = false;
+
+  this.offsets = WHITE_OFFSETS;
+}
+
+//}}}
+//{{{  bStruct
+
+function bStruct () {
+
+  this.pieces    = Array(16);
+  this.maxPieces = 16;
+  this.numPieces = 16;
+
+  this.kRights = false;
+  this.wRights = false;
+
+  this.offsets = BLACK_OFFSETS;
+}
+
+//}}}
+//{{{  gStruct
+
+function gStruct () {
+
+  this.board = Array(128).fill(0);
+  this.turn  = WHITE;
+  this.ep    = 0;
+
+  this.w = new wStruct();
+  this.b = new bStruct();
+
+  this.wb = [this.w, this.b];
+
+  this.moves         = Array(MAX_PLY * MAX_MOVES);
+  this.nextMoveIndex = 0;
+
+}
 
 //}}}
 
-const gBoard = Array(128).fill(0);
+//}}}
+//{{{  colour funcs
 
-//{{{  init gBoard
+function colourToggle (colour) {
+  return colour & 8;                     // WHITE (0) or BLACK (8)
+}
 
-gBoard[SQUARE.a1] = WHITE | ROOK;
-gBoard[SQUARE.b1] = WHITE | KNIGHT;
-gBoard[SQUARE.c1] = WHITE | BISHOP;
-gBoard[SQUARE.d1] = WHITE | QUEEN;
-gBoard[SQUARE.e1] = WHITE | KING;
-gBoard[SQUARE.f1] = WHITE | BISHOP;
-gBoard[SQUARE.g1] = WHITE | KNIGHT;
-gBoard[SQUARE.h1] = WHITE | ROOK;
+function colourIndex (colour) {
+  return colour >>> 3                    // 0 or 1
+}
 
-gBoard[SQUARE.a2] = WHITE | PAWN;
-gBoard[SQUARE.b2] = WHITE | PAWN;
-gBoard[SQUARE.c2] = WHITE | PAWN;
-gBoard[SQUARE.d2] = WHITE | PAWN;
-gBoard[SQUARE.e2] = WHITE | PAWN;
-gBoard[SQUARE.f2] = WHITE | PAWN;
-gBoard[SQUARE.g2] = WHITE | PAWN;
-gBoard[SQUARE.h2] = WHITE | PAWN;
-
-gBoard[SQUARE.a8] = BLACK | ROOK;
-gBoard[SQUARE.b8] = BLACK | KNIGHT;
-gBoard[SQUARE.c8] = BLACK | BISHOP;
-gBoard[SQUARE.d8] = BLACK | QUEEN;
-gBoard[SQUARE.e8] = BLACK | KING;
-gBoard[SQUARE.f8] = BLACK | BISHOP;
-gBoard[SQUARE.g8] = BLACK | KNIGHT;
-gBoard[SQUARE.h8] = BLACK | ROOK;
-
-gBoard[SQUARE.a7] = BLACK | PAWN;
-gBoard[SQUARE.b7] = BLACK | PAWN;
-gBoard[SQUARE.c7] = BLACK | PAWN;
-gBoard[SQUARE.d7] = BLACK | PAWN;
-gBoard[SQUARE.e7] = BLACK | PAWN;
-gBoard[SQUARE.f7] = BLACK | PAWN;
-gBoard[SQUARE.g7] = BLACK | PAWN;
-gBoard[SQUARE.h7] = BLACK | PAWN;
+function colourMultiplier (colour) {
+  return (-colour >> 31) | 1;            // 1 or -1.
+}
 
 //}}}
+//{{{  piece funcs
 
-let gTurn   = WHITE;
-let gRights = WHITE_RIGHTS | BLACK_RIGHTS;
-let gEnPass = 0;
+function pieceFlavour(p) {
+  return p & 7;
+}
+
+function pieceColour(p) {
+  return p & 8;
+}
+
+function pieceChar(p) {
+  const ch = ['.','P','N','B','R','Q','K','X','X','p','n','b','r','q','k'];
+  return ch[p];
+}
+
+//}}}
+//{{{  board funcs
 
 //{{{  sq88
 
@@ -172,13 +185,13 @@ function offboard (sq) {
 
 function printBoard() {
 
-  //{{{  gBoard
+  //{{{  board
   
   for (let r=7; r>=0; r--) {
     process.stdout.write((r+1) + ' ');
     for (let f=0; f<8; f++) {
       const sq = sq88(r,f);
-      process.stdout.write(pieceChar(gBoard[sq]) + ' ');
+      process.stdout.write(pieceChar(g.board[sq]) + ' ');
     }
     process.stdout.write('\r\n');
   }
@@ -186,38 +199,62 @@ function printBoard() {
   console.log('  a b c d e f g h');
   
   //}}}
-  //{{{  gTurn
+  //{{{  turn
   
-  if (gTurn == WHITE)
+  if (g.turn == WHITE)
     process.stdout.write('w ');
   
   else
     process.stdout.write('b ');
   
   //}}}
-  //{{{  gRights
+  //{{{  rights
   
-  if (!gRights)
-    process.stdout.write('- ');
+  let someRights = false;
   
-  else {
-    if (gRights & WHITE_RIGHTS_KING)
-      process.stdout.write('K');
-  
-    if (gRights & WHITE_RIGHTS_QUEEN)
-      process.stdout.write('Q');
-  
-    if (gRights & BLACK_RIGHTS_KING)
-      process.stdout.write('k');
-  
-    if (gRights & BLACK_RIGHTS_QUEEN)
-      process.stdout.write('q');
+  if (g.w.kRights) {
+    process.stdout.write('K');
+    someRights = true;
   }
   
+  if (g.w.qRights) {
+    process.stdout.write('Q');
+    someRights = true;
+  }
+  
+  if (g.b.kRights) {
+    process.stdout.write('k');
+    someRights = true;
+  }
+  
+  if (g.b.qRights) {
+    process.stdout.write('q');
+    someRights = true;
+  }
+  
+  if (!someRights)
+    process.stdout.write('- ');
+  
+  
   //}}}
-  //{{{  gEnPass
+  //{{{  ep
   
   process.stdout.write(' -');
+  
+  process.stdout.write('\r\n');
+  
+  //}}}
+  //{{{  piece lists
+  
+  console.log(g.w.numPieces, g.b.numPieces);
+  
+  for (let i=0; i<16; i++)
+    process.stdout.write(g.w.pieces[i].toString(16).padStart(2,'0') + ' ');
+  
+  process.stdout.write('\r\n');
+  
+  for (let i=0; i<16; i++)
+    process.stdout.write(g.b.pieces[i].toString(16).padStart(2,'0') + ' ');
   
   process.stdout.write('\r\n');
   
@@ -227,21 +264,21 @@ function printBoard() {
 //}}}
 //{{{  setBoardFromFENParts
 
-function setBoardFromFENParts(b,t,r,e) {
+function setBoardFromFENParts(board,turn,rights,ep) {
 
   let nw = 0;
   let nb = 0;
 
-  //{{{  gBoard
+  //{{{  board
   
-  gBoard.fill(0);
+  g.board.fill(0);
   
   let rank = 7;
   let file = 0;
   
-  for (let i=0; i < b.length; i++) {
+  for (let i=0; i < board.length; i++) {
   
-    const ch = b.charAt(i);
+    const ch = board.charAt(i);
   
     switch (ch) {
       //{{{  1-8
@@ -290,37 +327,37 @@ function setBoardFromFENParts(b,t,r,e) {
       //{{{  white
       
       case 'P':
-        gBoard[sq88(rank,file)] = WHITE|PAWN;
+        g.board[sq88(rank,file)] = WHITE|PAWN;
         file++;
         nw++;
         break;
       
       case 'N':
-        gBoard[sq88(rank,file)] = WHITE|KNIGHT;
+        g.board[sq88(rank,file)] = WHITE|KNIGHT;
         file++;
         nw++;
         break;
       
       case 'B':
-        gBoard[sq88(rank,file)] = WHITE|BISHOP;
+        g.board[sq88(rank,file)] = WHITE|BISHOP;
         file++;
         nw++;
         break;
       
       case 'R':
-        gBoard[sq88(rank,file)] = WHITE|ROOK;
+        g.board[sq88(rank,file)] = WHITE|ROOK;
         file++;
         nw++;
         break;
       
       case 'Q':
-        gBoard[sq88(rank,file)] = WHITE|QUEEN;
+        g.board[sq88(rank,file)] = WHITE|QUEEN;
         file++;
         nw++;
         break;
       
       case 'K':
-        gBoard[sq88(rank,file)] = WHITE|KING;
+        g.board[sq88(rank,file)] = WHITE|KING;
         nw++;
         file++;
         break;
@@ -329,37 +366,37 @@ function setBoardFromFENParts(b,t,r,e) {
       //{{{  black
       
       case 'p':
-        gBoard[sq88(rank,file)] = BLACK|PAWN;
+        g.board[sq88(rank,file)] = BLACK|PAWN;
         file++;
         nb++;
         break;
       
       case 'n':
-        gBoard[sq88(rank,file)] = BLACK|KNIGHT;
+        g.board[sq88(rank,file)] = BLACK|KNIGHT;
         file++;
         nb++;
         break;
       
       case 'b':
-        gBoard[sq88(rank,file)] = BLACK|BISHOP;
+        g.board[sq88(rank,file)] = BLACK|BISHOP;
         file++;
         nb++;
         break;
       
       case 'r':
-        gBoard[sq88(rank,file)] = BLACK|ROOK;
+        g.board[sq88(rank,file)] = BLACK|ROOK;
         file++;
         nb++;
         break;
       
       case 'q':
-        gBoard[sq88(rank,file)] = BLACK|QUEEN;
+        g.board[sq88(rank,file)] = BLACK|QUEEN;
         file++;
         nb++;
         break;
       
       case 'k':
-        gBoard[sq88(rank,file)] = BLACK|KING;
+        g.board[sq88(rank,file)] = BLACK|KING;
         file++;
         nb++;
         break;
@@ -369,182 +406,99 @@ function setBoardFromFENParts(b,t,r,e) {
   }
   
   //}}}
-  //{{{  gTurn
+  //{{{  turn
   
-  gTurn = WHITE;
+  g.turn = WHITE;
   
-  if (t == 'b')
-    gTurn = BLACK;
+  if (turn == 'b')
+    g.turn = BLACK;
   
   //}}}
-  //{{{  gRights
+  //{{{  rights
   
-  gRights = 0;
+  g.w.kRights = false;
+  g.w.qRights = false;
   
-  for (let i=0; i < r.length; i++) {
+  g.b.kRights = false;
+  g.b.qRights = false;
   
-    const ch = r.charAt(i);
+  for (let i=0; i < rights.length; i++) {
+  
+    const ch = rights.charAt(i);
   
     switch (ch) {
   
       case 'K':
-        gRights |= WHITE_RIGHTS_KING;
+        g.w.kRights = true;
         break;
   
       case 'Q':
-        gRights |= WHITE_RIGHTS_QUEEN;
+        g.w.qRights = true;
         break;
   
       case 'k':
-        gRights |= BLACK_RIGHTS_KING;
+        g.b.kRights = true;
         break;
   
       case 'q':
-        gRights |= BLACK_RIGHTS_QUEEN;
+        g.b.qRights = true;
         break;
     }
   }
   
   //}}}
-  //{{{  gEnPass
+  //{{{  ep
   
-  gEnPass = 0;
+  g.ep = 0;
   
   //}}}
-
-  setPieceListsFromBoard(nw,nb);
-}
-
-//}}}
-
-//}}}
-//{{{  piece list representation
-
-let gWhitePieces = Array(17);
-
-//{{{  init white piece list
-
-gWhitePieces[0]  = 16;
-
-gWhitePieces[1]  = SQUARE.e1;
-gWhitePieces[2]  = SQUARE.a1;
-gWhitePieces[3]  = SQUARE.b1;
-gWhitePieces[4]  = SQUARE.c1;
-gWhitePieces[5]  = SQUARE.d1;
-gWhitePieces[6]  = SQUARE.f1;
-gWhitePieces[7]  = SQUARE.g1;
-gWhitePieces[8]  = SQUARE.h1;
-gWhitePieces[9]  = SQUARE.a2;
-gWhitePieces[10] = SQUARE.b2;
-gWhitePieces[11] = SQUARE.c2;
-gWhitePieces[12] = SQUARE.d2;
-gWhitePieces[13] = SQUARE.e2;
-gWhitePieces[14] = SQUARE.f2;
-gWhitePieces[15] = SQUARE.g2;
-gWhitePieces[16] = SQUARE.h2;
-
-//}}}
-
-let gBlackPieces = Array(17);
-
-//{{{  init black piece list
-
-gBlackPieces[0]  = 16;
-
-gBlackPieces[1]  = SQUARE.e8;
-gBlackPieces[2]  = SQUARE.a8;
-gBlackPieces[3]  = SQUARE.b8;
-gBlackPieces[4]  = SQUARE.c8;
-gBlackPieces[5]  = SQUARE.d8;
-gBlackPieces[6]  = SQUARE.f8;
-gBlackPieces[7]  = SQUARE.g8;
-gBlackPieces[8]  = SQUARE.h8;
-gBlackPieces[9]  = SQUARE.a7;
-gBlackPieces[10] = SQUARE.b7;
-gBlackPieces[11] = SQUARE.c7;
-gBlackPieces[12] = SQUARE.d7;
-gBlackPieces[13] = SQUARE.e7;
-gBlackPieces[14] = SQUARE.f7;
-gBlackPieces[15] = SQUARE.g7;
-gBlackPieces[16] = SQUARE.h7;
-
-//}}}
-
-const gPieceLists = [gWhitePieces, gBlackPieces];
-
-//{{{  printPieceLists
-
-function printPieceLists() {
-
-  console.log(gWhitePieces[0], gBlackPieces[0]);
-
-  for (let i=1; i<gWhitePieces.length; i++)
-    process.stdout.write(gWhitePieces[i].toString(16).padStart(2,'0') + ' ');
-
-  process.stdout.write('\r\n');
-
-  for (let i=1; i<gBlackPieces.length; i++)
-    process.stdout.write(gBlackPieces[i].toString(16).padStart(2,'0') + ' ');
-
-  process.stdout.write('\r\n');
-}
-
-//}}}
-//{{{  setPieceListsFromBoard
-
-function setPieceListsFromBoard(nw,nb) {
-
-  gWhitePieces = Array(nw+1);
-  gBlackPieces = Array(nb+1);
-
-  gWhitePieces[0] = nw;
-  gBlackPieces[0] = nb;
-
-  let wNext = 2;
-  let bNext = 2;
-
+  //{{{  piece lists
+  
+  g.w.maxPieces = nw;
+  g.b.maxPieces = nb;
+  
+  let wNext = 1;
+  let bNext = 1;
+  
   for (let r=0; r < 8; r++) {
     for (let f=0; f < 8; f++) {
-
+  
       const sq = sq88(r,f);
-
-      const piece   = gBoard[sq]
+  
+      const piece   = g.board[sq]
       const colour  = pieceColour(piece);
       const flavour = pieceFlavour(piece);
-
+  
       if (piece) {
         if (colour == WHITE) {
           if (flavour == KING)
-            gWhitePieces[1] = sq;
+            g.w.pieces[0] = sq;
           else
-            gWhitePieces[wNext++] = sq;
+            g.w.pieces[wNext++] = sq;
         }
-
+  
         else {
           if (flavour == KING)
-            gBlackPieces[1] = sq;
+            g.b.pieces[0] = sq;
           else
-            gBlackPieces[bNext++] = sq;
+            g.b.pieces[bNext++] = sq;
         }
       }
     }
   }
+  
+  //}}}
 }
 
 //}}}
 
 //}}}
-//{{{  move representation
-
-const MAX_MOVES = 260;
-
-const gMoveList      = Array(MAX_PLY * MAX_MOVES);
-let   gNextMoveIndex = 0;
+//{{{  move funcs
 
 //{{{  move primitives
 
 function addMove(move) {
-  gMoveList[gNextMoveIndex++] = move;
+  g.moves[g.nextMoveIndex++] = move;
 }
 
 function assembleMove(fromSq, toSq, fromPiece, toPiece, flags) {
@@ -572,29 +526,29 @@ function getMoveToPiece(move) {
 }
 
 //}}}
+
 //{{{  generateMoves
 
 function generateMoves() {
 
-  const ci         = colourIndex(gTurn);
-  const pieceList  = gPieceLists[ci];
-  const startIndex = gNextMoveIndex;
+  const wb         = g.wb[colourIndex(g.turn)];
+  const startIndex = g.nextMoveIndex;
 
-  let numPieces    = pieceList[0];
-  let index        = 1
+  let numPieces    = wb.numPieces;
+  let index        = 0
 
-  generateKingMoves(pieceList[index]);
+  generateKingMoves(wb.pieces[index]);
 
   numPieces--;
   index++;
 
   while (numPieces) {
-    const sq = pieceList[index];
+    const sq = wb.pieces[index];
     if (sq < 0) {
       index++;
       continue;
     }
-    const piece = gBoard[sq];
+    const piece = g.board[sq];
     switch (pieceFlavour(piece)) {
       case PAWN:
         generatePawnMoves(sq)
@@ -614,7 +568,7 @@ function generateMoves() {
     index++;
   }
 
-  return(gNextMoveIndex - startIndex);
+  return(g.nextMoveIndex - startIndex);
 }
 
 //}}}
@@ -622,14 +576,16 @@ function generateMoves() {
 
 function generateKingMoves(sq) {
 
-  generateKingMove(sq, sq + SLIDE.orth1);
-  generateKingMove(sq, sq + SLIDE.orth2);
-  generateKingMove(sq, sq + SLIDE.orth3);
-  generateKingMove(sq, sq + SLIDE.orth4);
-  generateKingMove(sq, sq + SLIDE.diag1);
-  generateKingMove(sq, sq + SLIDE.diag2);
-  generateKingMove(sq, sq + SLIDE.diag3);
-  generateKingMove(sq, sq + SLIDE.diag4);
+  const offsets = g.wb[colourIndex(g.turn)].offsets;
+
+  generateKingMove(sq, sq + offsets.orth1);
+  generateKingMove(sq, sq + offsets.orth2);
+  generateKingMove(sq, sq + offsets.orth3);
+  generateKingMove(sq, sq + offsets.orth4);
+  generateKingMove(sq, sq + offsets.diag1);
+  generateKingMove(sq, sq + offsets.diag2);
+  generateKingMove(sq, sq + offsets.diag3);
+  generateKingMove(sq, sq + offsets.diag4);
 }
 
 function generateKingMove(from,to) {
@@ -637,14 +593,14 @@ function generateKingMove(from,to) {
   if (offboard(to))
     return 0;
 
-  const piece   = gBoard[to];
+  const piece   = g.board[to];
   const flavour = pieceFlavour(piece);
   const colour  = pieceColour(piece);
 
-  if (piece && (colour == gTurn || flavour == KING))
+  if (piece && (colour == g.turn || flavour == KING))
     return 0;
 
-  addMove(assembleMove(from, to, KING|gTurn, piece));
+  addMove(assembleMove(from, to, KING|g.turn, piece));
 
   return 1;
 }
@@ -654,14 +610,16 @@ function generateKingMove(from,to) {
 
 function generateKnightMoves(sq) {
 
-  generateKnightMove(sq, sq + SLIDE.hop1);
-  generateKnightMove(sq, sq + SLIDE.hop2);
-  generateKnightMove(sq, sq + SLIDE.hop3);
-  generateKnightMove(sq, sq + SLIDE.hop4);
-  generateKnightMove(sq, sq + SLIDE.hop5);
-  generateKnightMove(sq, sq + SLIDE.hop6);
-  generateKnightMove(sq, sq + SLIDE.hop7);
-  generateKnightMove(sq, sq + SLIDE.hop8);
+  const offsets = g.wb[colourIndex(g.turn)].offsets;
+
+  generateKnightMove(sq, sq + offsets.hop1);
+  generateKnightMove(sq, sq + offsets.hop2);
+  generateKnightMove(sq, sq + offsets.hop3);
+  generateKnightMove(sq, sq + offsets.hop4);
+  generateKnightMove(sq, sq + offsets.hop5);
+  generateKnightMove(sq, sq + offsets.hop6);
+  generateKnightMove(sq, sq + offsets.hop7);
+  generateKnightMove(sq, sq + offsets.hop8);
 }
 
 function generateKnightMove(from, to) {
@@ -669,14 +627,14 @@ function generateKnightMove(from, to) {
   if (offboard(to))
     return 0;
 
-  const piece   = gBoard[to];
+  const piece   = g.board[to];
   const flavour = pieceFlavour(piece);
   const colour  = pieceColour(piece);
 
-  if (piece && (colour == gTurn || flavour == KING))
+  if (piece && (colour == g.turn || flavour == KING))
     return 0;
 
-  addMove(assembleMove(from, to, KNIGHT|gTurn, piece));
+  addMove(assembleMove(from, to, KNIGHT|g.turn, piece));
 
   return 1;
 }
@@ -686,9 +644,11 @@ function generateKnightMove(from, to) {
 
 function generateBishopMoves(sq) {
 
+  const offsets = g.wb[colourIndex(g.turn)].offsets;
+
   let to = 0;
 
-  to = sq + SLIDE.diag1;
+  to = sq + offsets.diag1;
   while (generateBishopMove(sq, to)) {
     to += SLIDE.diag1
   }
@@ -699,14 +659,14 @@ function generateBishopMove(from, to) {
   if (offboard(to))
     return 0;
 
-  const piece   = gBoard[to];
+  const piece   = g.board[to];
   const flavour = pieceFlavour(piece);
   const colour  = pieceColour(piece);
 
-  if (piece && (colour == gTurn || flavour == KING))
+  if (piece && (colour == g.turn || flavour == KING))
     return 0;
 
-  addMove(assembleMove(from, to, BISHOP|gTurn, piece));
+  addMove(assembleMove(from, to, BISHOP|g.turn, piece));
 
   return 1;
 }
@@ -716,12 +676,14 @@ function generateBishopMove(from, to) {
 
 function generatePawnMoves(sq) {
 
-  if (generatePawnSlide(sq, sq + SLIDE.pawn1)) {
-    generatePawnSlide(sq, sq + SLIDE.pawn2);
+  const offsets = g.wb[colourIndex(g.turn)].offsets;
+
+  if (generatePawnSlide(sq, sq + offsets.pawn1)) {
+    generatePawnSlide(sq, sq + offsets.pawn2);
   }
 
-  generatePawnCapture(sq, sq + SLIDE.pawn3);
-  generatePawnCapture(sq, sq + SLIDE.pawn4);
+  generatePawnCapture(sq, sq + offsets.pawn3);
+  generatePawnCapture(sq, sq + offsets.pawn4);
 }
 
 function generatePawnSlide(from, to) {
@@ -729,12 +691,12 @@ function generatePawnSlide(from, to) {
   if (offboard(to))
     return 0;
 
-  const piece = gBoard[to];
+  const piece = g.board[to];
 
   if (piece)
     return 0;
 
-  addMove(assembleMove(from, to, PAWN|gTurn, 0));
+  addMove(assembleMove(from, to, PAWN|g.turn, 0));
 
   return 1;
 }
@@ -744,14 +706,14 @@ function generatePawnCapture(from, to) {
   if (offboard(to))
     return 0;
 
-  const piece   = gBoard[to];
+  const piece   = g.board[to];
   const flavour = pieceFlavour(piece);
   const colour  = pieceColour(piece);
 
-  if (!piece || (piece && (colour == gTurn || flavour == KING)))
+  if (!piece || (piece && (colour == g.turn || flavour == KING)))
     return 0;
 
-  addMove(assembleMove(from, to, PAWN|gTurn, piece));
+  addMove(assembleMove(from, to, PAWN|g.turn, piece));
 
   return 1;
 }
@@ -766,7 +728,6 @@ function generatePawnCapture(from, to) {
 function uciServer(data) {
 
   data = data.replace(/(\r)/gm,"");
-  data = data.replace(/\s+/g,' ');
   data = data.trim();
 
   const commands = data.split('\n');
@@ -774,7 +735,7 @@ function uciServer(data) {
   if (!commands.length)
     return;
 
-  for (let i=0; i < commands.length; i++ ) {
+  for (let i=0; i < commands.length; i++) {
 
     const command = commands[i].trim();
 
@@ -786,7 +747,10 @@ function uciServer(data) {
     if (!tokens.length)
       continue;
 
-    const c = tokens[0].trim();
+    for (let j=0; j < tokens.length; j++)
+      tokens[j] = tokens[j].trim();
+
+    const c = tokens[0];
 
     if (!c)
       continue;
@@ -809,9 +773,18 @@ function uciExec (tokens) {
       process.exit();
       break;
 
+    case 'board':
     case 'b':
       printBoard();
-      printPieceLists();
+      break;
+
+    case 'moves':
+    case 'm':
+      console.log(generateMoves());
+      break;
+
+    case 'ucinewgame':
+    case 'u':
       break;
 
     case 'position':
@@ -853,6 +826,12 @@ function uciExecPosition (tokens) {
 
 //}}}
 
+g = new gStruct();
+
+uciServer('u\np s');
+
+//{{{  connect the uci server to stdio
+
 const ucifs = require('fs');
 
 process.stdin.setEncoding('utf8');
@@ -867,4 +846,7 @@ process.stdin.on('readable', function() {
 process.stdin.on('end', function() {
   process.exit();
 });
+
+//}}}
+
 
