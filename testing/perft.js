@@ -1,10 +1,6 @@
 //{{{  // https://github.com/op12no2/lozza
-//"use strict"
-//
-// https://github.com/op12no2/lozza
-//
-// A Javascript chess engine inspired by Fabien Letouzey's Fruit 2.1.
-//
+
+"use strict"
 
 const BUILD = "3";
 
@@ -481,18 +477,19 @@ function genMoves (turn) {
 
 function makeMove (move) {
 
-  state.ply++;
+  const s = state;
+  const b = s.board;
 
-  const b = state.board;
+  s.ply++;
 
   const fr    = moveFromSq(move);
   const to    = moveToSq(move);
   const frObj = moveFromObj(move);
 
   if (frObj == W_KING)
-    state.wKingSq = to;
+    s.wKingSq = to;
   else if (frObj == B_KING)
-    state.bKingSq = to;
+    s.bKingSq = to;
 
   //{{{  slide piece
   
@@ -502,16 +499,16 @@ function makeMove (move) {
   //}}}
   //{{{  clear rights?
   
-  if (state.rights) {
+  if (s.rights) {
   
-    state.rights &= MASK_RIGHTS[fr] & MASK_RIGHTS[to];
+    s.rights &= MASK_RIGHTS[fr] & MASK_RIGHTS[to];
   
   }
   
   //}}}
   //{{{  reset EP
   
-  state.ep = 0;
+  s.ep = 0;
   
   //}}}
 
@@ -526,7 +523,7 @@ function makeMove (move) {
     
       if (move & MOVE_EPMAKE_MASK) {
     
-        state.ep = ep;
+        s.ep = ep;
     
       }
     
@@ -563,7 +560,7 @@ function makeMove (move) {
     
       if (move & MOVE_EPMAKE_MASK) {
     
-        state.ep = ep;
+        s.ep = ep;
     
       }
     
@@ -602,9 +599,10 @@ function makeMove (move) {
 
 function unmakeMove (move) {
 
-  state.ply--;
+  const s = state;
+  const b = s.board;
 
-  const b = state.board;
+  s.ply--;
 
   const fr    = moveFromSq(move);
   const to    = moveToSq(move);
@@ -612,9 +610,9 @@ function unmakeMove (move) {
   const frObj = moveFromObj(move);
 
   if (frObj == W_KING)
-    state.wKingSq = fr;
+    s.wKingSq = fr;
   else if (frObj == B_KING)
-    state.bKingSq = fr;
+    s.bKingSq = fr;
 
   b[fr] = frObj;
   b[to] = toObj;
@@ -768,7 +766,7 @@ function position () {
   
   //}}}
 
-  var spec = state.uciio;
+  var spec = uciio;
 
   //{{{  board turn
   
@@ -867,10 +865,11 @@ function initSearch () {
 
 function cache() {
 
-  const ply = state.ply;
+  const s   = state;
+  const ply = s.ply;
 
-  state.cacheRights[ply]   = state.rights;
-  state.cacheEp[ply]       = state.ep;
+  s.cacheRights[ply]   = s.rights;
+  s.cacheEp[ply]       = s.ep;
 }
 
 //}}}
@@ -878,10 +877,11 @@ function cache() {
 
 function uncache() {
 
-  const ply = state.ply;
+  const s   = state;
+  const ply = s.ply;
 
-  state.rights = state.cacheRights[ply];
-  state.ep     = state.cacheEp[ply];
+  s.rights = s.cacheRights[ply];
+  s.ep     = s.cacheEp[ply];
 }
 
 //}}}
@@ -915,8 +915,10 @@ function getNextMove (nextMove, lastMove) {
 
 function addMove (move) {
 
-  state.moves[state.nextMove]   = move;
-  state.ranks[state.nextMove++] = (Math.random() * 100) | 0;
+  const s = state;
+
+  s.moves[s.nextMove]   = move;
+  s.ranks[s.nextMove++] = (Math.random() * 100) | 0;
 
 }
 
@@ -1058,7 +1060,7 @@ const BENCHFENS = [
 
 function uciExec(e) {
 
-  const uci = state.uciio;
+  const uci = uciio;
 
   var messageList = e.split('\n');
 
@@ -1155,25 +1157,28 @@ function uciExec(e) {
 
 //{{{  global state
 
-const state = {}
+const state = {
 
-state.board  = Array(144);
-state.rights = 0;
-state.ep     = 0;
+  board:  Array(144),
+  turn:   0,
+  rights: 0,
+  ep:     0,
 
-state.ply = 0;
+  ply: 0,
 
-state.wKingSq = 0;
-state.bKingSq = 0;
+  wKingSq: 0,
+  bKingSq: 0,
 
-state.nextMove = 0;
-state.moves    = Array(MAX_PLY * MAX_MOVES);
-state.ranks    = Array(MAX_PLY * MAX_MOVES);
+  nextMove: 0,
+  moves:    Array(MAX_PLY * MAX_MOVES),
+  ranks:    Array(MAX_PLY * MAX_MOVES),
 
-state.cacheRights = Array(MAX_PLY);
-state.cacheEp     = Array(MAX_PLY);
+  cacheRights: Array(MAX_PLY),
+  cacheEp:     Array(MAX_PLY),
 
-state.uciio  = {};
+}
+
+const uciio = {}
 
 //}}}
 
@@ -1284,11 +1289,11 @@ for (var i=0; i < qp.length-5; i++) {
   uciExec('position ' + p[0]);
   uciExec('perft '    + p[1]);
 
-  var err = moves - state.uciio.moves;
+  var err = moves - uciio.moves;
 
   errs += err;
 
-  console.log(id,fen,depth,moves,state.uciio.moves,err);
+  console.log(id,fen,depth,moves,uciio.moves,err);
 }
 
 var t2 = Date.now();
