@@ -68,10 +68,12 @@ const B_KING   = KING   | BLACK;
 //
 // E == EMPTY, X = OFF BOARD, - == CANNOT HAPPEN
 //
-//               0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15
-//               E  W  W  W  W  W  W  X  -  B  B  B  B  B  B  -
-//               E  P  N  B  R  Q  K  X  -  P  N  B  R  Q  K  -
+//                 0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15
+//                 E  W  W  W  W  W  W  X  -  B  B  B  B  B  B  -
+//                 E  P  N  B  R  Q  K  X  -  P  N  B  R  Q  K  -
 //
+
+const SQ_CHAR   = ['.','P','N','B','R','Q','K','x','y','p','n','b','r','q','k','z'];
 
 const IS_O      = [0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0];
 const IS_E      = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -214,21 +216,6 @@ const FILE = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
               0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 0,
               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
-const MAP = [];
-
-MAP['p'] = B_PAWN;
-MAP['n'] = B_KNIGHT;
-MAP['b'] = B_BISHOP;
-MAP['r'] = B_ROOK;
-MAP['q'] = B_QUEEN;
-MAP['k'] = B_KING;
-MAP['P'] = W_PAWN;
-MAP['N'] = W_KNIGHT;
-MAP['B'] = W_BISHOP;
-MAP['R'] = W_ROOK;
-MAP['Q'] = W_QUEEN;
-MAP['K'] = W_KING;
 
 //}}}
 
@@ -728,81 +715,28 @@ function isAttacked (to, byCol) {
 
 
 //}}}
-//{{{  fen
+//{{{  printBoard
 
-var UMAP = [];
-
-UMAP[B_PAWN]   = 'p';
-UMAP[B_KNIGHT] = 'n';
-UMAP[B_BISHOP] = 'b';
-UMAP[B_ROOK]   = 'r';
-UMAP[B_QUEEN]  = 'q';
-UMAP[B_KING]   = 'k';
-UMAP[W_PAWN]   = 'P';
-UMAP[W_KNIGHT] = 'N';
-UMAP[W_BISHOP] = 'B';
-UMAP[W_ROOK]   = 'R';
-UMAP[W_QUEEN]  = 'Q';
-UMAP[W_KING]   = 'K';
-
-
-function fenstr () {
+function printBoard () {
 
   const s = state;
   const b = s.board;
 
-  var fen = '';
-  var n   = 0;
-
-  for (var i=0; i < 8; i++) {
-    for (var j=0; j < 8; j++) {
-      var sq  = B88[i*8 + j]
-      var obj = b[sq];
-      if (obj == 0)
-        n++;
-      else {
-        if (n) {
-          fen += '' + n;
-          n = 0;
-        }
-        fen += UMAP[obj];
-      }
+  for (var rank=7; rank >= 0; rank--) {
+    process.stdout.write((rank+1)+' ');
+    for (var file=0; file <= 7; file++) {
+      process.stdout.write(SQ_CHAR[b[B88[(7-rank)*8+file]]] + ' ');
     }
-    if (n) {
-      fen += '' + n;
-      n = 0;
-    }
-    if (i < 7)
-      fen += '/';
+    process.stdout.write('\r\n');
   }
 
+  console.log('  a b c d e f g h');
   if (s.turn == WHITE)
-    fen += ' w';
+    process.stdout.write('w');
   else
-    fen += ' b';
-
-  if (s.rights) {
-    fen += ' ';
-    if (s.rights & WHITE_RIGHTS_KING)
-      fen += 'K';
-    if (s.rights & WHITE_RIGHTS_QUEEN)
-      fen += 'Q';
-    if (s.rights & BLACK_RIGHTS_KING)
-      fen += 'k';
-    if (s.rights & BLACK_RIGHTS_QUEEN)
-      fen += 'q';
-  }
-  else
-    fen += ' -';
-
-  if (s.ep)
-    fen += ' ' + COORDS[s.ep];
-  else
-    fen += ' -';
-
-  fen += ' 0 1';
-
-  return fen;
+    process.stdout.write('b');
+  process.stdout.write(' ');
+  console.log();
 }
 
 //}}}
@@ -1242,6 +1176,16 @@ function uciExec(e) {
         
         //}}}
 
+      case 'board':
+      case 'b':
+        //{{{  board
+        
+        printBoard();
+        
+        break;
+        
+        //}}}
+
       case 'quit':
       case 'q':
         //{{{  quit
@@ -1307,7 +1251,7 @@ const uciio = {}
 
 //}}}
 
-uciExec('position startpos');
+uciExec('position startpos\nboard');
 uciArgv();
 
 //{{{  connect to stdio
