@@ -1,9 +1,5 @@
-//"use strict"
-//
-// https://github.com/op12no2/lozza
-//
-// A Javascript chess engine inspired by Fabien Letouzey's Fruit 2.1.
-//
+
+"use strict"
 
 const BUILD = "3";
 
@@ -36,7 +32,7 @@ const MOVE_TO_MASK       = 0x000000FF;
 const MOVE_FR_MASK       = 0x0000FF00;
 const MOVE_TOOBJ_MASK    = 0x000F0000;
 const MOVE_FROBJ_MASK    = 0x00F00000;
-const MOVE_PAWN_MASK     = 0x01000000;
+const MOVE_KINGMOVE_MASK = 0x01000000;
 const MOVE_EPTAKE_MASK   = 0x02000000;
 const MOVE_EPMAKE_MASK   = 0x04000000;
 const MOVE_CASTLE_MASK   = 0x08000000;
@@ -44,8 +40,7 @@ const MOVE_PROMOTE_MASK  = 0x10000000;
 const MOVE_PROMAS_MASK   = 0x60000000;  // NBRQ.
 const MOVE_SPARE2_MASK   = 0x80000000;
 
-const MOVE_SPECIAL_MASK  = MOVE_CASTLE_MASK | MOVE_PROMOTE_MASK | MOVE_EPTAKE_MASK | MOVE_EPMAKE_MASK; // need extra work in make move.
-const KEEPER_MASK        = MOVE_CASTLE_MASK | MOVE_PROMOTE_MASK | MOVE_EPTAKE_MASK | MOVE_TOOBJ_MASK;  // futility etc.
+const MOVE_IKKY_MASK = MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | MOVE_PROMOTE_MASK | MOVE_EPTAKE_MASK | MOVE_EPMAKE_MASK;
 
 const PAWN   = 1;
 const KNIGHT = 2;
@@ -124,10 +119,10 @@ const SQA6 = 50,  SQB6 = 51,  SQC6 = 52,  SQD6 = 53,  SQE6 = 54,  SQF6 = 55,  SQ
 const SQA7 = 38,  SQB7 = 39,  SQC7 = 40,  SQD7 = 41,  SQE7 = 42,  SQF7 = 43,  SQG7 = 44,  SQH7 = 45;
 const SQA8 = 26,  SQB8 = 27,  SQC8 = 28,  SQD8 = 29,  SQE8 = 30,  SQF8 = 31,  SQG8 = 32,  SQH8 = 33;
 
-const MOVE_E1G1 = MOVE_CASTLE_MASK | (W_KING << MOVE_FROBJ_BITS) | (E1 << MOVE_FR_BITS) | G1;
-const MOVE_E1C1 = MOVE_CASTLE_MASK | (W_KING << MOVE_FROBJ_BITS) | (E1 << MOVE_FR_BITS) | C1;
-const MOVE_E8G8 = MOVE_CASTLE_MASK | (B_KING << MOVE_FROBJ_BITS) | (E8 << MOVE_FR_BITS) | G8;
-const MOVE_E8C8 = MOVE_CASTLE_MASK | (B_KING << MOVE_FROBJ_BITS) | (E8 << MOVE_FR_BITS) | C8;
+const MOVE_E1G1 = MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | (W_KING << MOVE_FROBJ_BITS) | (E1 << MOVE_FR_BITS) | G1;
+const MOVE_E1C1 = MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | (W_KING << MOVE_FROBJ_BITS) | (E1 << MOVE_FR_BITS) | C1;
+const MOVE_E8G8 = MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | (B_KING << MOVE_FROBJ_BITS) | (E8 << MOVE_FR_BITS) | G8;
+const MOVE_E8C8 = MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | (B_KING << MOVE_FROBJ_BITS) | (E8 << MOVE_FR_BITS) | C8;
 
 const QPRO = (QUEEN-2)  << MOVE_PROMAS_BITS | MOVE_PROMOTE_MASK;
 const RPRO = (ROOK-2)   << MOVE_PROMAS_BITS | MOVE_PROMOTE_MASK;
@@ -339,8 +334,6 @@ function genMoves (turn) {
     if (frPiece == PAWN) {
       //{{{  P
       
-      frMove |= MOVE_PAWN_MASK;
-      
       to     = fr + pOffsetOrth;
       toObj  = b[to];
       
@@ -435,10 +428,10 @@ function genMoves (turn) {
         toObj = b[to];
       
         if (!toObj)
-          addMove(frMove | to);
+          addMove(frMove | to | MOVE_KINGMOVE_MASK);
       
         else if (CAPTURE[toObj])
-          addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+          addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | MOVE_KINGMOVE_MASK);
       }
       
       //}}}
@@ -480,58 +473,41 @@ function genMoves (turn) {
 
 function makeMove (move) {
 
-  state.ply++;
+  const s = state;
+  const b = s.board;
 
-  const b = state.board;
+  s.ply++;
 
   const fr    = moveFromSq(move);
   const to    = moveToSq(move);
   const frObj = moveFromObj(move);
 
-  if (frObj == W_KING)
-    state.wKingSq = to;
-  else if (frObj == B_KING)
-    state.bKingSq = to;
-
-  //{{{  slide piece
-  
   b[fr] = 0;
   b[to] = frObj;
-  
-  //}}}
-  //{{{  clear rights?
-  
-  if (state.rights) {
-  
-    state.rights &= MASK_RIGHTS[fr] & MASK_RIGHTS[to];
-  
-  }
-  
-  //}}}
-  //{{{  reset EP
-  
-  state.ep = 0;
-  
-  //}}}
 
-  if (move & MOVE_SPECIAL_MASK) {
+  s.rights &= MASK_RIGHTS[fr] & MASK_RIGHTS[to];
+
+  s.ep = 0;
+
+  if (move & MOVE_IKKY_MASK) {
     //{{{  ikky stuff
     
     const frCol = objColour(frObj);
     
     if (frCol == WHITE) {
     
-      const ep = to + 12;
+      if (move & MOVE_KINGMOVE_MASK)
+        s.wKingSq = to;
     
       if (move & MOVE_EPMAKE_MASK) {
     
-        state.ep = ep;
+        s.ep = to+12;
     
       }
     
       else if (move & MOVE_EPTAKE_MASK) {
     
-        b[ep] = 0;
+        b[to+12] = 0;
     
       }
     
@@ -558,17 +534,18 @@ function makeMove (move) {
     
     else {
     
-      const ep = to - 12;
+      if (move & MOVE_KINGMOVE_MASK)
+        s.bKingSq = to;
     
       if (move & MOVE_EPMAKE_MASK) {
     
-        state.ep = ep;
+        s.ep = to-12;
     
       }
     
       else if (move & MOVE_EPTAKE_MASK) {
     
-        b[ep] = 0;
+        b[to-12] = 0;
     
       }
     
@@ -601,35 +578,32 @@ function makeMove (move) {
 
 function unmakeMove (move) {
 
-  state.ply--;
+  const s = state;
+  const b = s.board;
 
-  const b = state.board;
+  s.ply--;
 
   const fr    = moveFromSq(move);
   const to    = moveToSq(move);
   const toObj = moveToObj(move);
   const frObj = moveFromObj(move);
 
-  if (frObj == W_KING)
-    state.wKingSq = fr;
-  else if (frObj == B_KING)
-    state.bKingSq = fr;
-
   b[fr] = frObj;
   b[to] = toObj;
 
-  if (move & MOVE_SPECIAL_MASK) {
+  if (move & MOVE_IKKY_MASK) {
     //{{{  ikky stuff
     
     const frCol = objColour(frObj);
     
     if (frCol == WHITE) {
     
+      if (move & MOVE_KINGMOVE_MASK)
+        s.wKingSq = fr;
+    
       if (move & MOVE_EPTAKE_MASK) {
     
-        const ep = to + 12;
-    
-        b[ep] = B_PAWN;
+        b[to+12] = B_PAWN;
     
       }
     
@@ -650,11 +624,12 @@ function unmakeMove (move) {
     
     else {
     
+      if (move & MOVE_KINGMOVE_MASK)
+        s.bKingSq = fr;
+    
       if (move & MOVE_EPTAKE_MASK) {
     
-        const ep = to - 12;
-    
-        b[ep] = W_PAWN;
+        b[to-12] = W_PAWN;
     
       }
     
@@ -752,100 +727,248 @@ function isAttacked (to, byCol) {
 
 
 //}}}
+//{{{  fen
+
+var UMAP = [];
+
+UMAP[B_PAWN]   = 'p';
+UMAP[B_KNIGHT] = 'n';
+UMAP[B_BISHOP] = 'b';
+UMAP[B_ROOK]   = 'r';
+UMAP[B_QUEEN]  = 'q';
+UMAP[B_KING]   = 'k';
+UMAP[W_PAWN]   = 'P';
+UMAP[W_KNIGHT] = 'N';
+UMAP[W_BISHOP] = 'B';
+UMAP[W_ROOK]   = 'R';
+UMAP[W_QUEEN]  = 'Q';
+UMAP[W_KING]   = 'K';
+
+
+function fenstr () {
+
+  const s = state;
+  const b = s.board;
+
+  var fen = '';
+  var n   = 0;
+
+  for (var i=0; i < 8; i++) {
+    for (var j=0; j < 8; j++) {
+      var sq  = B88[i*8 + j]
+      var obj = b[sq];
+      if (obj == 0)
+        n++;
+      else {
+        if (n) {
+          fen += '' + n;
+          n = 0;
+        }
+        fen += UMAP[obj];
+      }
+    }
+    if (n) {
+      fen += '' + n;
+      n = 0;
+    }
+    if (i < 7)
+      fen += '/';
+  }
+
+  if (s.turn == WHITE)
+    fen += ' w';
+  else
+    fen += ' b';
+
+  if (s.rights) {
+    fen += ' ';
+    if (s.rights & WHITE_RIGHTS_KING)
+      fen += 'K';
+    if (s.rights & WHITE_RIGHTS_QUEEN)
+      fen += 'Q';
+    if (s.rights & BLACK_RIGHTS_KING)
+      fen += 'k';
+    if (s.rights & BLACK_RIGHTS_QUEEN)
+      fen += 'q';
+  }
+  else
+    fen += ' -';
+
+  if (s.ep)
+    fen += ' ' + COORDS[s.ep];
+  else
+    fen += ' -';
+
+  fen += ' 0 1';
+
+  return fen;
+}
+
+//}}}
 //{{{  position
 
 function position () {
 
-  const b = state.board;
+  const s = state;
+  const b = s.board;
 
   //{{{  init
   
   b.fill(EDGE);
   
-  for (let i=0; i < B88.length; i++)
+  for (let i=0; i < 64; i++)
     b[B88[i]] = 0;
   
   //}}}
 
-  var spec = state.uciio;
+  var spec = uciio;
 
+  //{{{  board board
+  
+  var sq   = 0;
+  var rank = 7;
+  var file = 0;
+  
+  for (let i=0; i < spec.board.length; i++) {
+  
+    const ch   = spec.board.charAt(i);
+    const sq88 = (7-rank) * 8 + file;
+    const sq   = B88[sq88];
+  
+    switch (ch) {
+      //{{{  1-8
+      
+      case '1':
+        file += 1;
+        break;
+      case '2':
+        file += 2;
+        break;
+      case '3':
+        file += 3;
+        break;
+      case '4':
+        file += 4;
+        break;
+      case '5':
+        file += 5;
+        break;
+      case '6':
+        file += 6;
+        break;
+      case '7':
+        file += 7;
+        break;
+      case '8':
+        break;
+      
+      //}}}
+      //{{{  /
+      
+      case '/':
+        rank--;
+        file = 0;
+        break;
+      
+      //}}}
+      //{{{  black
+      
+      case 'p':
+        b[sq] = B_PAWN;
+        file++;
+        break;
+      case 'n':
+        b[sq] = B_KNIGHT;
+        file++;
+        break;
+      case 'b':
+        b[sq] = B_BISHOP;
+        file++;
+        break;
+      case 'r':
+        b[sq] = B_ROOK;
+        file++;
+        break;
+      case 'q':
+        b[sq] = B_QUEEN;
+        file++;
+        break;
+      case 'k':
+        b[sq] = B_KING;
+        s.bKingSq = sq;
+        file++;
+        break;
+      
+      //}}}
+      //{{{  white
+      
+      case 'P':
+        b[sq] = W_PAWN;
+        file++;
+        break;
+      case 'N':
+        b[sq] = W_KNIGHT;
+        file++;
+        break;
+      case 'B':
+        b[sq] = W_BISHOP;
+        file++;
+        break;
+      case 'R':
+        b[sq] = W_ROOK;
+        file++;
+        break;
+      case 'Q':
+        b[sq] = W_QUEEN;
+        file++;
+        break;
+      case 'K':
+        b[sq] = W_KING;
+        s.wKingSq = sq;
+        file++;
+        break;
+      
+      //}}}
+      default:
+        console.log('unknown board char','|'+ch+'|');
+    }
+  }
+  
+  //}}}
   //{{{  board turn
   
   if (spec.turn == 'w')
-    state.turn = WHITE;
+    s.turn = WHITE;
+  
+  else if (spec.turn == 'b')
+    s.turn = BLACK;
   
   else
-    state.turn = BLACK;
+    console.log('unknown board colour', spec.turn)
   
   //}}}
   //{{{  board rights
   
-  state.rights = 0;
+  s.rights = 0;
   
   for (let i=0; i < spec.rights.length; i++) {
   
     const ch = spec.rights.charAt(i);
   
-    if (ch == 'K') state.rights |= WHITE_RIGHTS_KING;
-    if (ch == 'Q') state.rights |= WHITE_RIGHTS_QUEEN;
-    if (ch == 'k') state.rights |= BLACK_RIGHTS_KING;
-    if (ch == 'q') state.rights |= BLACK_RIGHTS_QUEEN;
-  }
-  
-  //}}}
-  //{{{  board board
-  
-  var sq = 0;
-  
-  for (let j=0; j < spec.board.length; j++) {
-  
-    const ch  = spec.board.charAt(j);
-    const chn = parseInt(ch);
-  
-    while (b[sq] == EDGE)
-      sq++;
-  
-    if (isNaN(chn)) {
-  
-      if (ch != '/') {
-  
-        const obj   = MAP[ch];
-        const piece = obj & PIECE_MASK;
-        const col   = obj & COLOR_MASK;
-  
-        if (col == WHITE) {
-          b[sq] = obj;
-          if (piece == KING)
-            state.wKingSq = sq;
-        }
-  
-        else {
-          b[sq] = obj;
-          if (piece == KING)
-            state.bKingSq = sq;
-        }
-  
-        sq++;
-      }
-    }
-  
-    else {
-  
-      for (let k=0; k < chn; k++) {
-        b[sq] = 0;
-        sq++;
-      }
-    }
+    if (ch == 'K') s.rights |= WHITE_RIGHTS_KING;
+    if (ch == 'Q') s.rights |= WHITE_RIGHTS_QUEEN;
+    if (ch == 'k') s.rights |= BLACK_RIGHTS_KING;
+    if (ch == 'q') s.rights |= BLACK_RIGHTS_QUEEN;
   }
   
   //}}}
   //{{{  board ep
   
   if (spec.ep.length == 2)
-    state.ep = COORDS.indexOf(spec.ep)
+    s.ep = COORDS.indexOf(spec.ep)
   
   else
-    state.ep = 0;
+    s.ep = 0;
   
   //}}}
 
@@ -866,10 +989,11 @@ function initSearch () {
 
 function cache() {
 
-  const ply = state.ply;
+  const s   = state;
+  const ply = s.ply;
 
-  state.cacheRights[ply]   = state.rights;
-  state.cacheEp[ply]       = state.ep;
+  s.cacheRights[ply]   = s.rights;
+  s.cacheEp[ply]       = s.ep;
 }
 
 //}}}
@@ -877,10 +1001,11 @@ function cache() {
 
 function uncache() {
 
-  const ply = state.ply;
+  const s   = state;
+  const ply = s.ply;
 
-  state.rights = state.cacheRights[ply];
-  state.ep     = state.cacheEp[ply];
+  s.rights = s.cacheRights[ply];
+  s.ep     = s.cacheEp[ply];
 }
 
 //}}}
@@ -914,8 +1039,10 @@ function getNextMove (nextMove, lastMove) {
 
 function addMove (move) {
 
-  state.moves[state.nextMove]   = move;
-  state.ranks[state.nextMove++] = (Math.random() * 100) | 0;
+  const s = state;
+
+  s.moves[s.nextMove]   = move;
+  s.ranks[s.nextMove++] = (Math.random() * 100) | 0;
 
 }
 
@@ -1057,7 +1184,7 @@ const BENCHFENS = [
 
 function uciExec(e) {
 
-  const uci = state.uciio;
+  const uci = uciio;
 
   var messageList = e.split('\n');
 
@@ -1154,25 +1281,28 @@ function uciExec(e) {
 
 //{{{  global state
 
-const state = {}
+const state = {
 
-state.board  = Array(144);
-state.rights = 0;
-state.ep     = 0;
+  board:  Array(144),
+  turn:   0,
+  rights: 0,
+  ep:     0,
 
-state.ply = 0;
+  ply: 0,
 
-state.wKingSq = 0;
-state.bKingSq = 0;
+  wKingSq: 0,
+  bKingSq: 0,
 
-state.nextMove = 0;
-state.moves    = Array(MAX_PLY * MAX_MOVES);
-state.ranks    = Array(MAX_PLY * MAX_MOVES);
+  nextMove: 0,
+  moves:    Array(MAX_PLY * MAX_MOVES),
+  ranks:    Array(MAX_PLY * MAX_MOVES),
 
-state.cacheRights = Array(MAX_PLY);
-state.cacheEp     = Array(MAX_PLY);
+  cacheRights: Array(MAX_PLY),
+  cacheEp:     Array(MAX_PLY),
 
-state.uciio  = {};
+}
+
+const uciio = {}
 
 //}}}
 
