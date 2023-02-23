@@ -10,17 +10,11 @@ const MAX_MOVES = 250;
 
 const EMPTY = 0;
 
-const WHITE = 0x0;                  // toggle with: ~turn & COLOR_MASK
+const WHITE = 0x0;
 const BLACK = 0x8;
 
-const I_WHITE = 0;                  // 0/1 colour index, compute with: turn >>> 3
-const I_BLACK = 1;
-
-const M_WHITE = 1;
-const M_BLACK = -1;                 // +1/-1 colour multiplier, compute with: (-turn >> 31) | 1
-
-const PIECE_MASK = 0x7;
-const COLOR_MASK = 0x8;
+const PIECE_MASK  = 0x7;
+const COLOUR_MASK = 0x8;
 
 const MOVE_TO_BITS      = 0;
 const MOVE_FR_BITS      = 8;
@@ -91,6 +85,7 @@ const IS_WE     = [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 const IS_WP     = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 const IS_WN     = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 const IS_WNBRQ  = [0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+const IS_WPNBRQ = [0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 const IS_WB     = [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 const IS_WBQ    = [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 const IS_WRQ    = [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -101,25 +96,19 @@ const IS_BE     = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0];
 const IS_BP     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0];
 const IS_BN     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0];
 const IS_BNBRQ  = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0]
+const IS_BPNBRQ = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0]
 const IS_BB     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0];
 const IS_BBQ    = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0];
 const IS_BRQ    = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0];
 const IS_BQ     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+
+const WB_THEM   = [IS_BPNBRQ,IS_WPNBRQ];
 
 const W_PROMOTE_SQ = [0,26, 27, 28, 29, 30, 31, 32, 33];
 const B_PROMOTE_SQ = [0,110,111,112,113,114,115,116,117];
 
 const A1 = 110, B1 = 111, C1 = 112, D1 = 113, E1 = 114, F1 = 115, G1 = 116, H1 = 117;
 const A8 = 26,  B8 = 27,  C8 = 28,  D8 = 29,  E8 = 30,  F8 = 31,  G8 = 32,  H8 = 33;
-
-const SQA1 = 110, SQB1 = 111, SQC1 = 112, SQD1 = 113, SQE1 = 114, SQF1 = 115, SQG1 = 116, SQH1 = 117;
-const SQA2 = 98,  SQB2 = 99,  SQC2 = 100, SQD2 = 101, SQE2 = 102, SQF2 = 103, SQG2 = 104, SQH2 = 105;
-const SQA3 = 86,  SQB3 = 87,  SQC3 = 88,  SQD3 = 89,  SQE3 = 90,  SQF3 = 91,  SQG3 = 92,  SQH3 = 93;
-const SQA4 = 74,  SQB4 = 75,  SQC4 = 76,  SQD4 = 77,  SQE4 = 78,  SQF4 = 79,  SQG4 = 80,  SQH4 = 81;
-const SQA5 = 62,  SQB5 = 63,  SQC5 = 64,  SQD5 = 65,  SQE5 = 66,  SQF5 = 67,  SQG5 = 68,  SQH5 = 69;
-const SQA6 = 50,  SQB6 = 51,  SQC6 = 52,  SQD6 = 53,  SQE6 = 54,  SQF6 = 55,  SQG6 = 56,  SQH6 = 57;
-const SQA7 = 38,  SQB7 = 39,  SQC7 = 40,  SQD7 = 41,  SQE7 = 42,  SQF7 = 43,  SQG7 = 44,  SQH7 = 45;
-const SQA8 = 26,  SQB8 = 27,  SQC8 = 28,  SQD8 = 29,  SQE8 = 30,  SQF8 = 31,  SQG8 = 32,  SQH8 = 33;
 
 const MOVE_E1G1 = MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | (W_KING << MOVE_FROBJ_BITS) | (E1 << MOVE_FR_BITS) | G1;
 const MOVE_E1C1 = MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | (W_KING << MOVE_FROBJ_BITS) | (E1 << MOVE_FR_BITS) | C1;
@@ -220,6 +209,18 @@ const FILE = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 //{{{  primitives
 
+function colourIndex(c) {
+  return c >>> 3;
+}
+
+function colourMultiplier (c) {
+  return (-c >> 31) | 1;
+}
+
+function colourToggle (c) {
+  return ~c & COLOUR_MASK;
+}
+
 function moveFromSq (move) {
   return (move & MOVE_FR_MASK) >>> MOVE_FR_BITS;
 }
@@ -241,7 +242,7 @@ function movePromotePiece (move) {
 }
 
 function objColour (obj) {
-  return obj & COLOR_MASK;
+  return obj & COLOUR_MASK;
 }
 
 function objPiece (obj) {
@@ -253,206 +254,285 @@ function objPiece (obj) {
 
 function genMoves (turn) {
 
-  const b = state.board;
+  const s = state;
+  const b = s.board;
 
   //{{{  colour based stuff
   
   if (turn == WHITE) {
   
-    var pOffsetOrth  = WP_OFFSET_ORTH;
-    var pOffsetDiag1 = WP_OFFSET_DIAG1;
-    var pOffsetDiag2 = WP_OFFSET_DIAG2;
-    var pHomeRank    = 2;
-    var pPromoteRank = 7;
-    var rights       = state.rights & WHITE_RIGHTS;
-    var CAPTURE      = IS_B;
-    var ME           = IS_W;
+    genWhiteCastlingMoves(turn);
   
-    if (rights) {
+    var THEM = IS_BPNBRQ;
+    var ME   = IS_W;
   
-      if ((rights & WHITE_RIGHTS_KING)  && b[F1] == 0 && b[G1] == 0                  && !isAttacked(F1,BLACK) && !isAttacked(E1,BLACK))
-        addMove(MOVE_E1G1);
-  
-      if ((rights & WHITE_RIGHTS_QUEEN) && b[B1] == 0 && b[C1] == 0 && b[D1] == 0 && !isAttacked(D1,BLACK) && !isAttacked(E1,BLACK))
-        addMove(MOVE_E1C1);
-    }
   }
   
   else {
   
-    var pOffsetOrth  = BP_OFFSET_ORTH;
-    var pOffsetDiag1 = BP_OFFSET_DIAG1;
-    var pOffsetDiag2 = BP_OFFSET_DIAG2;
-    var pHomeRank    = 7;
-    var pPromoteRank = 2;
-    var rights       = state.rights & BLACK_RIGHTS;
-    var CAPTURE      = IS_W;
-    var ME           = IS_B;
+    genBlackCastlingMoves(turn);
   
-    if (rights) {
+    var THEM = IS_WPNBRQ;
+    var ME   = IS_B;
   
-      if ((rights & BLACK_RIGHTS_KING)  && b[F8] == 0 && b[G8] == 0 &&                  !isAttacked(F8,WHITE) && !isAttacked(E8,WHITE))
-        addMove(MOVE_E8G8);
-  
-      if ((rights & BLACK_RIGHTS_QUEEN) && b[B8] == 0 && b[C8] == 0 && b[D8] == 0 && !isAttacked(D8,WHITE) && !isAttacked(E8,WHITE))
-        addMove(MOVE_E8C8);
-    }
   }
   
   //}}}
 
-  let to     = 0;
-  let toObj  = 0;
-  let frMove = 0;
+  for (let i=0; i<64; i++) {
 
-  for (let count=0; count<64; count++) {
-
-    const fr    = B88[count];
+    const fr    = B88[i];
     const frObj = b[fr];
 
     if (!ME[frObj])
       continue;
 
-    const frPiece = frObj & PIECE_MASK;
-    const frRank  = RANK[fr];
+    const frPiece = objPiece(frObj);
+    const frMove  = (frObj << MOVE_FROBJ_BITS) | (fr << MOVE_FR_BITS);
 
-    frMove  = (frObj << MOVE_FROBJ_BITS) | (fr << MOVE_FR_BITS);
+    switch (frPiece) {
 
-    if (frPiece == PAWN) {
-      //{{{  P
-      
-      to     = fr + pOffsetOrth;
-      toObj  = b[to];
-      
-      if (!toObj) {
-      
-        if (frRank == pPromoteRank) {
-          addMove(frMove | to | QPRO);
-          addMove(frMove | to | RPRO);
-          addMove(frMove | to | BPRO);
-          addMove(frMove | to | NPRO);
-        }
-        else {
-          addMove(frMove | to);
-      
-          if (frRank == pHomeRank) {
-      
-            to += pOffsetOrth;
-            if (!b[to])
-              addMove(frMove | to | MOVE_EPMAKE_MASK);
-          }
-        }
-      }
-      
-      to    = fr + pOffsetDiag1;
-      toObj = b[to];
-      
-      if (CAPTURE[toObj]) {
-      
-        if (frRank == pPromoteRank) {
-          addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | QPRO);
-          addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | RPRO);
-          addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | BPRO);
-          addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | NPRO);
-        }
-        else
-          addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
-      }
-      
-      else if (!toObj && to == state.ep)
-        addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | MOVE_EPTAKE_MASK);
-      
-      to    = fr + pOffsetDiag2;
-      toObj = b[to];
-      
-      if (CAPTURE[toObj]) {
-      
-        if (frRank == pPromoteRank) {
-          addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | QPRO);
-          addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | RPRO);
-          addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | BPRO);
-          addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | NPRO);
-        }
-        else
-          addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
-      }
-      
-      else if (!toObj && to == state.ep)
-        addMove(frMove | to | MOVE_EPTAKE_MASK);
-      
-      //}}}
+      case PAWN:
+        genPawnMoves(frMove);
+        break;
+
+      case KNIGHT:
+        genKnightMoves(frMove);
+        break;
+
+      case KING:
+        genKingMoves(frMove);
+        break;
+
+      default:
+        genSliderMoves(frMove);
     }
+  }
+}
 
-    else if (frPiece == KNIGHT) {
-      //{{{  N
-      
-      var offsets = OFFSETS[frPiece];
-      var dir     = 0;
-      
-      while (dir < 8) {
-      
-        to    = fr + offsets[dir++];
-        toObj = b[to];
-      
-        if (!toObj)
-          addMove(frMove | to);
-        else if (CAPTURE[toObj])
-          addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
-      }
-      
-      //}}}
-    }
+//}}}
+//{{{  genPawnMove
 
-    else if (frPiece == KING) {
-      //{{{  K
-      
-      var offsets = OFFSETS[frPiece];
-      var dir     = 0;
-      
-      while (dir < 8) {
-      
-        to    = fr + offsets[dir++];
-        toObj = b[to];
-      
-        if (!toObj)
-          addMove(frMove | to | MOVE_KINGMOVE_MASK);
-      
-        else if (CAPTURE[toObj])
-          addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | MOVE_KINGMOVE_MASK);
-      }
-      
-      //}}}
+const WB_OFFSET_ORTH  = [WP_OFFSET_ORTH, BP_OFFSET_ORTH];
+const WB_OFFSET_DIAG1 = [WP_OFFSET_DIAG1,BP_OFFSET_DIAG1];
+const WB_OFFSET_DIAG2 = [WP_OFFSET_DIAG2,BP_OFFSET_DIAG2];
+const WB_HOME_RANK    = [2,7];
+const WB_PROMOTE_RANK = [7,2];
+
+function genPawnMoves (frMove) {
+
+  const s = state;
+  const b = s.board;
+
+  const fr           = moveFromSq(frMove);
+  const frObj        = moveFromObj(frMove);
+  const turn         = objColour(frObj);
+  const frRank       = RANK[fr];
+  const cx           = colourIndex(turn);
+  const THEM         = WB_THEM[cx];
+  const OFFSET_ORTH  = WB_OFFSET_ORTH[cx];
+  const OFFSET_DIAG1 = WB_OFFSET_DIAG1[cx];
+  const OFFSET_DIAG2 = WB_OFFSET_DIAG2[cx];
+  const HOME_RANK    = WB_HOME_RANK[cx];
+  const PROMOTE_RANK = WB_PROMOTE_RANK[cx];
+
+  var to    = fr + OFFSET_ORTH;
+  var toObj = b[to];
+
+  if (!toObj) {
+
+    if (frRank == PROMOTE_RANK) {
+      addMove(frMove | to | QPRO);
+      addMove(frMove | to | RPRO);
+      addMove(frMove | to | BPRO);
+      addMove(frMove | to | NPRO);
     }
 
     else {
-      //{{{  BRQ
-      
-      var offsets = OFFSETS[frPiece];
-      var len     = offsets.length;
-      var dir     = 0;
-      
-      while (dir < len) {
-      
-        var offset = offsets[dir++];
-      
-        to    = fr + offset;
-        toObj = b[to];
-      
-        while (!toObj) {
-      
-          addMove(frMove | to);
-      
-          to    += offset;
-          toObj = b[to];
-        }
-      
-        if (CAPTURE[toObj])
-          addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+
+      addMove(frMove | to);
+
+      if (frRank == HOME_RANK) {
+
+        to += OFFSET_ORTH;
+        if (!b[to])
+          addMove(frMove | to | MOVE_EPMAKE_MASK);
       }
-      
-      //}}}
     }
   }
+
+  to    = fr + OFFSET_DIAG1;
+  toObj = b[to];
+
+  if (THEM[toObj]) {
+
+    if (frRank == PROMOTE_RANK) {
+      addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | QPRO);
+      addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | RPRO);
+      addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | BPRO);
+      addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | NPRO);
+    }
+    else
+      addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+  }
+
+  else if (!toObj && to == s.ep)
+    addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | MOVE_EPTAKE_MASK);
+
+  to    = fr + OFFSET_DIAG2;
+  toObj = b[to];
+
+  if (THEM[toObj]) {
+
+    if (frRank == PROMOTE_RANK) {
+      addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | QPRO);
+      addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | RPRO);
+      addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | BPRO);
+      addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | NPRO);
+    }
+    else
+      addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+  }
+
+  else if (!toObj && to == s.ep)
+    addMove(frMove | to | MOVE_EPTAKE_MASK);
+
+}
+
+//}}}
+//{{{  genKingMoves
+
+function genKingMoves (frMove) {
+
+  const s = state;
+  const b = s.board;
+
+  const fr    = moveFromSq(frMove);
+  const frObj = moveFromObj(frMove);
+  const turn  = objColour(frObj);
+  const cx    = colourIndex(turn);
+  const THEM  = WB_THEM[cx];
+
+  const offsets = OFFSETS[KING];
+
+  var dir = 0;
+
+  while (dir < 8) {
+
+    const to    = fr + offsets[dir++];
+    const toObj = b[to];
+
+    if (!toObj)
+      addMove(frMove | to | MOVE_KINGMOVE_MASK);
+
+    else if (THEM[toObj])
+      addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | MOVE_KINGMOVE_MASK);
+  }
+
+}
+
+//}}}
+//{{{  genKnightMoves
+
+function genKnightMoves (frMove) {
+
+  const s = state;
+  const b = s.board;
+
+  const fr    = moveFromSq(frMove);
+  const frObj = moveFromObj(frMove);
+  const turn  = objColour(frObj);
+  const cx    = colourIndex(turn);
+  const THEM  = WB_THEM[cx];
+
+  const offsets = OFFSETS[KNIGHT];
+
+  var dir = 0;
+
+  while (dir < 8) {
+
+    const to    = fr + offsets[dir++];
+    const toObj = b[to];
+
+    if (!toObj)
+      addMove(frMove | to);
+
+    else if (THEM[toObj])
+      addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+  }
+
+}
+
+//}}}
+//{{{  genSliderMoves
+
+function genSliderMoves (frMove) {
+
+  const s = state;
+  const b = s.board;
+
+  const fr      = moveFromSq(frMove);
+  const frObj   = moveFromObj(frMove);
+  const frPiece = objPiece(frObj);
+  const turn    = objColour(frObj);
+  const cx      = colourIndex(turn);
+  const THEM    = WB_THEM[cx];
+
+  const offsets = OFFSETS[frPiece];
+  const len     = offsets.length;
+
+  var dir = 0;
+
+  while (dir < len) {
+
+    const offset = offsets[dir++];
+
+    let to    = fr + offset;
+    let toObj = b[to];
+
+    while (!toObj) {
+
+      addMove(frMove | to);
+
+      to    += offset;
+      toObj = b[to];
+    }
+
+    if (THEM[toObj])
+      addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+  }
+}
+
+//}}}
+//{{{  genWhiteCastlingMoves
+
+function genWhiteCastlingMoves (turn) {
+
+  const s = state;
+  const b = s.board;
+
+   if ((s.rights & WHITE_RIGHTS_KING)  && b[F1] == 0 && b[G1] == 0               && !isAttacked(F1,BLACK) && !isAttacked(E1,BLACK))
+     addMove(MOVE_E1G1);
+
+   if ((s.rights & WHITE_RIGHTS_QUEEN) && b[B1] == 0 && b[C1] == 0 && b[D1] == 0 && !isAttacked(D1,BLACK) && !isAttacked(E1,BLACK))
+     addMove(MOVE_E1C1);
+
+}
+
+//}}}
+//{{{  genBlackCastlingMoves
+
+function genBlackCastlingMoves (turn) {
+
+  const s = state;
+  const b = s.board;
+
+  if ((s.rights & BLACK_RIGHTS_KING)  && b[F8] == 0 && b[G8] == 0 &&               !isAttacked(F8,WHITE) && !isAttacked(E8,WHITE))
+    addMove(MOVE_E8G8);
+
+  if ((s.rights & BLACK_RIGHTS_QUEEN) && b[B8] == 0 && b[C8] == 0 && b[D8] == 0 && !isAttacked(D8,WHITE) && !isAttacked(E8,WHITE))
+    addMove(MOVE_E8C8);
+
 }
 
 //}}}
@@ -476,84 +556,101 @@ function makeMove (move) {
 
   s.ep = 0;
 
-  if (move & MOVE_IKKY_MASK) {
-    //{{{  ikky stuff
+  if (move & MOVE_IKKY_MASK)
+    makeIkkyMove(move);
+}
+
+//}}}
+//{{{  makeIkkyMove
+
+function makeIkkyMove (move) {
+
+  const s = state;
+  const b = s.board;
+
+  const to    = moveToSq(move);
+  const frObj = moveFromObj(move);
+  const frCol = objColour(frObj);
+
+  if (frCol == WHITE) {
+    //{{{  white
     
-    const frCol = objColour(frObj);
+    if (move & MOVE_KINGMOVE_MASK)
     
-    if (frCol == WHITE) {
+      s.wKingSq = to;
     
-      if (move & MOVE_KINGMOVE_MASK)
-        s.wKingSq = to;
+    if (move & MOVE_EPMAKE_MASK) {
     
-      if (move & MOVE_EPMAKE_MASK) {
-    
-        s.ep = to+12;
-    
-      }
-    
-      else if (move & MOVE_EPTAKE_MASK) {
-    
-        b[to+12] = 0;
-    
-      }
-    
-      else if (move & MOVE_PROMOTE_MASK) {
-    
-        b[to] = movePromotePiece(move) | WHITE;
-    
-      }
-    
-      else if (move == MOVE_E1G1) {
-    
-        b[H1] = 0;
-        b[F1] = W_ROOK;
-    
-      }
-    
-      else if (move == MOVE_E1C1) {
-    
-        b[A1] = 0;
-        b[D1] = W_ROOK;
-    
-      }
-    }
-    
-    else {
-    
-      if (move & MOVE_KINGMOVE_MASK)
-        s.bKingSq = to;
-    
-      if (move & MOVE_EPMAKE_MASK) {
-    
-        s.ep = to-12;
-    
-      }
-    
-      else if (move & MOVE_EPTAKE_MASK) {
-    
-        b[to-12] = 0;
-    
-      }
-    
-      else if (move & MOVE_PROMOTE_MASK) {
-    
-        b[to] = movePromotePiece(move) | BLACK;
-    
-      }
-    
-      else if (move == MOVE_E8G8) {
-    
-        b[H8] = 0;
-        b[F8] = B_ROOK;
+      s.ep = to+12;
     
     }
-      else if (move == MOVE_E8C8) {
     
-        b[A8] = 0;
-        b[D8] = B_ROOK;
+    else if (move & MOVE_EPTAKE_MASK) {
     
-      }
+      b[to+12] = 0;
+    
+    }
+    
+    else if (move & MOVE_PROMOTE_MASK) {
+    
+      b[to] = movePromotePiece(move) | WHITE;
+    
+    }
+    
+    else if (move == MOVE_E1G1) {
+    
+      b[H1] = 0;
+      b[F1] = W_ROOK;
+    
+    }
+    
+    else if (move == MOVE_E1C1) {
+    
+      b[A1] = 0;
+      b[D1] = W_ROOK;
+    
+    }
+    
+    //}}}
+  }
+
+  else {
+    //{{{  black
+    
+    if (move & MOVE_KINGMOVE_MASK)
+    
+      s.bKingSq = to;
+    
+    if (move & MOVE_EPMAKE_MASK) {
+    
+      s.ep = to-12;
+    
+    }
+    
+    else if (move & MOVE_EPTAKE_MASK) {
+    
+      b[to-12] = 0;
+    
+    }
+    
+    else if (move & MOVE_PROMOTE_MASK) {
+    
+      b[to] = movePromotePiece(move) | BLACK;
+    
+    }
+    
+    else if (move == MOVE_E8G8) {
+    
+      b[H8] = 0;
+      b[F8] = B_ROOK;
+    
+    }
+    
+    else if (move == MOVE_E8C8) {
+    
+      b[A8] = 0;
+      b[D8] = B_ROOK;
+    
     }
     
     //}}}
@@ -578,61 +675,78 @@ function unmakeMove (move) {
   b[fr] = frObj;
   b[to] = toObj;
 
-  if (move & MOVE_IKKY_MASK) {
-    //{{{  ikky stuff
+  if (move & MOVE_IKKY_MASK)
+    unmakeIkkyMove(move);
+}
+
+//}}}
+//{{{  unmakeIkkyMove
+
+function unmakeIkkyMove (move) {
+
+  const s = state;
+  const b = s.board;
+
+  const fr    = moveFromSq(move);
+  const to    = moveToSq(move);
+  const frObj = moveFromObj(move);
+  const frCol = objColour(frObj);
+
+  if (frCol == WHITE) {
+    //{{{  white
     
-    const frCol = objColour(frObj);
+    if (move & MOVE_KINGMOVE_MASK)
     
-    if (frCol == WHITE) {
+      s.wKingSq = fr;
     
-      if (move & MOVE_KINGMOVE_MASK)
-        s.wKingSq = fr;
+    if (move & MOVE_EPTAKE_MASK) {
     
-      if (move & MOVE_EPTAKE_MASK) {
+      b[to+12] = B_PAWN;
     
-        b[to+12] = B_PAWN;
-    
-      }
-    
-      else if (move == MOVE_E1G1) {
-    
-        b[H1] = W_ROOK;
-        b[F1] = 0;
-    
-      }
-    
-      else if (move == MOVE_E1C1) {
-    
-        b[A1] = W_ROOK;
-        b[D1] = 0;
-    
-      }
     }
     
-    else {
+    else if (move == MOVE_E1G1) {
     
-      if (move & MOVE_KINGMOVE_MASK)
-        s.bKingSq = fr;
+      b[H1] = W_ROOK;
+      b[F1] = 0;
     
-      if (move & MOVE_EPTAKE_MASK) {
+    }
     
-        b[to-12] = W_PAWN;
+    else if (move == MOVE_E1C1) {
     
-      }
+      b[A1] = W_ROOK;
+      b[D1] = 0;
     
-      else if (move == MOVE_E8G8) {
+    }
     
-        b[H8] = B_ROOK;
-        b[F8] = 0;
+    //}}}
+  }
+
+  else {
+    //{{{  black
     
-      }
+    if (move & MOVE_KINGMOVE_MASK)
     
-      else if (move == MOVE_E8C8) {
+      s.bKingSq = fr;
     
-        b[A8] = B_ROOK;
-        b[D8] = 0;
+    if (move & MOVE_EPTAKE_MASK) {
     
-      }
+      b[to-12] = W_PAWN;
+    
+    }
+    
+    else if (move == MOVE_E8G8) {
+    
+      b[H8] = B_ROOK;
+      b[F8] = 0;
+    
+    }
+    
+    else if (move == MOVE_E8C8) {
+    
+      b[A8] = B_ROOK;
+      b[D8] = 0;
+    
     }
     
     //}}}
@@ -690,6 +804,7 @@ function isAttacked (to, byCol) {
   fr = to - 1;  while (!b[fr]) fr -= 1;  if (RQ[b[fr]]) return 1;
   fr = to + 12; while (!b[fr]) fr += 12; if (RQ[b[fr]]) return 1;
   fr = to - 12; while (!b[fr]) fr -= 12; if (RQ[b[fr]]) return 1;
+  
   fr = to + 11; while (!b[fr]) fr += 11; if (BQ[b[fr]]) return 1;
   fr = to - 11; while (!b[fr]) fr -= 11; if (BQ[b[fr]]) return 1;
   fr = to + 13; while (!b[fr]) fr += 13; if (BQ[b[fr]]) return 1;
@@ -730,11 +845,32 @@ function printBoard () {
   }
 
   console.log('  a b c d e f g h');
+
   if (s.turn == WHITE)
     process.stdout.write('w');
   else
     process.stdout.write('b');
   process.stdout.write(' ');
+
+  if (s.rights) {
+    if (s.rights & WHITE_RIGHTS_KING)
+      process.stdout.write('K');
+   if (s.rights & WHITE_RIGHTS_QUEEN)
+      process.stdout.write('Q');
+   if (s.rights & BLACK_RIGHTS_KING)
+      process.stdout.write('k');
+   if (s.rights & BLACK_RIGHTS_QUEEN)
+      process.stdout.write('q');
+    process.stdout.write(' ');
+  }
+  else
+    process.stdout.write('- ');
+
+  if (s.ep)
+    process.stdout.write(COORDS[s.ep]);
+  else
+    process.stdout.write('-');
+
   console.log();
 }
 
@@ -990,7 +1126,7 @@ function perft (depth, turn) {
 
   var   count     = 0;
   var   move      = 0;
-  const nextTurn  = ~turn & COLOR_MASK;
+  const nextTurn  = colourToggle(turn);
   const firstMove = state.nextMove;
   var   nextMove  = firstMove;
 
@@ -1250,7 +1386,8 @@ const uciio = {}
 
 //}}}
 
-uciExec('position startpos\nboard');
+initSearch();
+uciExec('position startpos');
 uciArgv();
 
 //{{{  connect to stdio
