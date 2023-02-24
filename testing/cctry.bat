@@ -2,11 +2,11 @@
 
 rem engines: coal, cand, loz25, loz24, leo23, tt51.
 
-set e1=coal
+set e1=cand
 set e2=cand
 
-set tc=20+0.2
-set threads=4
+set tc=120+1.2
+set threads=1
 
 set elo0=0
 set elo1=5
@@ -33,7 +33,7 @@ if exist cctry.pgn del cctry.pgn
 
 set args=%ee1 %ee2 %t %r %d %o %v %m %s %f
 
-echo %args
+echo %args -debug
 
-"C:\Program Files (x86)\Cute Chess\cutechess-cli" %args
+"C:\Program Files (x86)\Cute Chess\cutechess-cli" %args -debug
 
