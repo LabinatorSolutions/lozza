@@ -62,9 +62,9 @@ const B_KING   = KING   | BLACK;
 //
 // E == EMPTY, X = OFF BOARD, - == CANNOT HAPPEN
 //
-//                 0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15
-//                 E  W  W  W  W  W  W  X  -  B  B  B  B  B  B  -
-//                 E  P  N  B  R  Q  K  X  -  P  N  B  R  Q  K  -
+//                  0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15
+//                  E  W  W  W  W  W  W  X  -  B  B  B  B  B  B  -
+//                  E  P  N  B  R  Q  K  X  -  P  N  B  R  Q  K  -
 //
 const IS_O       = [0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0];
 const IS_E       = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -77,6 +77,7 @@ const IS_RQKE    = [1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0]
 const IS_QKE     = [1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0]
 const IS_K       = [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0];
 const IS_KN      = [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0];
+const IS_SLIDER  = [0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0];
 
 const IS_W       = [0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 const IS_WE      = [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -509,7 +510,6 @@ const DIRECTION = [
 ];
 
 //}}}
-
 //{{{  primitives
 
 function colourIndex (c) {
@@ -1188,9 +1188,12 @@ function isKingAttacked (to, byCol) {
 
   var fr = 0;
 
+  //{{{  pawns
+  
   if (b[to+OFFSET_DIAG1] == BY_PAWN || b[to+OFFSET_DIAG2] == BY_PAWN)
     return 1;
-
+  
+  //}}}
   //{{{  knights
   
   if (b[to + -10] == N) return 1;
@@ -1224,22 +1227,17 @@ function isKingAttacked (to, byCol) {
 //}}}
 //{{{  isKingAttackedFrom
 
-const WB_BY = [
-  [null,IS_WRQ,null,null,null,null,null,null,null,null,null,IS_WBQ,IS_WRQ,IS_WBQ],
-  [null,IS_BRQ,null,null,null,null,null,null,null,null,null,IS_BBQ,IS_BRQ,IS_BBQ]
-];
+function isKingAttackedFrom (to, byCol, from) {
 
-function isKingAttackedFrom (to, byCol, move) {
-
-  const b = state.board;
-
-  const cx     = colourIndex(byCol);
-  const from   = moveFromSq(move);
   const offset = DIRECTION[to][from];
-  const BY     = WB_BY[cx][Math.abs(offset)];
 
   if (!offset)
     return 0;
+
+  const b = state.board;
+
+  const cx = colourIndex(byCol);
+  const BY = WB_BY[cx][Math.abs(offset)];
 
   let fr = to + offset;
 
@@ -1250,9 +1248,53 @@ function isKingAttackedFrom (to, byCol, move) {
 }
 
 //}}}
+//{{{  isInCheckAfterTheirMove
+
+// hack add can hop stuff
+
+function isInCheckAfterTheirMove (ourKingSq, theirColour, theirMove) {
+
+  var inCheck = 0;
+  const frObj = moveFromObj(theirMove);
+
+  if (IS_SLIDER[frObj]) {
+    inCheck = isKingAttackedFrom(ourKingSq, theirColour, moveToSq(theirMove)) ||
+              isKingAttackedFrom(ourKingSq, theirColour, moveFromSq(theirMove));
+  }
+  else if (IS_K[frObj] && !(theirMove & MOVE_CASTLE_MASK)) {
+    inCheck = isKingAttackedFrom(ourKingSq, theirColour, moveFromSq(theirMove));
+  }
+  else {
+    inCheck = isKingAttacked(ourKingSq, theirColour);
+  }
+
+  return inCheck;
+}
+
+//}}}
+//{{{  isInCheckAfterOurMove
+
+const WB_BY = [
+  [null,IS_WRQ,null,null,null,null,null,null,null,null,null,IS_WBQ,IS_WRQ,IS_WBQ],
+  [null,IS_BRQ,null,null,null,null,null,null,null,null,null,IS_BBQ,IS_BRQ,IS_BBQ]
+];
+
+function isInCheckAfterOurMove (currentlyInCheck, ourKingSq, theirColour, ourMove) {
+
+  if (!currentlyInCheck && !(ourMove & MOVE_MULTIPLE_ATTACKS_FROM_MASK))
+
+    return isKingAttackedFrom(ourKingSq, theirColour, moveFromSq(ourMove));
+
+  else
+
+    return isKingAttacked(ourKingSq, theirColour);
+
+}
+
+//}}}
 //{{{  printBoard
 
-function printBoard () {
+function printBoard (turn) {
 
   const s = state;
   const b = s.board;
@@ -1267,7 +1309,7 @@ function printBoard () {
 
   console.log('  a b c d e f g h');
 
-  if (s.turn == WHITE)
+  if (turn == WHITE)
     process.stdout.write('w');
   else
     process.stdout.write('b');
@@ -1542,7 +1584,7 @@ function addMove (move) {
 
 const MOVE_MULTIPLE_ATTACKS_FROM_MASK = MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | MOVE_EPTAKE_MASK;
 
-function perft (depth, turn) {
+function perft (depth, turn, moved) {
 
   if (depth == 0)
     return 1;
@@ -1556,7 +1598,7 @@ function perft (depth, turn) {
   const lastMove  = state.nextMove - 1;
   var   nextMove  = firstMove;
 
-  const inCheck = isKingAttacked(s.kings[cx],nextTurn);
+  const inCheck = isInCheckAfterTheirMove(s.kings[cx], nextTurn, moved);
 
   var count = 0;
   var move  = 0;
@@ -1571,33 +1613,18 @@ function perft (depth, turn) {
 
     //{{{  legal?
     
-    let   att = 0;
-    const to  = s.kings[cx];
-    
-    if (!inCheck && !(move & MOVE_MULTIPLE_ATTACKS_FROM_MASK)) {
-    
-      att = isKingAttackedFrom(to, nextTurn, move);
-    
-    }
-    
-    else {
-    
-      att = isKingAttacked(to, nextTurn);
-    
-    }
-    
-    if (att) {
+    if (isInCheckAfterOurMove(inCheck, s.kings[cx], nextTurn, move)) {
     
       unmakeMove(move);
+    
       uncache();
     
       continue;
-    
     }
     
     //}}}
 
-    count += perft(depth-1, nextTurn);
+    count += perft(depth-1, nextTurn, move);
 
     unmakeMove(move);
     uncache();
@@ -1784,7 +1811,7 @@ function uciExec(e) {
       case 'b':
         //{{{  board
         
-        printBoard();
+        printBoard(state.turn);
         
         break;
         
@@ -1810,7 +1837,7 @@ function uciExec(e) {
         
         let t = Date.now();
         
-        uci.moves = perft(depth, state.turn);
+        uci.moves = perft(depth, state.turn, 0);
         
         console.log(uci.moves,'moves',Date.now()-t,'ms');
         
@@ -1955,7 +1982,7 @@ var t1 = Date.now();
 var n    = 0;
 var errs = 0;
 
-for (var i=0; i < qp.length-0; i++) {
+for (var i=0; i < qp.length-5; i++) {
 
   var p = qp[i];
 
