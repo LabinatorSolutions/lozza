@@ -14,7 +14,7 @@ https://github.com/op12no2/lozza/releases
 
 ## Basic use in web pages
 
-All you need is ```lozza.js``` from the root of the repo. 
+All you need is ```lozza.js``` from the latest release. 
 
 Here is a little example to do a 10 ply search:-
 
