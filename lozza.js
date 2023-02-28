@@ -1281,9 +1281,12 @@ function isSqAttacked (to, byCol) {
 
   var fr = 0;
 
+  //{{{  pawns
+  
   if (b[to+OFFSET_DIAG1] == BY_PAWN || b[to+OFFSET_DIAG2] == BY_PAWN)
     return 1;
-
+  
+  //}}}
   //{{{  knights
   
   if (b[to + -10] == N) return 1;
@@ -2008,4 +2011,5 @@ process.stdin.on('end', function() {
 });
 
 //}}}
+
 
