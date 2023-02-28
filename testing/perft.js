@@ -1421,8 +1421,13 @@ function isInCheckAfterTheirMove (ourKingSq, theirColour, theirMove) {
   const from  = moveFromSq(theirMove);
   const to    = moveToSq(theirMove);
 
-  if (IS_SLIDER[frObj])
-    return isKingAttackedFrom(ourKingSq, theirColour, to) || isKingAttackedFrom(ourKingSq, theirColour, from);
+  if (IS_SLIDER[frObj]) {
+    let att = isKingAttackedFrom(ourKingSq, theirColour, to);   // don't return || bool
+    if (!att)
+      return isKingAttackedFrom(ourKingSq, theirColour, from);
+    else
+      return att;
+  }
 
   else if (IS_K[frObj] && !(theirMove & MOVE_CASTLE_MASK))
     return isKingAttackedFrom(ourKingSq, theirColour, from);

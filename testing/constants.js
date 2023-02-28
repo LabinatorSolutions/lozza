@@ -203,6 +203,7 @@ const FILE = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 //}}}
 
+/*
 //{{{  DIST
 
 var d = Array(144);
@@ -229,7 +230,7 @@ for (var i=0; i<144; i++) {
 console.log('];');
 
 //}}}
-//{{{  ADJ
+//{{{  ADJACENT
 
 var d = Array(144);
 
@@ -250,7 +251,7 @@ for (var i=0; i < 64; i++) {
   }
 }
 
-console.log('const ADJ = [');
+console.log('const ADJACENT = [');
 for (var i=0; i<144; i++) {
   s = '[' + d[i].toString() + '],';
   console.log(' ', s);
@@ -370,6 +371,7 @@ for (var i=0; i<144; i++) {
 console.log('];');
 
 //}}}
+*/
 
 process.exit();
 
