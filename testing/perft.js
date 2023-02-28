@@ -66,39 +66,41 @@ const B_KING   = KING   | BLACK;
 //                 E  W  W  W  W  W  W  X  -  B  B  B  B  B  B  -
 //                 E  P  N  B  R  Q  K  X  -  P  N  B  R  Q  K  -
 //
-const IS_O      = [0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0];
-const IS_E      = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-const IS_OE     = [1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0];
+const IS_O       = [0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0];
+const IS_E       = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const IS_OE      = [1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0];
 
-const IS_P      = [0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0];
-const IS_N      = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0];
-const IS_NBRQKE = [1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0]
-const IS_RQKE   = [1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0]
-const IS_QKE    = [1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0]
-const IS_K      = [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0];
-const IS_KN     = [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0];
+const IS_P       = [0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0];
+const IS_N       = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0];
+const IS_NBRQKE  = [1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0]
+const IS_RQKE    = [1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0]
+const IS_QKE     = [1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0]
+const IS_K       = [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0];
+const IS_KN      = [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0];
 
-const IS_W      = [0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-const IS_WE     = [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-const IS_WP     = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-const IS_WN     = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-const IS_WNBRQ  = [0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-const IS_WPNBRQ = [0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-const IS_WB     = [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-const IS_WBQ    = [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-const IS_WRQ    = [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-const IS_WQ     = [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+const IS_W       = [0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const IS_WE      = [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const IS_WP      = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const IS_WN      = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const IS_WNBRQ   = [0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+const IS_WPNBRQ  = [0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+const IS_WPNBRQE = [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+const IS_WB      = [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const IS_WBQ     = [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const IS_WRQ     = [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const IS_WQ      = [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
-const IS_B      = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0];
-const IS_BE     = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0];
-const IS_BP     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0];
-const IS_BN     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0];
-const IS_BNBRQ  = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0]
-const IS_BPNBRQ = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0]
-const IS_BB     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0];
-const IS_BBQ    = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0];
-const IS_BRQ    = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0];
-const IS_BQ     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+const IS_B       = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0];
+const IS_BE      = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0];
+const IS_BP      = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0];
+const IS_BN      = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0];
+const IS_BNBRQ   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0]
+const IS_BPNBRQ  = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0]
+const IS_BPNBRQE = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0]
+const IS_BB      = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0];
+const IS_BBQ     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0];
+const IS_BRQ     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0];
+const IS_BQ      = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
 
 const OBJ_CHAR = ['.','P','N','B','R','Q','K','x','y','p','n','b','r','q','k','z'];
 
@@ -152,6 +154,7 @@ const KING_OFFSETS    = [11,-11,13,-13,1,-1,12,-12];
 const OFFSETS = [0,0,KNIGHT_OFFSETS, BISHOP_OFFSETS, ROOK_OFFSETS, QUEEN_OFFSETS, KING_OFFSETS];
 
 const WB_CAN_CAPTURE  = [IS_BPNBRQ,      IS_WPNBRQ];
+const WB_CAN_MOVE     = [IS_BPNBRQE,     IS_WPNBRQE];
 const WB_OUR_PIECE    = [IS_W,           IS_B];
 const WB_OFFSET_ORTH  = [W_OFFSET_ORTH,  B_OFFSET_ORTH];
 const WB_OFFSET_DIAG1 = [W_OFFSET_DIAG1, B_OFFSET_DIAG1];
@@ -159,10 +162,9 @@ const WB_OFFSET_DIAG2 = [W_OFFSET_DIAG2, B_OFFSET_DIAG2];
 const WB_HOME_RANK    = [2,              7];
 const WB_PROMOTE_RANK = [7,              2];
 const WB_EP_RANK      = [5,              4];
-const WB_RQ           = [IS_WRQ, IS_BRQ];
-const WB_BQ           = [IS_WBQ, IS_BBQ];
-const WB_PAWN         = [W_PAWN, B_PAWN];
-
+const WB_RQ           = [IS_WRQ,         IS_BRQ];
+const WB_BQ           = [IS_WBQ,         IS_BBQ];
+const WB_PAWN         = [W_PAWN,         B_PAWN];
 
 const B88 = [26, 27, 28, 29, 30, 31, 32, 33,
              38, 39, 40, 41, 42, 43, 44, 45,
@@ -510,7 +512,7 @@ const DIRECTION = [
 
 //{{{  primitives
 
-function colourIndex(c) {
+function colourIndex (c) {
   return c >>> 3;
 }
 
@@ -803,7 +805,7 @@ function genKingMoves (frMove) {
   const turn        = objColour(frObj);
   const cx          = colourIndex(turn);
   const cy          = colourIndex(colourToggle(turn));
-  const CAN_CAPTURE = WB_CAN_CAPTURE[cx];
+  const CAN_MOVE    = WB_CAN_MOVE[cx];
   const theirKingSq = s.kings[cy];
 
   const offsets = OFFSETS[KING];
@@ -815,13 +817,7 @@ function genKingMoves (frMove) {
     const to    = fr + offsets[dir++];
     const toObj = b[to];
 
-    if (ADJACENT[to][theirKingSq])
-      continue;
-
-    if (!toObj)
-      addMove(frMove | to | MOVE_KINGMOVE_MASK);
-
-    else if (CAN_CAPTURE[toObj])
+    if (!ADJACENT[to][theirKingSq] && CAN_MOVE[toObj])
       addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | MOVE_KINGMOVE_MASK);
   }
 
@@ -835,11 +831,11 @@ function genKnightMoves (frMove) {
   const s = state;
   const b = s.board;
 
-  const fr          = moveFromSq(frMove);
-  const frObj       = moveFromObj(frMove);
-  const turn        = objColour(frObj);
-  const cx          = colourIndex(turn);
-  const CAN_CAPTURE = WB_CAN_CAPTURE[cx];
+  const fr       = moveFromSq(frMove);
+  const frObj    = moveFromObj(frMove);
+  const turn     = objColour(frObj);
+  const cx       = colourIndex(turn);
+  const CAN_MOVE = WB_CAN_MOVE[cx];
 
   const offsets = OFFSETS[KNIGHT];
 
@@ -850,10 +846,7 @@ function genKnightMoves (frMove) {
     const to    = fr + offsets[dir++];
     const toObj = b[to];
 
-    if (!toObj)
-      addMove(frMove | to);
-
-    else if (CAN_CAPTURE[toObj])
+    if (CAN_MOVE[toObj])
       addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
   }
 
@@ -1229,6 +1222,34 @@ function isKingAttacked (to, byCol) {
 
 
 //}}}
+//{{{  isKingAttackedFrom
+
+const WB_BY = [
+  [null,IS_WRQ,null,null,null,null,null,null,null,null,null,IS_WBQ,IS_WRQ,IS_WBQ],
+  [null,IS_BRQ,null,null,null,null,null,null,null,null,null,IS_BBQ,IS_BRQ,IS_BBQ]
+];
+
+function isKingAttackedFrom (to, byCol, move) {
+
+  const b = state.board;
+
+  const cx     = colourIndex(byCol);
+  const from   = moveFromSq(move);
+  const offset = DIRECTION[to][from];
+  const BY     = WB_BY[cx][Math.abs(offset)];
+
+  if (!offset)
+    return 0;
+
+  let fr = to + offset;
+
+  while (!b[fr])
+    fr += offset;
+
+  return BY[b[fr]];
+}
+
+//}}}
 //{{{  printBoard
 
 function printBoard () {
@@ -1239,7 +1260,7 @@ function printBoard () {
   for (var rank=7; rank >= 0; rank--) {
     process.stdout.write((rank+1)+' ');
     for (var file=0; file <= 7; file++) {
-      process.stdout.write(SQ_CHAR[b[B88[(7-rank)*8+file]]] + ' ');
+      process.stdout.write(OBJ_CHAR[b[B88[(7-rank)*8+file]]] + ' ');
     }
     process.stdout.write('\r\n');
   }
@@ -1519,6 +1540,8 @@ function addMove (move) {
 //}}}
 //{{{  perft
 
+const MOVE_MULTIPLE_ATTACKS_FROM_MASK = MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | MOVE_EPTAKE_MASK;
+
 function perft (depth, turn) {
 
   if (depth == 0)
@@ -1533,6 +1556,8 @@ function perft (depth, turn) {
   const lastMove  = state.nextMove - 1;
   var   nextMove  = firstMove;
 
+  const inCheck = isKingAttacked(s.kings[cx],nextTurn);
+
   var count = 0;
   var move  = 0;
 
@@ -1544,11 +1569,33 @@ function perft (depth, turn) {
 
     makeMove(move);
 
-    if (isKingAttacked(s.kings[cx],nextTurn)) {
+    //{{{  legal?
+    
+    let   att = 0;
+    const to  = s.kings[cx];
+    
+    if (!inCheck && !(move & MOVE_MULTIPLE_ATTACKS_FROM_MASK)) {
+    
+      att = isKingAttackedFrom(to, nextTurn, move);
+    
+    }
+    
+    else {
+    
+      att = isKingAttacked(to, nextTurn);
+    
+    }
+    
+    if (att) {
+    
       unmakeMove(move);
       uncache();
+    
       continue;
+    
     }
+    
+    //}}}
 
     count += perft(depth-1, nextTurn);
 
@@ -1908,7 +1955,7 @@ var t1 = Date.now();
 var n    = 0;
 var errs = 0;
 
-for (var i=0; i < qp.length-5; i++) {
+for (var i=0; i < qp.length-0; i++) {
 
   var p = qp[i];
 
