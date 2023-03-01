@@ -1595,29 +1595,26 @@ function printBoard (turn) {
 function formatMove (move) {
 
   if (!move)
-    return 'NULL';
+    return 'NULL MOVE';
 
-  var fr    = moveFromSq(move);
-  var to    = moveToSq(move);
+  const fr = moveFromSq(move);
+  const to = moveToSq(move);
 
-  var frObj = moveFromObj(move);
-  var toObj = moveToObj(move);
+  const frObj = moveFromObj(move);
+  const toObj = moveToObj(move);
 
-  var frCoord = COORDS[fr];
-  var toCoord = COORDS[to];
+  const frCoord = COORDS[fr];
+  const toCoord = COORDS[to];
 
-  var frPiece = objPiece(frObj)
-  var frCol   = objColour(frObj);
-  var frName  = OBJ_CHAR[frObj];
+  const frPiece = objPiece(frObj)
+  const frCol   = objColour(frObj);
+  const frName  = OBJ_CHAR[frObj];
 
-  var toPiece = objPiece(toObj);
-  var toCol   = objColour(toObj);
-  var toName  = OBJ_CHAR[toObj];
+  const toPiece = objPiece(toObj);
+  const toCol   = objColour(toObj);
+  const toName  = OBJ_CHAR[toObj];
 
-  if (move & MOVE_PROMOTE_MASK)
-    var pro = OBJ_CHAR[movePromotePiece(move)|BLACK];
-  else
-    var pro = '';
+  const pro = (move & MOVE_PROMOTE_MASK) ? OBJ_CHAR[movePromotePiece(move)|BLACK] : '';
 
   return frCoord + toCoord + pro;
 }
