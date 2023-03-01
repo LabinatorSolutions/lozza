@@ -837,7 +837,7 @@ function genMoves (turn) {
 //}}}
 //{{{  genEvasions
 
-function genEvasions (turn) {
+function genEvasions (turn, moved) {
 
   const s = state;
   const b = s.board;
@@ -1506,25 +1506,17 @@ function isInCheckAfterTheirMove (ourKingSq, theirColour, theirMove) {
   const to    = moveToSq(theirMove);
 
   if (IS_SLIDER[frObj]) {
-    let att = isKingAttackedFrom(ourKingSq, theirColour, to);   // don't return || bool
-    if (!att)
-      return isKingAttackedFrom(ourKingSq, theirColour, from);
-    else
-      return att;
+    const att = isKingAttackedFrom(ourKingSq, theirColour, to);
+    return att ? att : isKingAttackedFrom(ourKingSq, theirColour, from);
   }
 
   else if (IS_K[frObj] && !(theirMove & MOVE_CASTLE_MASK))
     return isKingAttackedFrom(ourKingSq, theirColour, from);
 
-  else if (IS_N[frObj]) {
-    if (HOPPER[to][ourKingSq])
-      return 1;
-    else
-      return isKingAttackedFrom(ourKingSq, theirColour, from);
-  }
+  else if (IS_N[frObj])
+    return HOPPER[to][ourKingSq] ? 1 : isKingAttackedFrom(ourKingSq, theirColour, from);
 
   else
-
     return isKingAttacked(ourKingSq, theirColour);
 
 }
@@ -1874,13 +1866,9 @@ function perft (depth, turn, moved) {
   const nextTurn  = colourToggle(turn);
   const cx        = colourIndex(turn);
 
-  const inCheck = isInCheckAfterTheirMove(s.kings[cx], nextTurn, moved);
+  const inCheck   = isInCheckAfterTheirMove(s.kings[cx], nextTurn, moved);
 
-  if (inCheck)
-    var firstMove = genEvasions(turn);
-  else
-    var firstMove = genMoves(turn);
-
+  const firstMove = (inCheck) ? genEvasions(turn, moved) : genMoves(turn);
   const lastMove  = s.nextMove - 1;
   var   nextMove  = firstMove;
 
