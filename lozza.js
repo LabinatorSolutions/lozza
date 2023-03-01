@@ -32,7 +32,7 @@ const MOVE_EPMAKE_MASK   = 0x04000000;
 const MOVE_CASTLE_MASK   = 0x08000000;
 const MOVE_PROMOTE_MASK  = 0x10000000;
 const MOVE_PROMAS_MASK   = 0x60000000;  // NBRQ.
-const MOVE_SPARE2_MASK   = 0x80000000;
+const MOVE_LEGAL_MASK    = 0x80000000;
 
 const MOVE_IKKY_MASK = MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | MOVE_PROMOTE_MASK | MOVE_EPTAKE_MASK | MOVE_EPMAKE_MASK;
 
@@ -71,6 +71,7 @@ const IS_OE      = [1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0];
 
 const IS_P       = [0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0];
 const IS_N       = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0];
+const IS_NBRQ    = [0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0]
 const IS_NBRQKE  = [1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 0]
 const IS_RQKE    = [1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0]
 const IS_QKE     = [1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0]
@@ -103,14 +104,15 @@ const IS_BRQ     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0];
 const IS_BQ      = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
 
 const OBJ_CHAR = ['.','P','N','B','R','Q','K','x','y','p','n','b','r','q','k','z'];
+const PROMOTES = ['n','b','r','q'];
 
 const A1 = 110, B1 = 111, C1 = 112, D1 = 113, E1 = 114, F1 = 115, G1 = 116, H1 = 117;
 const A8 = 26,  B8 = 27,  C8 = 28,  D8 = 29,  E8 = 30,  F8 = 31,  G8 = 32,  H8 = 33;
 
-const MOVE_E1G1 = MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | (W_KING << MOVE_FROBJ_BITS) | (E1 << MOVE_FR_BITS) | G1;
-const MOVE_E1C1 = MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | (W_KING << MOVE_FROBJ_BITS) | (E1 << MOVE_FR_BITS) | C1;
-const MOVE_E8G8 = MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | (B_KING << MOVE_FROBJ_BITS) | (E8 << MOVE_FR_BITS) | G8;
-const MOVE_E8C8 = MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | (B_KING << MOVE_FROBJ_BITS) | (E8 << MOVE_FR_BITS) | C8;
+const MOVE_E1G1 = MOVE_LEGAL_MASK | MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | (W_KING << MOVE_FROBJ_BITS) | (E1 << MOVE_FR_BITS) | G1;
+const MOVE_E1C1 = MOVE_LEGAL_MASK | MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | (W_KING << MOVE_FROBJ_BITS) | (E1 << MOVE_FR_BITS) | C1;
+const MOVE_E8G8 = MOVE_LEGAL_MASK | MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | (B_KING << MOVE_FROBJ_BITS) | (E8 << MOVE_FR_BITS) | G8;
+const MOVE_E8C8 = MOVE_LEGAL_MASK | MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | (B_KING << MOVE_FROBJ_BITS) | (E8 << MOVE_FR_BITS) | C8;
 
 const QPRO = (QUEEN-2)  << MOVE_PROMAS_BITS | MOVE_PROMOTE_MASK;
 const RPRO = (ROOK-2)   << MOVE_PROMAS_BITS | MOVE_PROMOTE_MASK;
@@ -364,9 +366,9 @@ const ADJACENT = [
 ];
 
 //}}}
-//{{{  DIRECTION
+//{{{  ALIGNED
 
-const DIRECTION = [
+const ALIGNED = [
   [7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7],
   [7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7],
   [7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,0,0,0,0,0,0,0,0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7],
@@ -716,10 +718,19 @@ function genWhiteCastlingMoves () {
   const s = state;
   const b = s.board;
 
-   if ((s.rights & WHITE_RIGHTS_KING)  && b[F1] == 0 && b[G1] == 0               && !isSqAttacked(F1,BLACK) && !isSqAttacked(E1,BLACK))
+   if ((s.rights & WHITE_RIGHTS_KING)  && b[F1] == 0
+                                       && b[G1] == 0
+                                       && !isSqAttacked(G1,BLACK)
+                                       && !isSqAttacked(F1,BLACK)
+                                       && !isSqAttacked(E1,BLACK))
      addMove(MOVE_E1G1);
 
-   if ((s.rights & WHITE_RIGHTS_QUEEN) && b[B1] == 0 && b[C1] == 0 && b[D1] == 0 && !isSqAttacked(D1,BLACK) && !isSqAttacked(E1,BLACK))
+   if ((s.rights & WHITE_RIGHTS_QUEEN) && b[B1] == 0
+                                       && b[C1] == 0
+                                       && b[D1] == 0
+                                       && !isSqAttacked(C1,BLACK)
+                                       && !isSqAttacked(D1,BLACK)
+                                       && !isSqAttacked(E1,BLACK))
      addMove(MOVE_E1C1);
 
 }
@@ -732,10 +743,19 @@ function genBlackCastlingMoves () {
   const s = state;
   const b = s.board;
 
-  if ((s.rights & BLACK_RIGHTS_KING)  && b[F8] == 0 && b[G8] == 0 &&               !isSqAttacked(F8,WHITE) && !isSqAttacked(E8,WHITE))
+  if ((s.rights & BLACK_RIGHTS_KING)  && b[F8] == 0
+                                      && b[G8] == 0
+                                      && !isSqAttacked(G8,WHITE)
+                                      && !isSqAttacked(F8,WHITE)
+                                      && !isSqAttacked(E8,WHITE))
     addMove(MOVE_E8G8);
 
-  if ((s.rights & BLACK_RIGHTS_QUEEN) && b[B8] == 0 && b[C8] == 0 && b[D8] == 0 && !isSqAttacked(D8,WHITE) && !isSqAttacked(E8,WHITE))
+  if ((s.rights & BLACK_RIGHTS_QUEEN) && b[B8] == 0
+                                      && b[C8] == 0
+                                      && b[D8] == 0
+                                      && !isSqAttacked(C8,WHITE)
+                                      && !isSqAttacked(D8,WHITE)
+                                      && !isSqAttacked(E8,WHITE))
     addMove(MOVE_E8C8);
 
 }
@@ -761,6 +781,73 @@ function genMoves (turn) {
     genWhiteCastlingMoves();
   else
     genBlackCastlingMoves();
+
+  for (let i=0; i<64; i++) {
+
+    const fr    = B88[i];
+    const frObj = b[fr];
+
+    if (!OUR_PIECE[frObj])
+      continue;
+
+    const frPiece   = objPiece(frObj);
+    const frMove    = (frObj << MOVE_FROBJ_BITS) | (fr << MOVE_FR_BITS);
+    const legalMask = !ALIGNED[s.kings[cx]][fr] ? MOVE_LEGAL_MASK : 0;
+
+    switch (frPiece) {
+
+      case PAWN:
+        const frRank = RANK[fr];
+        switch (frRank) {
+          case HOME_RANK:
+            genHomePawnMoves(frMove | legalMask);
+            break;
+          case PROMOTE_RANK:
+            genPromotePawnMoves(frMove | legalMask);
+            break;
+          case EP_RANK:
+            genPawnMoves(frMove | legalMask);
+            if (s.ep)
+              genEnPassPawnMoves(frMove);
+            break;
+          default:
+            genPawnMoves(frMove | legalMask);
+            break;
+        }
+        break;
+
+      case KNIGHT:
+        genKnightMoves(frMove | legalMask);
+        break;
+
+      case KING:
+        genKingMoves(frMove);
+        break;
+
+      default:
+        genSliderMoves(frMove | legalMask);
+        break;
+    }
+  }
+
+  return nextMove;
+}
+
+//}}}
+//{{{  genEvasions
+
+function genEvasions (turn) {
+
+  const s = state;
+  const b = s.board;
+
+  const nextMove = s.nextMove;
+
+  const cx           = colourIndex(turn);
+  const OUR_PIECE    = WB_OUR_PIECE[cx];
+  const HOME_RANK    = WB_HOME_RANK[cx];
+  const PROMOTE_RANK = WB_PROMOTE_RANK[cx];
+  const EP_RANK      = WB_EP_RANK[cx];
 
   for (let i=0; i<64; i++) {
 
@@ -963,8 +1050,7 @@ function genKingMoves (frMove) {
   const cy          = colourIndex(colourToggle(turn));
   const CAN_MOVE    = WB_CAN_MOVE[cx];
   const theirKingSq = s.kings[cy];
-
-  const offsets = OFFSETS[KING];
+  const offsets     = OFFSETS[KING];
 
   var dir = 0;
 
@@ -992,8 +1078,7 @@ function genKnightMoves (frMove) {
   const turn     = objColour(frObj);
   const cx       = colourIndex(turn);
   const CAN_MOVE = WB_CAN_MOVE[cx];
-
-  const offsets = OFFSETS[KNIGHT];
+  const offsets  = OFFSETS[KNIGHT];
 
   var dir = 0;
 
@@ -1022,9 +1107,8 @@ function genSliderMoves (frMove) {
   const turn        = objColour(frObj);
   const cx          = colourIndex(turn);
   const CAN_CAPTURE = WB_CAN_CAPTURE[cx];
-
-  const offsets = OFFSETS[frPiece];
-  const len     = offsets.length;
+  const offsets     = OFFSETS[frPiece];
+  const len         = offsets.length;
 
   var dir = 0;
 
@@ -1393,7 +1477,7 @@ const WB_BY = [
 
 function isKingAttackedFrom (to, byCol, from) {
 
-  const offset = DIRECTION[to][from];
+  const offset = ALIGNED[to][from];
 
   if (!offset)
     return 0;
@@ -1420,8 +1504,13 @@ function isInCheckAfterTheirMove (ourKingSq, theirColour, theirMove) {
   const from  = moveFromSq(theirMove);
   const to    = moveToSq(theirMove);
 
-  if (IS_SLIDER[frObj])
-    return isKingAttackedFrom(ourKingSq, theirColour, to) || isKingAttackedFrom(ourKingSq, theirColour, from);
+  if (IS_SLIDER[frObj]) {
+    let att = isKingAttackedFrom(ourKingSq, theirColour, to);   // don't return || bool
+    if (!att)
+      return isKingAttackedFrom(ourKingSq, theirColour, from);
+    else
+      return att;
+  }
 
   else if (IS_K[frObj] && !(theirMove & MOVE_CASTLE_MASK))
     return isKingAttackedFrom(ourKingSq, theirColour, from);
@@ -1434,6 +1523,7 @@ function isInCheckAfterTheirMove (ourKingSq, theirColour, theirMove) {
   }
 
   else
+
     return isKingAttacked(ourKingSq, theirColour);
 
 }
@@ -1450,7 +1540,6 @@ function isInCheckAfterOurMove (currentlyInCheck, ourKingSq, theirColour, ourMov
 
   else
     return isKingAttacked(ourKingSq, theirColour);
-
 }
 
 //}}}
@@ -1497,6 +1586,38 @@ function printBoard (turn) {
     process.stdout.write('-');
 
   console.log();
+}
+
+//}}}
+//{{{  formatMove
+
+function formatMove (move) {
+
+  if (!move)
+    return 'NULL';
+
+  var fr    = (move & MOVE_FR_MASK   ) >>> MOVE_FR_BITS;
+  var to    = (move & MOVE_TO_MASK   ) >>> MOVE_TO_BITS;
+  var toObj = (move & MOVE_TOOBJ_MASK) >>> MOVE_TOOBJ_BITS;
+  var frObj = (move & MOVE_FROBJ_MASK) >>> MOVE_FROBJ_BITS;
+
+  var frCoord = COORDS[fr];
+  var toCoord = COORDS[to];
+
+  var frPiece = frObj & PIECE_MASK;
+  var frCol   = frObj & COLOUR_MASK;
+  var frName  = OBJ_CHAR[frObj];
+
+  var toPiece = toObj & PIECE_MASK;
+  var toCol   = toObj & COLOUR_MASK;
+  var toName  = OBJ_CHAR[toObj];
+
+  if (move & MOVE_PROMOTE_MASK)
+    var pro = PROMOTES[(move & MOVE_PROMAS_MASK) >>> MOVE_PROMAS_BITS];
+  else
+    var pro = '';
+
+  return frCoord + toCoord + pro;
 }
 
 //}}}
@@ -1754,11 +1875,15 @@ function perft (depth, turn, moved) {
   const nextTurn  = colourToggle(turn);
   const cx        = colourIndex(turn);
 
-  const firstMove = genMoves(turn);
-  const lastMove  = state.nextMove - 1;
-  var   nextMove  = firstMove;
-
   const inCheck = isInCheckAfterTheirMove(s.kings[cx], nextTurn, moved);
+
+  if (inCheck)
+    var firstMove = genEvasions(turn);
+  else
+    var firstMove = genMoves(turn);
+
+  const lastMove  = s.nextMove - 1;
+  var   nextMove  = firstMove;
 
   var count = 0;
   var move  = 0;
@@ -1771,18 +1896,11 @@ function perft (depth, turn, moved) {
 
     makeMove(move);
 
-    //{{{  legal?
-    
-    if (isInCheckAfterOurMove(inCheck, s.kings[cx], nextTurn, move)) {
-    
+    if (!(move & MOVE_LEGAL_MASK) && isInCheckAfterOurMove(inCheck, s.kings[cx], nextTurn, move)) {
       unmakeMove(move);
-    
       uncache();
-    
       continue;
     }
-    
-    //}}}
 
     count += perft(depth-1, nextTurn, move);
 
@@ -1790,7 +1908,7 @@ function perft (depth, turn, moved) {
     uncache();
   }
 
-  state.nextMove = firstMove;
+  s.nextMove = firstMove;
 
   return count;
 }
@@ -1832,8 +1950,6 @@ function uciSend () {
 
 function uciExec(e) {
 
-  const uci = uciio;
-
   var messageList = e.split('\n');
 
   for (var messageNum=0; messageNum < messageList.length; messageNum++ ) {
@@ -1851,7 +1967,7 @@ function uciExec(e) {
 
     switch (command) {
 
-      case 'uci':
+      case 'uci': {
         //{{{  uci
         
         uciSend('id name Lozza',BUILD);
@@ -1861,8 +1977,9 @@ function uciExec(e) {
         break;
         
         //}}}
+      }
 
-      case 'isready':
+      case 'isready': {
         //{{{  isready
         
         uciSend('readyok');
@@ -1870,9 +1987,10 @@ function uciExec(e) {
         break;
         
         //}}}
+      }
 
       case 'position':
-      case 'p':
+      case 'p': {
         //{{{  position
         
         switch (tokens[1]) {
@@ -1880,10 +1998,10 @@ function uciExec(e) {
           case 'startpos':
           case 's':
         
-            uci.board  = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
-            uci.turn   = 'w';
-            uci.rights = 'KQkq';
-            uci.ep     = '-';
+            uciio.board  = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
+            uciio.turn   = 'w';
+            uciio.rights = 'KQkq';
+            uciio.ep     = '-';
         
             position();
             break;
@@ -1891,10 +2009,10 @@ function uciExec(e) {
           case 'fen':
           case 'f':
         
-            uci.board  = tokens[2];
-            uci.turn   = tokens[3];
-            uci.rights = tokens[4];
-            uci.ep     = tokens[5];
+            uciio.board  = tokens[2];
+            uciio.turn   = tokens[3];
+            uciio.rights = tokens[4];
+            uciio.ep     = tokens[5];
         
             position();
             break;
@@ -1908,9 +2026,10 @@ function uciExec(e) {
         break;
         
         //}}}
+      }
 
       case 'board':
-      case 'b':
+      case 'b': {
         //{{{  board
         
         printBoard(state.turn);
@@ -1918,9 +2037,76 @@ function uciExec(e) {
         break;
         
         //}}}
+      }
+
+      case 'moves':
+      case 'm': {
+        //{{{  moves
+        
+        initSearch();
+        
+        printBoard(state.turn);
+        
+        const turn     = state.turn;
+        const nextTurn = colourToggle(turn);
+        const cx       = colourIndex(turn);
+        const inCheck  = isInCheckAfterTheirMove(state.kings[cx], nextTurn, 0);
+        
+        if (inCheck)
+          console.log('in check');
+        else
+          console.log('not in check');
+        
+        if (inCheck)
+          var firstMove = genEvasions(turn);
+        else
+          var firstMove = genMoves(turn);
+        
+        const lastMove  = state.nextMove - 1;
+        var   nextMove  = firstMove;
+        
+        var move    = 0;
+        var moveStr = '';
+        var num     = 1;
+        var flags   = '';
+        
+        cache();
+        
+        while (nextMove <= lastMove) {
+        
+          move = getNextMove(nextMove++, lastMove);
+        
+          makeMove(move);
+        
+          if (!(move & MOVE_LEGAL_MASK) && isInCheckAfterOurMove(inCheck, state.kings[cx], nextTurn, move))
+            flags = 'I ';
+          else
+            flags = '  ';
+        
+          unmakeMove(move);
+          uncache();
+        
+          moveStr = formatMove(move);
+        
+          flags += (move & MOVE_LEGAL_MASK)    ? 'A ' : '  ';
+          flags += (move & MOVE_EPTAKE_MASK)   ? 'E ' : '  ';
+          flags += (move & MOVE_KINGMOVE_MASK) ? 'K ' : '  ';
+          flags += (move & MOVE_CASTLE_MASK)   ? 'C ' : '  ';
+          flags += (move & MOVE_PROMOTE_MASK)  ? 'P ' : '  ';
+        
+          console.log((''+num).padStart(2), moveStr, flags, '0x'+(move>>>0).toString(16).padStart(8,'0'));
+          num++;
+        }
+        
+        state.nextMove = firstMove;
+        
+        break;
+        
+        //}}}
+      }
 
       case 'quit':
-      case 'q':
+      case 'q': {
         //{{{  quit
         
         process.exit();
@@ -1928,24 +2114,134 @@ function uciExec(e) {
         break;
         
         //}}}
+      }
 
-      case 'perft':
-      case 'r':
+      case 'perft': {
         //{{{  perft
-        
-        const depth = parseInt(tokens[1]);
         
         initSearch();
         
-        let t = Date.now();
+        const depth  = parseInt(tokens[1]);
+        const t      = Date.now();
+        const pmoves = perft(depth, state.turn, 0);
         
-        uci.moves = perft(depth, state.turn, 0);
-        
-        console.log(uci.moves,'moves',Date.now()-t,'ms');
+        console.log(pmoves,'moves',Date.now()-t,'ms');
         
         break;
         
         //}}}
+      }
+
+      case 'mbench':
+      case 'mb': {
+        //{{{  mbench
+        
+        //{{{  mbench fens
+        
+        const mbfens = [
+          ['fen 4k3/8/8/8/8/8/R7/R3K2R                                  w Q    -  0 1',  3, 4729,      'castling-2'],
+          ['fen 4k3/8/8/8/8/8/R7/R3K2R                                  w K    -  0 1',  3, 4686,      'castling-3'],
+          ['fen 4k3/8/8/8/8/8/R7/R3K2R                                  w -    -  0 1',  3, 4522,      'castling-4'],
+          ['fen r3k2r/r7/8/8/8/8/8/4K3                                  b kq   -  0 1',  3, 4893,      'castling-5'],
+          ['fen r3k2r/r7/8/8/8/8/8/4K3                                  b q    -  0 1',  3, 4729,      'castling-6'],
+          ['fen r3k2r/r7/8/8/8/8/8/4K3                                  b k    -  0 1',  3, 4686,      'castling-7'],
+          ['fen r3k2r/r7/8/8/8/8/8/4K3                                  b -    -  0 1',  3, 4522,      'castling-8'],
+          ['fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR             w KQkq -  0 1',  0, 1,         'cpw-pos1-0'],
+          ['fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR             w KQkq -  0 1',  1, 20,        'cpw-pos1-1'],
+          ['fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR             w KQkq -  0 1',  2, 400,       'cpw-pos1-2'],
+          ['fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR             w KQkq -  0 1',  3, 8902,      'cpw-pos1-3'],
+          ['fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR             w KQkq -  0 1',  4, 197281,    'cpw-pos1-4'],
+          ['fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR             w KQkq -  0 1',  5, 4865609,   'cpw-pos1-5'],
+          ['fen rnbqkb1r/pp1p1ppp/2p5/4P3/2B5/8/PPP1NnPP/RNBQK2R        w KQkq -  0 1',  1, 42,        'cpw-pos5-1'],
+          ['fen rnbqkb1r/pp1p1ppp/2p5/4P3/2B5/8/PPP1NnPP/RNBQK2R        w KQkq -  0 1',  2, 1352,      'cpw-pos5-2'],
+          ['fen rnbqkb1r/pp1p1ppp/2p5/4P3/2B5/8/PPP1NnPP/RNBQK2R        w KQkq -  0 1',  3, 53392,     'cpw-pos5-3'],
+          ['fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -  0 1',  1, 48,        'cpw-pos2-1'],
+          ['fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -  0 1',  2, 2039,      'cpw-pos2-2'],
+          ['fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -  0 1',  3, 97862,     'cpw-pos2-3'],
+          ['fen 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8                         w -    -  0 1',  5, 674624,    'cpw-pos3-5'],
+          ['fen n1n5/PPPk4/8/8/8/8/4Kppp/5N1N                           b -    -  0 1',  1, 24,        'prom-1    '],
+          ['fen 8/5bk1/8/2Pp4/8/1K6/8/8                                 w -    d6 0 1',  6, 824064,    'ccc-1     '],
+          ['fen 8/8/1k6/8/2pP4/8/5BK1/8                                 b -    d3 0 1',  6, 824064,    'ccc-2     '],
+          ['fen 8/8/1k6/2b5/2pP4/8/5K2/8                                b -    d3 0 1',  6, 1440467,   'ccc-3     '],
+          ['fen 8/5k2/8/2Pp4/2B5/1K6/8/8                                w -    d6 0 1',  6, 1440467,   'ccc-4     '],
+          ['fen 5k2/8/8/8/8/8/8/4K2R                                    w K    -  0 1',  6, 661072,    'ccc-5     '],
+          ['fen 4k2r/8/8/8/8/8/8/5K2                                    b k    -  0 1',  6, 661072,    'ccc-6     '],
+          ['fen 3k4/8/8/8/8/8/8/R3K3                                    w Q    -  0 1',  6, 803711,    'ccc-7     '],
+          ['fen r3k3/8/8/8/8/8/8/3K4                                    b q    -  0 1',  6, 803711,    'ccc-8     '],
+          ['fen r3k2r/1b4bq/8/8/8/8/7B/R3K2R                            w KQkq -  0 1',  4, 1274206,   'ccc-9     '],
+          ['fen r3k2r/7b/8/8/8/8/1B4BQ/R3K2R                            b KQkq -  0 1',  4, 1274206,   'ccc-10    '],
+          ['fen r3k2r/8/3Q4/8/8/5q2/8/R3K2R                             b KQkq -  0 1',  4, 1720476,   'ccc-11    '],
+          ['fen r3k2r/8/5Q2/8/8/3q4/8/R3K2R                             w KQkq -  0 1',  4, 1720476,   'ccc-12    '],
+          ['fen 2K2r2/4P3/8/8/8/8/8/3k4                                 w -    -  0 1',  6, 3821001,   'ccc-13    '],
+          ['fen 3K4/8/8/8/8/8/4p3/2k2R2                                 b -    -  0 1',  6, 3821001,   'ccc-14    '],
+          ['fen 8/8/1P2K3/8/2n5/1q6/8/5k2                               b -    -  0 1',  5, 1004658,   'ccc-15    '],
+          ['fen 5K2/8/1Q6/2N5/8/1p2k3/8/8                               w -    -  0 1',  5, 1004658,   'ccc-16    '],
+          ['fen 4k3/1P6/8/8/8/8/K7/8                                    w -    -  0 1',  6, 217342,    'ccc-17    '],
+          ['fen 8/k7/8/8/8/8/1p6/4K3                                    b -    -  0 1',  6, 217342,    'ccc-18    '],
+          ['fen 8/P1k5/K7/8/8/8/8/8                                     w -    -  0 1',  6, 92683,     'ccc-19    '],
+          ['fen 8/8/8/8/8/k7/p1K5/8                                     b -    -  0 1',  6, 92683,     'ccc-20    '],
+          ['fen K1k5/8/P7/8/8/8/8/8                                     w -    -  0 1',  6, 2217,      'ccc-21    '],
+          ['fen 8/8/8/8/8/p7/8/k1K5                                     b -    -  0 1',  6, 2217,      'ccc-22    '],
+          ['fen 8/k1P5/8/1K6/8/8/8/8                                    w -    -  0 1',  7, 567584,    'ccc-23    '],
+          ['fen 8/8/8/8/1k6/8/K1p5/8                                    b -    -  0 1',  7, 567584,    'ccc-24    '],
+          ['fen 8/8/2k5/5q2/5n2/8/5K2/8                                 b -    -  0 1',  4, 23527,     'ccc-25    '],
+          ['fen 8/5k2/8/5N2/5Q2/2K5/8/8                                 w -    -  0 1',  4, 23527,     'ccc-26    '],
+          ['fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR             w KQkq -  0 1',  6, 119060324, 'cpw-pos1-6'],
+          ['fen 8/p7/8/1P6/K1k3p1/6P1/7P/8                              w -    -  0 1',  8, 8103790,   'jvm-7     '],
+          ['fen n1n5/PPPk4/8/8/8/8/4Kppp/5N1N                           b -    -  0 1',  6, 71179139,  'jvm-8     '],
+          ['fen r3k2r/p6p/8/B7/1pp1p3/3b4/P6P/R3K2R                     w KQkq -  0 1',  6, 77054993,  'jvm-9     '],
+          ['fen 8/5p2/8/2k3P1/p3K3/8/1P6/8                              b -    -  0 1',  8, 64451405,  'jvm-11    '],
+          ['fen r3k2r/pb3p2/5npp/n2p4/1p1PPB2/6P1/P2N1PBP/R3K2R         w KQkq -  0 1',  5, 29179893,  'jvm-12    '],
+          ['fen 8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8                         w -    -  0 1',  7, 178633661, 'jvm-10    '],
+          ['fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq -  0 1',  5, 193690690, 'jvm-6     '],
+          ['fen 8/2pkp3/8/RP3P1Q/6B1/8/2PPP3/rb1K1n1r                   w -    -  0 1',  6, 181153194, 'ob1       '],
+          ['fen rnbqkb1r/ppppp1pp/7n/4Pp2/8/8/PPPP1PPP/RNBQKBNR         w KQkq f6 0 3',  6, 244063299, 'jvm-5     '],
+          ['fen 8/2ppp3/8/RP1k1P1Q/8/8/2PPP3/rb1K1n1r                   w -    -  0 1',  6, 205552081, 'ob2       '],
+          ['fen 8/8/3q4/4r3/1b3n2/8/3PPP2/2k1K2R                        w K    -  0 1',  6, 207139531, 'ob3       '],
+          ['fen 4r2r/RP1kP1P1/3P1P2/8/8/3ppp2/1p4p1/4K2R                b K    -  0 1',  6, 314516438, 'ob4       '],
+          ['fen r3k2r/8/8/8/3pPp2/8/8/R3K1RR                            b KQkq e3 0 1',  6, 485647607, 'jvm-1     '],
+          ['fen 8/3K4/2p5/p2b2r1/5k2/8/8/1q6                            b -    -  1 67', 7, 493407574, 'jvm-4     '],
+          ['fen r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1   w kq   -  0 1',  6, 706045033, 'jvm-2     '],
+          ['fen r6r/1P4P1/2kPPP2/8/8/3ppp2/1p4p1/R3K2R                  w KQ   -  0 1',  6, 975944981, 'ob5       ']
+        ];
+        
+        //}}}
+        
+        var err    = 0;
+        var errs   = 0;
+        var pmoves = 0;
+        
+        const t1 = Date.now();
+        
+        for (var i=0; i < mbfens.length-16; i++) {
+        
+          const p = mbfens[i];
+        
+          const fen   = p[0];
+          const depth = p[1];
+          const moves = p[2];
+          const id    = p[3];
+        
+          uciExec('position ' + fen);
+        
+          initSearch();
+        
+          pmoves = perft(depth, state.turn, 0);
+          err    = moves - pmoves;
+          errs   += err;
+        
+          console.log(id,fen,depth,moves,pmoves,err);
+        }
+        
+        const t2  = Date.now();
+        const sec = Math.round((t2-t1)/100)/10;
+        
+        console.log(sec, 'sec', errs, 'errors');
+        
+        break;
+        
+        //}}}
+      }
 
       default:
         //{{{  ?
@@ -2011,5 +2307,4 @@ process.stdin.on('end', function() {
 });
 
 //}}}
-
 
