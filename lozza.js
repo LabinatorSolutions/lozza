@@ -154,7 +154,7 @@ const ROOK_OFFSETS    = [1,-1,12,-12];
 const QUEEN_OFFSETS   = [11,-11,13,-13,1,-1,12,-12];
 const KING_OFFSETS    = [11,-11,13,-13,1,-1,12,-12];
 
-const OFFSETS = [0,0,KNIGHT_OFFSETS, BISHOP_OFFSETS, ROOK_OFFSETS, QUEEN_OFFSETS, KING_OFFSETS];
+const ALL_OFFSETS = [0, 0, KNIGHT_OFFSETS, BISHOP_OFFSETS, ROOK_OFFSETS, QUEEN_OFFSETS, KING_OFFSETS];
 
 const WB_CAN_CAPTURE  = [IS_BPNBRQ,      IS_WPNBRQ];
 const WB_CAN_MOVE     = [IS_BPNBRQE,     IS_WPNBRQE];
@@ -1051,13 +1051,13 @@ function genKingMoves (frMove) {
   const cy          = colourIndex(colourToggle(turn));
   const CAN_MOVE    = WB_CAN_MOVE[cx];
   const theirKingSq = s.kings[cy];
-  const offsets     = OFFSETS[KING];
+  const OFFSETS     = ALL_OFFSETS[KING];
 
   var dir = 0;
 
   while (dir < 8) {
 
-    const to    = fr + offsets[dir++];
+    const to    = fr + OFFSETS[dir++];
     const toObj = b[to];
 
     if (!ADJACENT[to][theirKingSq] && CAN_MOVE[toObj])
@@ -1079,13 +1079,13 @@ function genKnightMoves (frMove) {
   const turn     = objColour(frObj);
   const cx       = colourIndex(turn);
   const CAN_MOVE = WB_CAN_MOVE[cx];
-  const offsets  = OFFSETS[KNIGHT];
+  const OFFSETS  = ALL_OFFSETS[KNIGHT];
 
   var dir = 0;
 
   while (dir < 8) {
 
-    const to    = fr + offsets[dir++];
+    const to    = fr + OFFSETS[dir++];
     const toObj = b[to];
 
     if (CAN_MOVE[toObj])
@@ -1108,14 +1108,14 @@ function genSliderMoves (frMove) {
   const turn        = objColour(frObj);
   const cx          = colourIndex(turn);
   const CAN_CAPTURE = WB_CAN_CAPTURE[cx];
-  const offsets     = OFFSETS[frPiece];
-  const len         = offsets.length;
+  const OFFSETS     = ALL_OFFSETS[frPiece];
+  const len         = OFFSETS.length;
 
   var dir = 0;
 
   while (dir < len) {
 
-    const offset = offsets[dir++];
+    const offset = OFFSETS[dir++];
 
     let to = fr + offset;
     while (!b[to]) {
