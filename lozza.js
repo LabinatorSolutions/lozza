@@ -1,4 +1,6 @@
 
+// wip - do not use
+
 "use strict"
 
 const BUILD = "3";
@@ -104,7 +106,6 @@ const IS_BRQ     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0];
 const IS_BQ      = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
 
 const OBJ_CHAR = ['.','P','N','B','R','Q','K','x','y','p','n','b','r','q','k','z'];
-const PROMOTES = ['n','b','r','q'];
 
 const A1 = 110, B1 = 111, C1 = 112, D1 = 113, E1 = 114, F1 = 115, G1 = 116, H1 = 117;
 const A8 = 26,  B8 = 27,  C8 = 28,  D8 = 29,  E8 = 30,  F8 = 31,  G8 = 32,  H8 = 33;
@@ -1596,24 +1597,25 @@ function formatMove (move) {
   if (!move)
     return 'NULL';
 
-  var fr    = (move & MOVE_FR_MASK   ) >>> MOVE_FR_BITS;
-  var to    = (move & MOVE_TO_MASK   ) >>> MOVE_TO_BITS;
-  var toObj = (move & MOVE_TOOBJ_MASK) >>> MOVE_TOOBJ_BITS;
-  var frObj = (move & MOVE_FROBJ_MASK) >>> MOVE_FROBJ_BITS;
+  var fr    = moveFromSq(move);
+  var to    = moveToSq(move);
+
+  var frObj = moveFromObj(move);
+  var toObj = moveToObj(move);
 
   var frCoord = COORDS[fr];
   var toCoord = COORDS[to];
 
-  var frPiece = frObj & PIECE_MASK;
-  var frCol   = frObj & COLOUR_MASK;
+  var frPiece = objPiece(frObj)
+  var frCol   = objColour(frObj);
   var frName  = OBJ_CHAR[frObj];
 
-  var toPiece = toObj & PIECE_MASK;
-  var toCol   = toObj & COLOUR_MASK;
+  var toPiece = objPiece(toObj);
+  var toCol   = objColour(toObj);
   var toName  = OBJ_CHAR[toObj];
 
   if (move & MOVE_PROMOTE_MASK)
-    var pro = PROMOTES[(move & MOVE_PROMAS_MASK) >>> MOVE_PROMAS_BITS];
+    var pro = OBJ_CHAR[movePromotePiece(move)|BLACK];
   else
     var pro = '';
 
@@ -1801,9 +1803,9 @@ function initSearch () {
 }
 
 //}}}
-//{{{  cache
+//{{{  cacheState
 
-function cache() {
+function cacheState() {
 
   const s   = state;
   const ply = s.ply;
@@ -1813,9 +1815,9 @@ function cache() {
 }
 
 //}}}
-//{{{  uncache
+//{{{  uncacheState
 
-function uncache() {
+function uncacheState() {
 
   const s   = state;
   const ply = s.ply;
@@ -1888,7 +1890,7 @@ function perft (depth, turn, moved) {
   var count = 0;
   var move  = 0;
 
-  cache();
+  cacheState();
 
   while (nextMove <= lastMove) {
 
@@ -1898,14 +1900,14 @@ function perft (depth, turn, moved) {
 
     if (!(move & MOVE_LEGAL_MASK) && isInCheckAfterOurMove(inCheck, s.kings[cx], nextTurn, move)) {
       unmakeMove(move);
-      uncache();
+      uncacheState();
       continue;
     }
 
     count += perft(depth-1, nextTurn, move);
 
     unmakeMove(move);
-    uncache();
+    uncacheState();
   }
 
   s.nextMove = firstMove;
@@ -2070,7 +2072,7 @@ function uciExec(e) {
         var num     = 1;
         var flags   = '';
         
-        cache();
+        cacheState();
         
         while (nextMove <= lastMove) {
         
@@ -2084,7 +2086,7 @@ function uciExec(e) {
             flags = '  ';
         
           unmakeMove(move);
-          uncache();
+          uncacheState();
         
           moveStr = formatMove(move);
         
@@ -2094,7 +2096,7 @@ function uciExec(e) {
           flags += (move & MOVE_CASTLE_MASK)   ? 'C ' : '  ';
           flags += (move & MOVE_PROMOTE_MASK)  ? 'P ' : '  ';
         
-          console.log((''+num).padStart(2), moveStr, flags, '0x'+(move>>>0).toString(16).padStart(8,'0'));
+          console.log((''+num).padStart(2), moveStr.padEnd(5), flags, '0x'+(move>>>0).toString(16).padStart(8,'0'));
           num++;
         }
         
@@ -2261,23 +2263,17 @@ function uciExec(e) {
 
 const state = {
 
-  board:  Array(144),
-  turn:   0,
-  rights: 0,
-  ep:     0,
-
-  ply: 0,
-
-  kings: [0,0],
-
-  nextMove: 0,
-
-  moves: Array(MAX_PLY * MAX_MOVES),
-  ranks: Array(MAX_PLY * MAX_MOVES),
-
+  board:       Array(144),
+  turn:        0,
+  rights:      0,
+  ep:          0,
+  ply:         0,
+  kings:       [0,0],
+  nextMove:    0,
+  moves:       Array(MAX_PLY * MAX_MOVES),
+  ranks:       Array(MAX_PLY * MAX_MOVES),
   cacheRights: Array(MAX_PLY),
   cacheEp:     Array(MAX_PLY),
-
 }
 
 const uciio = {}
