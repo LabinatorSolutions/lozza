@@ -670,81 +670,45 @@ const HOPPER = [
 
 //}}}
 
-//{{{  state global
+//{{{  state
 
 const state = {
-  board:       Array(144),
-  turn:        0,
-  rights:      0,
-  ep:          0,
-  kings:       [0,0],
+  board:  Array(144),
+  turn:   0,
+  rights: 0,
+  ep:     0,
+  kings:  [0,0],
 }
 
 //}}}
-//{{{  nodes global
+//{{{  node
+
+//{{{  nodeStruct
 
 function nodeStruct (ply, state) {
   this.ply         = ply;
   this.state       = state;
   this.parent      = 0;
   this.child       = 0;
-  this.moves       = Array(MAX_MOVES);
-  this.ranks       = Array(MAX_MOVES);
-  this.numMoves    = 0;
+  this.quietMoves  = Array(MAX_MOVES);
+  this.noiseyMoves = Array(MAX_MOVES);
+  this.quietRanks  = Array(MAX_MOVES);
+  this.noiseyRanks = Array(MAX_MOVES);
+  this.quietNum    = 0;
+  this.noiseyNum   = 0;
   this.nextMove    = 0;
+  this.inCheck     = 0;
+  this.turn        = 0;
+  this.moved       = 0;
+  this.nextMove    = 0;
+  this.stage       = 0;
   this.cacheRights = 0;
   this.cacheEp     = 0;
 }
 
+//}}}
+
 const nodes = Array(MAX_PLY);
-
-//}}}
-
-//{{{  primitives
-
-function colourIndex (c) {
-  return c >>> 3;
-}
-
-function colourMultiplier (c) {
-  return (-c >> 31) | 1;
-}
-
-function colourToggle (c) {
-  return ~c & COLOUR_MASK;
-}
-
-function moveFromSq (move) {
-  return (move & MOVE_FR_MASK) >>> MOVE_FR_BITS;
-}
-
-function moveToSq (move) {
-  return (move & MOVE_TO_MASK) >>> MOVE_TO_BITS;
-}
-
-function moveToObj (move) {
-  return (move & MOVE_TOOBJ_MASK) >>> MOVE_TOOBJ_BITS;
-}
-
-function moveFromObj ( move) {
-  return (move & MOVE_FROBJ_MASK) >>> MOVE_FROBJ_BITS;
-}
-
-function movePromotePiece (move) {
-  return ((move & MOVE_PROMAS_MASK) >>> MOVE_PROMAS_BITS) + 2;
-}
-
-function objColour (obj) {
-  return obj & COLOUR_MASK;
-}
-
-function objPiece (obj) {
-  return obj & PIECE_MASK;
-}
-
-//}}}
-
-//{{{  node functions
 
 //{{{  initNodes
 
@@ -759,12 +723,15 @@ function initNodes() {
 
 //}}}
 
-//{{{  addMove
+//{{{  initMoveGen
 
-nodeStruct.prototype.addMove = function (move) {
+nodeStruct.prototype.initMoveGen = function (turn, inCheck, moved) {
 
-  this.moves[this.numMoves]   = move;
-  this.ranks[this.numMoves++] = (Math.random() * 100) | 0;
+  this.turn    = turn;
+  this.inCheck = inCheck;
+  this.moved   = moved;
+
+  this.stage   = 0;
 
 }
 
@@ -773,25 +740,79 @@ nodeStruct.prototype.addMove = function (move) {
 
 nodeStruct.prototype.getNextMove = function () {
 
-  if (this.nextMove == this.numMoves)
-    return 0;
+  switch (this.stage) {
+
+    case 0:
+
+      this.noiseyNum = 0;
+      this.quietNum  = 0;
+
+      if (this.inCheck)
+        this.genEvasions(this.turn, this.moved);
+      else
+        this.genMoves(this.turn);
+
+      this.nextMove = 0;
+      this.stage++;
+
+    case 1:
+
+      if (this.nextMove < this.noiseyNum)
+        return this.nextStagedMove(this.noiseyNum, this.noiseyMoves, this.noiseyRanks);
+
+      this.nextMove = 0;
+      this.stage++;
+
+    case 2:
+
+      if (this.nextMove < this.quietNum)
+        return this.nextStagedMove(this.quietNum, this.quietMoves, this.quietRanks);
+
+      return 0;
+
+  }
+}
+
+//}}}
+//{{{  nextStagedMove
+
+nodeStruct.prototype.nextStagedMove = function (num, moves, ranks) {
 
   var maxR = -100000;
   var maxI = 0;
 
-  for (let i=this.nextMove; i < this.numMoves; i++) {
-    if (this.ranks[i] > maxR) {
-      maxR = this.ranks[i];
+  for (let i=this.nextMove; i < num; i++) {
+    if (ranks[i] > maxR) {
+      maxR = ranks[i];
       maxI = i;
     }
   }
 
-  const maxM = this.moves[maxI]
+  const maxM = moves[maxI]
 
-  this.moves[maxI] = this.moves[this.nextMove];
-  this.ranks[maxI] = this.ranks[this.nextMove++];
+  moves[maxI] = moves[this.nextMove];
+  ranks[maxI] = ranks[this.nextMove++];
 
   return maxM;
+}
+
+//}}}
+//{{{  addNoisey
+
+nodeStruct.prototype.addNoisey = function (move) {
+
+  this.noiseyMoves[this.noiseyNum]   = move;
+  this.noiseyRanks[this.noiseyNum++] = Math.random() * 100 | 0;
+
+}
+
+//}}}
+//{{{  addQuiet
+
+nodeStruct.prototype.addQuiet = function (move) {
+
+  this.quietMoves[this.quietNum]   = move;
+  this.quietRanks[this.quietNum++] = Math.random() * 100 | 0;
 }
 
 //}}}
@@ -799,9 +820,6 @@ nodeStruct.prototype.getNextMove = function () {
 //{{{  genMoves
 
 nodeStruct.prototype.genMoves = function (turn) {
-
-  this.numMoves = 0;
-  this.nextMove = 0;
 
   const s = this.state;
   const b = s.board;
@@ -884,7 +902,7 @@ nodeStruct.prototype.genWhiteCastlingMoves = function () {
                                        && !isSqAttacked(G1,BLACK)
                                        && !isSqAttacked(F1,BLACK)
                                        && !isSqAttacked(E1,BLACK))
-     this.addMove(MOVE_E1G1);
+     this.addNoisey(MOVE_E1G1);
 
    if ((s.rights & WHITE_RIGHTS_QUEEN) && b[B1] == 0
                                        && b[C1] == 0
@@ -892,7 +910,7 @@ nodeStruct.prototype.genWhiteCastlingMoves = function () {
                                        && !isSqAttacked(C1,BLACK)
                                        && !isSqAttacked(D1,BLACK)
                                        && !isSqAttacked(E1,BLACK))
-     this.addMove(MOVE_E1C1);
+     this.addNoisey(MOVE_E1C1);
 
 }
 
@@ -909,7 +927,7 @@ nodeStruct.prototype.genBlackCastlingMoves = function () {
                                       && !isSqAttacked(G8,WHITE)
                                       && !isSqAttacked(F8,WHITE)
                                       && !isSqAttacked(E8,WHITE))
-    this.addMove(MOVE_E8G8);
+    this.addNoisey(MOVE_E8G8);
 
   if ((s.rights & BLACK_RIGHTS_QUEEN) && b[B8] == 0
                                       && b[C8] == 0
@@ -917,7 +935,7 @@ nodeStruct.prototype.genBlackCastlingMoves = function () {
                                       && !isSqAttacked(C8,WHITE)
                                       && !isSqAttacked(D8,WHITE)
                                       && !isSqAttacked(E8,WHITE))
-    this.addMove(MOVE_E8C8);
+    this.addNoisey(MOVE_E8C8);
 
 }
 
@@ -940,17 +958,17 @@ nodeStruct.prototype.genPawnMoves = function (frMove) {
 
   var to = fr + OFFSET_ORTH;
   if (!b[to])
-    this.addMove(frMove | to);
+    this.addQuiet(frMove | to);
 
   var to = fr + OFFSET_DIAG1;
   var toObj = b[to];
   if (CAN_CAPTURE[toObj])
-    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+    this.addNoisey(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
 
   var to = fr + OFFSET_DIAG2;
   var toObj = b[to];
   if (CAN_CAPTURE[toObj])
-    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+    this.addNoisey(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
 }
 
 //}}}
@@ -970,11 +988,11 @@ nodeStruct.prototype.genEnPassPawnMoves = function (frMove) {
 
   var to = fr + OFFSET_DIAG1;
   if (to == s.ep && !b[to])
-    this.addMove(frMove | to | MOVE_EPTAKE_MASK);
+    this.addNoisey(frMove | to | MOVE_EPTAKE_MASK);
 
   var to = fr + OFFSET_DIAG2;
   if (to == s.ep && !b[to])
-    this.addMove(frMove | to | MOVE_EPTAKE_MASK);
+    this.addNoisey(frMove | to | MOVE_EPTAKE_MASK);
 }
 
 //}}}
@@ -996,21 +1014,21 @@ nodeStruct.prototype.genHomePawnMoves = function (frMove) {
 
   var to = fr + OFFSET_ORTH;
   if (!b[to]) {
-    this.addMove(frMove | to);
+    this.addQuiet(frMove | to);
     to += OFFSET_ORTH;
     if (!b[to])
-      this.addMove(frMove | to | MOVE_EPMAKE_MASK);
+      this.addNoisey(frMove | to | MOVE_EPMAKE_MASK);
   }
 
   var to    = fr + OFFSET_DIAG1;
   var toObj = b[to];
   if (CAN_CAPTURE[toObj])
-    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+    this.addNoisey(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
 
   var to    = fr + OFFSET_DIAG2;
   var toObj = b[to];
   if (CAN_CAPTURE[toObj])
-    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+    this.addNoisey(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
 }
 
 //}}}
@@ -1032,28 +1050,28 @@ nodeStruct.prototype.genPromotePawnMoves = function (frMove) {
 
   var to = fr + OFFSET_ORTH;
   if (!b[to]) {
-    this.addMove(frMove | to | QPRO);
-    this.addMove(frMove | to | RPRO);
-    this.addMove(frMove | to | BPRO);
-    this.addMove(frMove | to | NPRO);
+    this.addNoisey(frMove | to | QPRO);
+    this.addNoisey(frMove | to | RPRO);
+    this.addNoisey(frMove | to | BPRO);
+    this.addNoisey(frMove | to | NPRO);
   }
 
   var to    = fr + OFFSET_DIAG1;
   var toObj = b[to];
   if (CAN_CAPTURE[toObj]) {
-    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | QPRO);
-    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | RPRO);
-    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | BPRO);
-    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | NPRO);
+    this.addNoisey(frMove | (toObj << MOVE_TOOBJ_BITS) | to | QPRO);
+    this.addNoisey(frMove | (toObj << MOVE_TOOBJ_BITS) | to | RPRO);
+    this.addNoisey(frMove | (toObj << MOVE_TOOBJ_BITS) | to | BPRO);
+    this.addNoisey(frMove | (toObj << MOVE_TOOBJ_BITS) | to | NPRO);
   }
 
   var to    = fr + OFFSET_DIAG2;
   var toObj = b[to];
   if (CAN_CAPTURE[toObj]) {
-    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | QPRO);
-    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | RPRO);
-    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | BPRO);
-    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | NPRO);
+    this.addNoisey(frMove | (toObj << MOVE_TOOBJ_BITS) | to | QPRO);
+    this.addNoisey(frMove | (toObj << MOVE_TOOBJ_BITS) | to | RPRO);
+    this.addNoisey(frMove | (toObj << MOVE_TOOBJ_BITS) | to | BPRO);
+    this.addNoisey(frMove | (toObj << MOVE_TOOBJ_BITS) | to | NPRO);
   }
 }
 
@@ -1070,7 +1088,7 @@ nodeStruct.prototype.genKingMoves = function (frMove) {
   const turn        = objColour(frObj);
   const cx          = colourIndex(turn);
   const cy          = colourIndex(colourToggle(turn));
-  const CAN_MOVE    = WB_CAN_MOVE[cx];
+  const CAN_CAPTURE = WB_CAN_CAPTURE[cx];
   const theirKingSq = s.kings[cy];
   const OFFSETS     = ALL_OFFSETS[KING];
 
@@ -1081,10 +1099,13 @@ nodeStruct.prototype.genKingMoves = function (frMove) {
     const to    = fr + OFFSETS[dir++];
     const toObj = b[to];
 
-    if (!ADJACENT[to][theirKingSq] && CAN_MOVE[toObj])
-      this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | MOVE_KINGMOVE_MASK);
+    if (!ADJACENT[to][theirKingSq]) {
+      if (!toObj)
+        this.addQuiet(frMove | to | MOVE_KINGMOVE_MASK);
+      else if (CAN_CAPTURE[toObj])
+        this.addNoisey(frMove | (toObj << MOVE_TOOBJ_BITS) | to | MOVE_KINGMOVE_MASK);
+    }
   }
-
 }
 
 //}}}
@@ -1095,12 +1116,12 @@ nodeStruct.prototype.genKnightMoves = function (frMove) {
   const s = this.state;
   const b = s.board;
 
-  const fr       = moveFromSq(frMove);
-  const frObj    = moveFromObj(frMove);
-  const turn     = objColour(frObj);
-  const cx       = colourIndex(turn);
-  const CAN_MOVE = WB_CAN_MOVE[cx];
-  const OFFSETS  = ALL_OFFSETS[KNIGHT];
+  const fr          = moveFromSq(frMove);
+  const frObj       = moveFromObj(frMove);
+  const turn        = objColour(frObj);
+  const cx          = colourIndex(turn);
+  const CAN_CAPTURE = WB_CAN_CAPTURE[cx];
+  const OFFSETS     = ALL_OFFSETS[KNIGHT];
 
   var dir = 0;
 
@@ -1109,10 +1130,11 @@ nodeStruct.prototype.genKnightMoves = function (frMove) {
     const to    = fr + OFFSETS[dir++];
     const toObj = b[to];
 
-    if (CAN_MOVE[toObj])
-      this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+    if (!toObj)
+      this.addQuiet(frMove | to);
+    else if (CAN_CAPTURE[toObj])
+      this.addNoisey(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
   }
-
 }
 
 //}}}
@@ -1140,13 +1162,13 @@ nodeStruct.prototype.genSliderMoves = function (frMove) {
 
     let to = fr + offset;
     while (!b[to]) {
-      this.addMove(frMove | to);
+      this.addQuiet(frMove | to);
       to += offset;
     }
 
     const toObj = b[to];
     if (CAN_CAPTURE[toObj])
-      this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+      this.addNoisey(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
   }
 }
 
@@ -1155,9 +1177,6 @@ nodeStruct.prototype.genSliderMoves = function (frMove) {
 //{{{  genEvasions
 
 nodeStruct.prototype.genEvasions = function (turn, moved) {
-
-  this.numMoves = 0;
-  this.nextMove = 0;
 
   const s = this.state;
   const b = s.board;
@@ -1244,6 +1263,49 @@ nodeStruct.prototype.uncacheState = function() {
 }
 
 //}}}
+
+//}}}
+//{{{  primitives
+
+function colourIndex (c) {
+  return c >>> 3;
+}
+
+function colourMultiplier (c) {
+  return (-c >> 31) | 1;
+}
+
+function colourToggle (c) {
+  return ~c & COLOUR_MASK;
+}
+
+function moveFromSq (move) {
+  return (move & MOVE_FR_MASK) >>> MOVE_FR_BITS;
+}
+
+function moveToSq (move) {
+  return (move & MOVE_TO_MASK) >>> MOVE_TO_BITS;
+}
+
+function moveToObj (move) {
+  return (move & MOVE_TOOBJ_MASK) >>> MOVE_TOOBJ_BITS;
+}
+
+function moveFromObj ( move) {
+  return (move & MOVE_FROBJ_MASK) >>> MOVE_FROBJ_BITS;
+}
+
+function movePromotePiece (move) {
+  return ((move & MOVE_PROMAS_MASK) >>> MOVE_PROMAS_BITS) + 2;
+}
+
+function objColour (obj) {
+  return obj & COLOUR_MASK;
+}
+
+function objPiece (obj) {
+  return obj & PIECE_MASK;
+}
 
 //}}}
 //{{{  makeMove
@@ -1905,10 +1967,7 @@ function perft (node, depth, turn, moved) {
   const cx        = colourIndex(turn);
   const inCheck   = isInCheckAfterTheirMove(s.kings[cx], nextTurn, moved);
 
-  if (inCheck)
-    node.genEvasions(turn, moved)
-  else
-    node.genMoves(turn);
+  node.initMoveGen(turn, inCheck, moved);
 
   var count = 0;
   var move  = 0;
@@ -2067,10 +2126,7 @@ function uciExec(e) {
         else
           console.log('not in check');
         
-        if (inCheck)
-          node.genEvasions(turn, 0);
-        else
-          node.genMoves(turn);
+        node.initMoveGen(turn, inCheck, 0);
         
         var move    = 0;
         var moveStr = '';
@@ -2099,7 +2155,7 @@ function uciExec(e) {
           flags += (move & MOVE_CASTLE_MASK)   ? 'C ' : '  ';
           flags += (move & MOVE_PROMOTE_MASK)  ? 'P ' : '  ';
         
-          console.log((''+num).padStart(2), moveStr.padEnd(5), flags, '0x'+(move>>>0).toString(16).padStart(8,'0'));
+          console.log((''+num).padStart(2), moveStr.padEnd(5), flags, '0x'+(move>>>0).toString(16).padStart(8,'0'), node.stage);
           num++;
         }
         
