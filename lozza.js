@@ -670,6 +670,17 @@ const HOPPER = [
 
 //}}}
 
+//{{{  state global
+
+const state = {
+  board:       Array(144),
+  turn:        0,
+  rights:      0,
+  ep:          0,
+  kings:       [0,0],
+}
+
+//}}}
 //{{{  nodes global
 
 function nodeStruct (ply, state) {
@@ -686,22 +697,6 @@ function nodeStruct (ply, state) {
 }
 
 const nodes = Array(MAX_PLY);
-
-//}}}
-//{{{  state global
-
-const state = {
-  board:       Array(144),
-  turn:        0,
-  rights:      0,
-  ep:          0,
-  kings:       [0,0],
-}
-
-//}}}
-//{{{  uciio global
-
-const uciio = {}
 
 //}}}
 
@@ -1231,8 +1226,10 @@ nodeStruct.prototype.genEvasions = function (turn, moved) {
 
 nodeStruct.prototype.cacheState = function() {
 
-  this.cacheRights = this.state.rights;
-  this.cacheEp     = this.state.ep;
+  const s = this.state;
+
+  this.cacheRights = s.rights;
+  this.cacheEp     = s.ep;
 }
 
 //}}}
@@ -1240,8 +1237,10 @@ nodeStruct.prototype.cacheState = function() {
 
 nodeStruct.prototype.uncacheState = function() {
 
-   this.state.rights = this.cacheRights;
-   this.state.ep     = this.cacheEp;
+   const s = this.state;
+
+   s.rights = this.cacheRights;
+   s.ep     = this.cacheEp;
 }
 
 //}}}
@@ -1727,7 +1726,7 @@ function formatMove (move) {
 //}}}
 //{{{  position
 
-function position () {
+function position (sb, st, sr, sep) {
 
   const s = state;
   const b = s.board;
@@ -1741,17 +1740,15 @@ function position () {
   
   //}}}
 
-  var spec = uciio;
-
   //{{{  board board
   
   var sq   = 0;
   var rank = 7;
   var file = 0;
   
-  for (let i=0; i < spec.board.length; i++) {
+  for (let i=0; i < sb.length; i++) {
   
-    const ch   = spec.board.charAt(i);
+    const ch   = sb.charAt(i);
     const sq88 = (7-rank) * 8 + file;
     const sq   = B88[sq88];
   
@@ -1857,10 +1854,10 @@ function position () {
   //}}}
   //{{{  board turn
   
-  if (spec.turn == 'w')
+  if (st == 'w')
     s.turn = WHITE;
   
-  else if (spec.turn == 'b')
+  else if (st == 'b')
     s.turn = BLACK;
   
   else
@@ -1871,9 +1868,9 @@ function position () {
   
   s.rights = 0;
   
-  for (let i=0; i < spec.rights.length; i++) {
+  for (let i=0; i < sr.length; i++) {
   
-    const ch = spec.rights.charAt(i);
+    const ch = sr.charAt(i);
   
     if (ch == 'K') s.rights |= WHITE_RIGHTS_KING;
     if (ch == 'Q') s.rights |= WHITE_RIGHTS_QUEEN;
@@ -1884,8 +1881,8 @@ function position () {
   //}}}
   //{{{  board ep
   
-  if (spec.ep.length == 2)
-    s.ep = COORDS.indexOf(spec.ep)
+  if (sep.length == 2)
+    s.ep = COORDS.indexOf(sep)
   
   else
     s.ep = 0;
@@ -2022,23 +2019,13 @@ function uciExec(e) {
           case 'startpos':
           case 's':
         
-            uciio.board  = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
-            uciio.turn   = 'w';
-            uciio.rights = 'KQkq';
-            uciio.ep     = '-';
-        
-            position();
+            position('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR', 'w', 'KQkq', '-');
             break;
         
           case 'fen':
           case 'f':
         
-            uciio.board  = tokens[2];
-            uciio.turn   = tokens[3];
-            uciio.rights = tokens[4];
-            uciio.ep     = tokens[5];
-        
-            position();
+            position(tokens[2], tokens[3], tokens[4], tokens[5]);
             break;
         
           default:
