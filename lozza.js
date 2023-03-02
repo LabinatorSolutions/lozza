@@ -1328,6 +1328,32 @@ function objPiece (obj) {
 }
 
 //}}}
+//{{{  see
+
+function quickSee (move, turn) {
+
+  if (move & MOVE_IKKY_MASK)
+    return true;
+
+  const toObj = moveToObj(move);
+
+  if (!toObj)
+    return true;
+
+  const frObj   = moveFromObj(move);
+  const toPiece = objPiece(toObj);
+  const frPiece = objPiece(frObj);
+
+  if (frPiece <= toPiece)
+    return true;
+
+  const to = moveToSq(move);
+
+  return !isSqAttacked(to, colourToggle(turn));
+}
+
+
+//}}}
 //{{{  makeMove
 
 function makeMove (move) {
@@ -2175,7 +2201,7 @@ function uciExec(e) {
           flags += (move & MOVE_CASTLE_MASK)   ? 'C ' : '  ';
           flags += (move & MOVE_PROMOTE_MASK)  ? 'P ' : '  ';
         
-          console.log((''+num).padStart(2), moveStr.padEnd(5), flags, '0x'+(move>>>0).toString(16).padStart(8,'0'), node.stage, node.maxR);
+          console.log((''+num).padStart(2), moveStr.padEnd(5), flags, '0x'+(move>>>0).toString(16).padStart(8,'0'), node.stage, quickSee(move, turn), node.maxR);
         
           num++;
         }
