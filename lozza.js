@@ -217,6 +217,19 @@ const FILE = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
+const CENTRE = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 1, 2, 3, 4, 4, 3, 2, 1, 0, 0,
+                0, 0, 2, 3, 4, 5, 5, 4, 3, 2, 0, 0,
+                0, 0, 3, 4, 5, 6, 6, 5, 4, 3, 0, 0,
+                0, 0, 4, 5, 6, 7, 7, 6, 5, 4, 0, 0,
+                0, 0, 4, 5, 6, 7, 7, 6, 5, 4, 0, 0,
+                0, 0, 3, 4, 5, 6, 6, 5, 4, 3, 0, 0,
+                0, 0, 2, 3, 4, 5, 5, 4, 3, 2, 0, 0,
+                0, 0, 1, 2, 3, 4, 4, 3, 2, 1, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
 //{{{  ADJACENT
 
 const ADJACENT = [
@@ -704,6 +717,7 @@ function nodeStruct (ply, state) {
   this.stage       = 0;
   this.cacheRights = 0;
   this.cacheEp     = 0;
+  this.maxR        = 0;  // hack
 }
 
 //}}}
@@ -713,10 +727,13 @@ const nodes = Array(MAX_PLY);
 //{{{  initNodes
 
 function initNodes() {
+
   for (let i=0; i < nodes.length; i++)
     nodes[i] = new nodeStruct(i, state);
+
   for (let i=0; i < nodes.length-1; i++)
     nodes[i].child = nodes[i+1];
+
   for (let i=1; i < nodes.length; i++)
     nodes[i].parent = nodes[i-1];
 }
@@ -793,16 +810,21 @@ nodeStruct.prototype.nextStagedMove = function (num, moves, ranks) {
   moves[maxI] = moves[this.nextMove];
   ranks[maxI] = ranks[this.nextMove++];
 
+  this.maxR = maxR;  // hack
+
   return maxM;
 }
 
 //}}}
 //{{{  addNoisey
 
+const RANK_DEFENDER = [2000, 1000, 3000, 3000, 5000, 9000, 0,   0, 2000, 1000, 3000, 3000, 5000, 9000, 0];
+const RANK_ATTACKER = [0,    600,  500,  400,  300,  200,  100, 0, 0,    600,  500,  400,  300,  200,  100];
+
 nodeStruct.prototype.addNoisey = function (move) {
 
   this.noiseyMoves[this.noiseyNum]   = move;
-  this.noiseyRanks[this.noiseyNum++] = Math.random() * 100 | 0;
+  this.noiseyRanks[this.noiseyNum++] = RANK_DEFENDER[moveToObj(move)] + RANK_ATTACKER[moveFromObj(move)] + CENTRE[moveToSq(move)];
 
 }
 
@@ -812,7 +834,7 @@ nodeStruct.prototype.addNoisey = function (move) {
 nodeStruct.prototype.addQuiet = function (move) {
 
   this.quietMoves[this.quietNum]   = move;
-  this.quietRanks[this.quietNum++] = Math.random() * 100 | 0;
+  this.quietRanks[this.quietNum++] = CENTRE[moveToSq(move)];
 }
 
 //}}}
@@ -1090,13 +1112,12 @@ nodeStruct.prototype.genKingMoves = function (frMove) {
   const cy          = colourIndex(colourToggle(turn));
   const CAN_CAPTURE = WB_CAN_CAPTURE[cx];
   const theirKingSq = s.kings[cy];
-  const OFFSETS     = ALL_OFFSETS[KING];
 
   var dir = 0;
 
   while (dir < 8) {
 
-    const to    = fr + OFFSETS[dir++];
+    const to    = fr + KING_OFFSETS[dir++];
     const toObj = b[to];
 
     if (!ADJACENT[to][theirKingSq]) {
@@ -1121,13 +1142,12 @@ nodeStruct.prototype.genKnightMoves = function (frMove) {
   const turn        = objColour(frObj);
   const cx          = colourIndex(turn);
   const CAN_CAPTURE = WB_CAN_CAPTURE[cx];
-  const OFFSETS     = ALL_OFFSETS[KNIGHT];
 
   var dir = 0;
 
   while (dir < 8) {
 
-    const to    = fr + OFFSETS[dir++];
+    const to    = fr + KNIGHT_OFFSETS[dir++];
     const toObj = b[to];
 
     if (!toObj)
@@ -2155,7 +2175,8 @@ function uciExec(e) {
           flags += (move & MOVE_CASTLE_MASK)   ? 'C ' : '  ';
           flags += (move & MOVE_PROMOTE_MASK)  ? 'P ' : '  ';
         
-          console.log((''+num).padStart(2), moveStr.padEnd(5), flags, '0x'+(move>>>0).toString(16).padStart(8,'0'), node.stage);
+          console.log((''+num).padStart(2), moveStr.padEnd(5), flags, '0x'+(move>>>0).toString(16).padStart(8,'0'), node.stage, node.maxR);
+        
           num++;
         }
         
