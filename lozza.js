@@ -1328,7 +1328,7 @@ function objPiece (obj) {
 }
 
 //}}}
-//{{{  see
+//{{{  quickSee
 
 function quickSee (move, turn) {
 
