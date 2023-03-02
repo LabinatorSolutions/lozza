@@ -669,6 +669,42 @@ const HOPPER = [
 //}}}
 
 //}}}
+
+//{{{  nodes global
+
+function nodeStruct (ply, state) {
+  this.ply         = ply;
+  this.state       = state;
+  this.parent      = 0;
+  this.child       = 0;
+  this.moves       = Array(MAX_MOVES);
+  this.ranks       = Array(MAX_MOVES);
+  this.numMoves    = 0;
+  this.nextMove    = 0;
+  this.cacheRights = 0;
+  this.cacheEp     = 0;
+}
+
+const nodes = Array(MAX_PLY);
+
+//}}}
+//{{{  state global
+
+const state = {
+  board:       Array(144),
+  turn:        0,
+  rights:      0,
+  ep:          0,
+  kings:       [0,0],
+}
+
+//}}}
+//{{{  uciio global
+
+const uciio = {}
+
+//}}}
+
 //{{{  primitives
 
 function colourIndex (c) {
@@ -712,62 +748,67 @@ function objPiece (obj) {
 }
 
 //}}}
-//{{{  genWhiteCastlingMoves
 
-function genWhiteCastlingMoves () {
+//{{{  node functions
 
-  const s = state;
-  const b = s.board;
+//{{{  initNodes
 
-   if ((s.rights & WHITE_RIGHTS_KING)  && b[F1] == 0
-                                       && b[G1] == 0
-                                       && !isSqAttacked(G1,BLACK)
-                                       && !isSqAttacked(F1,BLACK)
-                                       && !isSqAttacked(E1,BLACK))
-     addMove(MOVE_E1G1);
+function initNodes() {
+  for (let i=0; i < nodes.length; i++)
+    nodes[i] = new nodeStruct(i, state);
+  for (let i=0; i < nodes.length-1; i++)
+    nodes[i].child = nodes[i+1];
+  for (let i=1; i < nodes.length; i++)
+    nodes[i].parent = nodes[i-1];
+}
 
-   if ((s.rights & WHITE_RIGHTS_QUEEN) && b[B1] == 0
-                                       && b[C1] == 0
-                                       && b[D1] == 0
-                                       && !isSqAttacked(C1,BLACK)
-                                       && !isSqAttacked(D1,BLACK)
-                                       && !isSqAttacked(E1,BLACK))
-     addMove(MOVE_E1C1);
+//}}}
+
+//{{{  addMove
+
+nodeStruct.prototype.addMove = function (move) {
+
+  this.moves[this.numMoves]   = move;
+  this.ranks[this.numMoves++] = (Math.random() * 100) | 0;
 
 }
 
 //}}}
-//{{{  genBlackCastlingMoves
+//{{{  getNextMove
 
-function genBlackCastlingMoves () {
+nodeStruct.prototype.getNextMove = function () {
 
-  const s = state;
-  const b = s.board;
+  if (this.nextMove == this.numMoves)
+    return 0;
 
-  if ((s.rights & BLACK_RIGHTS_KING)  && b[F8] == 0
-                                      && b[G8] == 0
-                                      && !isSqAttacked(G8,WHITE)
-                                      && !isSqAttacked(F8,WHITE)
-                                      && !isSqAttacked(E8,WHITE))
-    addMove(MOVE_E8G8);
+  var maxR = -100000;
+  var maxI = 0;
 
-  if ((s.rights & BLACK_RIGHTS_QUEEN) && b[B8] == 0
-                                      && b[C8] == 0
-                                      && b[D8] == 0
-                                      && !isSqAttacked(C8,WHITE)
-                                      && !isSqAttacked(D8,WHITE)
-                                      && !isSqAttacked(E8,WHITE))
-    addMove(MOVE_E8C8);
+  for (let i=this.nextMove; i < this.numMoves; i++) {
+    if (this.ranks[i] > maxR) {
+      maxR = this.ranks[i];
+      maxI = i;
+    }
+  }
 
+  const maxM = this.moves[maxI]
+
+  this.moves[maxI] = this.moves[this.nextMove];
+  this.ranks[maxI] = this.ranks[this.nextMove++];
+
+  return maxM;
 }
 
 //}}}
+
 //{{{  genMoves
 
-function genMoves (turn) {
+nodeStruct.prototype.genMoves = function (turn) {
 
+  this.numMoves = 0;
+  this.nextMove = 0;
 
-  const s = state;
+  const s = this.state;
   const b = s.board;
 
   const nextMove = s.nextMove;
@@ -779,9 +820,9 @@ function genMoves (turn) {
   const EP_RANK      = WB_EP_RANK[cx];
 
   if (turn == WHITE)
-    genWhiteCastlingMoves();
+    this.genWhiteCastlingMoves();
   else
-    genBlackCastlingMoves();
+    this.genBlackCastlingMoves();
 
   for (let i=0; i<64; i++) {
 
@@ -801,32 +842,32 @@ function genMoves (turn) {
         const frRank = RANK[fr];
         switch (frRank) {
           case HOME_RANK:
-            genHomePawnMoves(frMove | legalMask);
+            this.genHomePawnMoves(frMove | legalMask);
             break;
           case PROMOTE_RANK:
-            genPromotePawnMoves(frMove | legalMask);
+            this.genPromotePawnMoves(frMove | legalMask);
             break;
           case EP_RANK:
-            genPawnMoves(frMove | legalMask);
+            this.genPawnMoves(frMove | legalMask);
             if (s.ep)
-              genEnPassPawnMoves(frMove);
+              this.genEnPassPawnMoves(frMove);
             break;
           default:
-            genPawnMoves(frMove | legalMask);
+            this.genPawnMoves(frMove | legalMask);
             break;
         }
         break;
 
       case KNIGHT:
-        genKnightMoves(frMove | legalMask);
+        this.genKnightMoves(frMove | legalMask);
         break;
 
       case KING:
-        genKingMoves(frMove);
+        this.genKingMoves(frMove);
         break;
 
       default:
-        genSliderMoves(frMove | legalMask);
+        this.genSliderMoves(frMove | legalMask);
         break;
     }
   }
@@ -835,11 +876,295 @@ function genMoves (turn) {
 }
 
 //}}}
+
+//{{{  genWhiteCastlingMoves
+
+nodeStruct.prototype.genWhiteCastlingMoves = function () {
+
+  const s = this.state;
+  const b = s.board;
+
+   if ((s.rights & WHITE_RIGHTS_KING)  && b[F1] == 0
+                                       && b[G1] == 0
+                                       && !isSqAttacked(G1,BLACK)
+                                       && !isSqAttacked(F1,BLACK)
+                                       && !isSqAttacked(E1,BLACK))
+     this.addMove(MOVE_E1G1);
+
+   if ((s.rights & WHITE_RIGHTS_QUEEN) && b[B1] == 0
+                                       && b[C1] == 0
+                                       && b[D1] == 0
+                                       && !isSqAttacked(C1,BLACK)
+                                       && !isSqAttacked(D1,BLACK)
+                                       && !isSqAttacked(E1,BLACK))
+     this.addMove(MOVE_E1C1);
+
+}
+
+//}}}
+//{{{  genBlackCastlingMoves
+
+nodeStruct.prototype.genBlackCastlingMoves = function () {
+
+  const s = this.state;
+  const b = s.board;
+
+  if ((s.rights & BLACK_RIGHTS_KING)  && b[F8] == 0
+                                      && b[G8] == 0
+                                      && !isSqAttacked(G8,WHITE)
+                                      && !isSqAttacked(F8,WHITE)
+                                      && !isSqAttacked(E8,WHITE))
+    this.addMove(MOVE_E8G8);
+
+  if ((s.rights & BLACK_RIGHTS_QUEEN) && b[B8] == 0
+                                      && b[C8] == 0
+                                      && b[D8] == 0
+                                      && !isSqAttacked(C8,WHITE)
+                                      && !isSqAttacked(D8,WHITE)
+                                      && !isSqAttacked(E8,WHITE))
+    this.addMove(MOVE_E8C8);
+
+}
+
+//}}}
+//{{{  genPawnMoves
+
+nodeStruct.prototype.genPawnMoves = function (frMove) {
+
+  const s = this.state;
+  const b = s.board;
+
+  const fr           = moveFromSq(frMove);
+  const frObj        = moveFromObj(frMove);
+  const turn         = objColour(frObj);
+  const cx           = colourIndex(turn);
+  const CAN_CAPTURE  = WB_CAN_CAPTURE[cx];
+  const OFFSET_ORTH  = WB_OFFSET_ORTH[cx];
+  const OFFSET_DIAG1 = WB_OFFSET_DIAG1[cx];
+  const OFFSET_DIAG2 = WB_OFFSET_DIAG2[cx];
+
+  var to = fr + OFFSET_ORTH;
+  if (!b[to])
+    this.addMove(frMove | to);
+
+  var to = fr + OFFSET_DIAG1;
+  var toObj = b[to];
+  if (CAN_CAPTURE[toObj])
+    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+
+  var to = fr + OFFSET_DIAG2;
+  var toObj = b[to];
+  if (CAN_CAPTURE[toObj])
+    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+}
+
+//}}}
+//{{{  genEnPassPawnMoves
+
+nodeStruct.prototype.genEnPassPawnMoves = function (frMove) {
+
+  const s = this.state;
+  const b = s.board;
+
+  const fr           = moveFromSq(frMove);
+  const frObj        = moveFromObj(frMove);
+  const turn         = objColour(frObj);
+  const cx           = colourIndex(turn);
+  const OFFSET_DIAG1 = WB_OFFSET_DIAG1[cx];
+  const OFFSET_DIAG2 = WB_OFFSET_DIAG2[cx];
+
+  var to = fr + OFFSET_DIAG1;
+  if (to == s.ep && !b[to])
+    this.addMove(frMove | to | MOVE_EPTAKE_MASK);
+
+  var to = fr + OFFSET_DIAG2;
+  if (to == s.ep && !b[to])
+    this.addMove(frMove | to | MOVE_EPTAKE_MASK);
+}
+
+//}}}
+//{{{  genHomePawnMoves
+
+nodeStruct.prototype.genHomePawnMoves = function (frMove) {
+
+  const s = this.state;
+  const b = s.board;
+
+  const fr           = moveFromSq(frMove);
+  const frObj        = moveFromObj(frMove);
+  const turn         = objColour(frObj);
+  const cx           = colourIndex(turn);
+  const CAN_CAPTURE  = WB_CAN_CAPTURE[cx];
+  const OFFSET_ORTH  = WB_OFFSET_ORTH[cx];
+  const OFFSET_DIAG1 = WB_OFFSET_DIAG1[cx];
+  const OFFSET_DIAG2 = WB_OFFSET_DIAG2[cx];
+
+  var to = fr + OFFSET_ORTH;
+  if (!b[to]) {
+    this.addMove(frMove | to);
+    to += OFFSET_ORTH;
+    if (!b[to])
+      this.addMove(frMove | to | MOVE_EPMAKE_MASK);
+  }
+
+  var to    = fr + OFFSET_DIAG1;
+  var toObj = b[to];
+  if (CAN_CAPTURE[toObj])
+    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+
+  var to    = fr + OFFSET_DIAG2;
+  var toObj = b[to];
+  if (CAN_CAPTURE[toObj])
+    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+}
+
+//}}}
+//{{{  genPromotePawnMoves
+
+nodeStruct.prototype.genPromotePawnMoves = function (frMove) {
+
+  const s = this.state;
+  const b = s.board;
+
+  const fr           = moveFromSq(frMove);
+  const frObj        = moveFromObj(frMove);
+  const turn         = objColour(frObj);
+  const cx           = colourIndex(turn);
+  const CAN_CAPTURE  = WB_CAN_CAPTURE[cx];
+  const OFFSET_ORTH  = WB_OFFSET_ORTH[cx];
+  const OFFSET_DIAG1 = WB_OFFSET_DIAG1[cx];
+  const OFFSET_DIAG2 = WB_OFFSET_DIAG2[cx];
+
+  var to = fr + OFFSET_ORTH;
+  if (!b[to]) {
+    this.addMove(frMove | to | QPRO);
+    this.addMove(frMove | to | RPRO);
+    this.addMove(frMove | to | BPRO);
+    this.addMove(frMove | to | NPRO);
+  }
+
+  var to    = fr + OFFSET_DIAG1;
+  var toObj = b[to];
+  if (CAN_CAPTURE[toObj]) {
+    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | QPRO);
+    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | RPRO);
+    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | BPRO);
+    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | NPRO);
+  }
+
+  var to    = fr + OFFSET_DIAG2;
+  var toObj = b[to];
+  if (CAN_CAPTURE[toObj]) {
+    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | QPRO);
+    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | RPRO);
+    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | BPRO);
+    this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | NPRO);
+  }
+}
+
+//}}}
+//{{{  genKingMoves
+
+nodeStruct.prototype.genKingMoves = function (frMove) {
+
+  const s = this.state;
+  const b = s.board;
+
+  const fr          = moveFromSq(frMove);
+  const frObj       = moveFromObj(frMove);
+  const turn        = objColour(frObj);
+  const cx          = colourIndex(turn);
+  const cy          = colourIndex(colourToggle(turn));
+  const CAN_MOVE    = WB_CAN_MOVE[cx];
+  const theirKingSq = s.kings[cy];
+  const OFFSETS     = ALL_OFFSETS[KING];
+
+  var dir = 0;
+
+  while (dir < 8) {
+
+    const to    = fr + OFFSETS[dir++];
+    const toObj = b[to];
+
+    if (!ADJACENT[to][theirKingSq] && CAN_MOVE[toObj])
+      this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | MOVE_KINGMOVE_MASK);
+  }
+
+}
+
+//}}}
+//{{{  genKnightMoves
+
+nodeStruct.prototype.genKnightMoves = function (frMove) {
+
+  const s = this.state;
+  const b = s.board;
+
+  const fr       = moveFromSq(frMove);
+  const frObj    = moveFromObj(frMove);
+  const turn     = objColour(frObj);
+  const cx       = colourIndex(turn);
+  const CAN_MOVE = WB_CAN_MOVE[cx];
+  const OFFSETS  = ALL_OFFSETS[KNIGHT];
+
+  var dir = 0;
+
+  while (dir < 8) {
+
+    const to    = fr + OFFSETS[dir++];
+    const toObj = b[to];
+
+    if (CAN_MOVE[toObj])
+      this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+  }
+
+}
+
+//}}}
+//{{{  genSliderMoves
+
+nodeStruct.prototype.genSliderMoves = function (frMove) {
+
+  const s = this.state;
+  const b = s.board;
+
+  const fr          = moveFromSq(frMove);
+  const frObj       = moveFromObj(frMove);
+  const frPiece     = objPiece(frObj);
+  const turn        = objColour(frObj);
+  const cx          = colourIndex(turn);
+  const CAN_CAPTURE = WB_CAN_CAPTURE[cx];
+  const OFFSETS     = ALL_OFFSETS[frPiece];
+  const len         = OFFSETS.length;
+
+  var dir = 0;
+
+  while (dir < len) {
+
+    const offset = OFFSETS[dir++];
+
+    let to = fr + offset;
+    while (!b[to]) {
+      this.addMove(frMove | to);
+      to += offset;
+    }
+
+    const toObj = b[to];
+    if (CAN_CAPTURE[toObj])
+      this.addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+  }
+}
+
+//}}}
+
 //{{{  genEvasions
 
-function genEvasions (turn, moved) {
+nodeStruct.prototype.genEvasions = function (turn, moved) {
 
-  const s = state;
+  this.numMoves = 0;
+  this.nextMove = 0;
+
+  const s = this.state;
   const b = s.board;
 
   const nextMove = s.nextMove;
@@ -867,32 +1192,32 @@ function genEvasions (turn, moved) {
         const frRank = RANK[fr];
         switch (frRank) {
           case HOME_RANK:
-            genHomePawnMoves(frMove);
+            this.genHomePawnMoves(frMove);
             break;
           case PROMOTE_RANK:
-            genPromotePawnMoves(frMove);
+            this.genPromotePawnMoves(frMove);
             break;
           case EP_RANK:
-            genPawnMoves(frMove);
+            this.genPawnMoves(frMove);
             if (s.ep)
-              genEnPassPawnMoves(frMove);
+              this.genEnPassPawnMoves(frMove);
             break;
           default:
-            genPawnMoves(frMove);
+            this.genPawnMoves(frMove);
             break;
         }
         break;
 
       case KNIGHT:
-        genKnightMoves(frMove);
+        this.genKnightMoves(frMove);
         break;
 
       case KING:
-        genKingMoves(frMove);
+        this.genKingMoves(frMove);
         break;
 
       default:
-        genSliderMoves(frMove);
+        this.genSliderMoves(frMove);
         break;
     }
   }
@@ -901,233 +1226,25 @@ function genEvasions (turn, moved) {
 }
 
 //}}}
-//{{{  genPawnMoves
 
-function genPawnMoves (frMove) {
+//{{{  cacheState
 
-  const s = state;
-  const b = s.board;
+nodeStruct.prototype.cacheState = function() {
 
-  const fr           = moveFromSq(frMove);
-  const frObj        = moveFromObj(frMove);
-  const turn         = objColour(frObj);
-  const cx           = colourIndex(turn);
-  const CAN_CAPTURE  = WB_CAN_CAPTURE[cx];
-  const OFFSET_ORTH  = WB_OFFSET_ORTH[cx];
-  const OFFSET_DIAG1 = WB_OFFSET_DIAG1[cx];
-  const OFFSET_DIAG2 = WB_OFFSET_DIAG2[cx];
-
-  var to = fr + OFFSET_ORTH;
-  if (!b[to])
-    addMove(frMove | to);
-
-  var to = fr + OFFSET_DIAG1;
-  var toObj = b[to];
-  if (CAN_CAPTURE[toObj])
-    addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
-
-  var to = fr + OFFSET_DIAG2;
-  var toObj = b[to];
-  if (CAN_CAPTURE[toObj])
-    addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
+  this.cacheRights = this.state.rights;
+  this.cacheEp     = this.state.ep;
 }
 
 //}}}
-//{{{  genEnPassPawnMoves
+//{{{  uncacheState
 
-function genEnPassPawnMoves (frMove) {
+nodeStruct.prototype.uncacheState = function() {
 
-  const s = state;
-  const b = s.board;
-
-  const fr           = moveFromSq(frMove);
-  const frObj        = moveFromObj(frMove);
-  const turn         = objColour(frObj);
-  const cx           = colourIndex(turn);
-  const OFFSET_DIAG1 = WB_OFFSET_DIAG1[cx];
-  const OFFSET_DIAG2 = WB_OFFSET_DIAG2[cx];
-
-  var to = fr + OFFSET_DIAG1;
-  if (to == s.ep && !b[to])
-    addMove(frMove | to | MOVE_EPTAKE_MASK);
-
-  var to = fr + OFFSET_DIAG2;
-  if (to == s.ep && !b[to])
-    addMove(frMove | to | MOVE_EPTAKE_MASK);
+   this.state.rights = this.cacheRights;
+   this.state.ep     = this.cacheEp;
 }
 
 //}}}
-//{{{  genHomePawnMoves
-
-function genHomePawnMoves (frMove) {
-
-  const s = state;
-  const b = s.board;
-
-  const fr           = moveFromSq(frMove);
-  const frObj        = moveFromObj(frMove);
-  const turn         = objColour(frObj);
-  const cx           = colourIndex(turn);
-  const CAN_CAPTURE  = WB_CAN_CAPTURE[cx];
-  const OFFSET_ORTH  = WB_OFFSET_ORTH[cx];
-  const OFFSET_DIAG1 = WB_OFFSET_DIAG1[cx];
-  const OFFSET_DIAG2 = WB_OFFSET_DIAG2[cx];
-
-  var to = fr + OFFSET_ORTH;
-  if (!b[to]) {
-    addMove(frMove | to);
-    to += OFFSET_ORTH;
-    if (!b[to])
-      addMove(frMove | to | MOVE_EPMAKE_MASK);
-  }
-
-  var to    = fr + OFFSET_DIAG1;
-  var toObj = b[to];
-  if (CAN_CAPTURE[toObj])
-    addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
-
-  var to    = fr + OFFSET_DIAG2;
-  var toObj = b[to];
-  if (CAN_CAPTURE[toObj])
-    addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
-}
-
-//}}}
-//{{{  genPromotePawnMoves
-
-function genPromotePawnMoves (frMove) {
-
-  const s = state;
-  const b = s.board;
-
-  const fr           = moveFromSq(frMove);
-  const frObj        = moveFromObj(frMove);
-  const turn         = objColour(frObj);
-  const cx           = colourIndex(turn);
-  const CAN_CAPTURE  = WB_CAN_CAPTURE[cx];
-  const OFFSET_ORTH  = WB_OFFSET_ORTH[cx];
-  const OFFSET_DIAG1 = WB_OFFSET_DIAG1[cx];
-  const OFFSET_DIAG2 = WB_OFFSET_DIAG2[cx];
-
-  var to = fr + OFFSET_ORTH;
-  if (!b[to]) {
-    addMove(frMove | to | QPRO);
-    addMove(frMove | to | RPRO);
-    addMove(frMove | to | BPRO);
-    addMove(frMove | to | NPRO);
-  }
-
-  var to    = fr + OFFSET_DIAG1;
-  var toObj = b[to];
-  if (CAN_CAPTURE[toObj]) {
-    addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | QPRO);
-    addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | RPRO);
-    addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | BPRO);
-    addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | NPRO);
-  }
-
-  var to    = fr + OFFSET_DIAG2;
-  var toObj = b[to];
-  if (CAN_CAPTURE[toObj]) {
-    addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | QPRO);
-    addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | RPRO);
-    addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | BPRO);
-    addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | NPRO);
-  }
-}
-
-//}}}
-//{{{  genKingMoves
-
-function genKingMoves (frMove) {
-
-  const s = state;
-  const b = s.board;
-
-  const fr          = moveFromSq(frMove);
-  const frObj       = moveFromObj(frMove);
-  const turn        = objColour(frObj);
-  const cx          = colourIndex(turn);
-  const cy          = colourIndex(colourToggle(turn));
-  const CAN_MOVE    = WB_CAN_MOVE[cx];
-  const theirKingSq = s.kings[cy];
-  const OFFSETS     = ALL_OFFSETS[KING];
-
-  var dir = 0;
-
-  while (dir < 8) {
-
-    const to    = fr + OFFSETS[dir++];
-    const toObj = b[to];
-
-    if (!ADJACENT[to][theirKingSq] && CAN_MOVE[toObj])
-      addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to | MOVE_KINGMOVE_MASK);
-  }
-
-}
-
-//}}}
-//{{{  genKnightMoves
-
-function genKnightMoves (frMove) {
-
-  const s = state;
-  const b = s.board;
-
-  const fr       = moveFromSq(frMove);
-  const frObj    = moveFromObj(frMove);
-  const turn     = objColour(frObj);
-  const cx       = colourIndex(turn);
-  const CAN_MOVE = WB_CAN_MOVE[cx];
-  const OFFSETS  = ALL_OFFSETS[KNIGHT];
-
-  var dir = 0;
-
-  while (dir < 8) {
-
-    const to    = fr + OFFSETS[dir++];
-    const toObj = b[to];
-
-    if (CAN_MOVE[toObj])
-      addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
-  }
-
-}
-
-//}}}
-//{{{  genSliderMoves
-
-function genSliderMoves (frMove) {
-
-  const s = state;
-  const b = s.board;
-
-  const fr          = moveFromSq(frMove);
-  const frObj       = moveFromObj(frMove);
-  const frPiece     = objPiece(frObj);
-  const turn        = objColour(frObj);
-  const cx          = colourIndex(turn);
-  const CAN_CAPTURE = WB_CAN_CAPTURE[cx];
-  const OFFSETS     = ALL_OFFSETS[frPiece];
-  const len         = OFFSETS.length;
-
-  var dir = 0;
-
-  while (dir < len) {
-
-    const offset = OFFSETS[dir++];
-
-    let to = fr + offset;
-    while (!b[to]) {
-      addMove(frMove | to);
-      to += offset;
-    }
-
-    const toObj = b[to];
-    if (CAN_CAPTURE[toObj])
-      addMove(frMove | (toObj << MOVE_TOOBJ_BITS) | to);
-  }
-}
 
 //}}}
 //{{{  makeMove
@@ -1136,8 +1253,6 @@ function makeMove (move) {
 
   const s = state;
   const b = s.board;
-
-  s.ply++;
 
   const fr    = moveFromSq(move);
   const to    = moveToSq(move);
@@ -1258,8 +1373,6 @@ function unmakeMove (move) {
 
   const s = state;
   const b = s.board;
-
-  s.ply--;
 
   const fr    = moveFromSq(move);
   const to    = moveToSq(move);
@@ -1782,120 +1895,44 @@ function position () {
 }
 
 //}}}
-//{{{  initSearch
-
-function initSearch () {
-
-  state.nextMove = 0;
-  state.ply      = 0;
-
-}
-
-//}}}
-//{{{  cacheState
-
-function cacheState() {
-
-  const s   = state;
-  const ply = s.ply;
-
-  s.cacheRights[ply]   = s.rights;
-  s.cacheEp[ply]       = s.ep;
-}
-
-//}}}
-//{{{  uncacheState
-
-function uncacheState() {
-
-  const s   = state;
-  const ply = s.ply;
-
-  s.rights = s.cacheRights[ply];
-  s.ep     = s.cacheEp[ply];
-}
-
-//}}}
-//{{{  getNextMove
-
-function getNextMove (nextMove, lastMove) {
-
-  const moves = state.moves;
-  const ranks = state.ranks;
-
-  var maxR = -100000;
-  var maxI = 0;
-
-  for (let i=nextMove; i <= lastMove; i++) {
-    if (ranks[i] > maxR) {
-      maxR = ranks[i];
-      maxI = i;
-    }
-  }
-
-  const maxM = moves[maxI]
-
-  moves[maxI] = moves[nextMove];
-  ranks[maxI] = ranks[nextMove];
-
-  return maxM;
-}
-
-//}}}
-//{{{  addMove
-
-function addMove (move) {
-
-  const s = state;
-
-  s.moves[s.nextMove]   = move;
-  s.ranks[s.nextMove++] = (Math.random() * 100) | 0;
-
-}
-
-//}}}
 //{{{  perft
 
-function perft (depth, turn, moved) {
+function perft (node, depth, turn, moved) {
 
   if (depth == 0)
     return 1;
 
-  const s = state;
+  const s = node.state;
 
   const nextTurn  = colourToggle(turn);
   const cx        = colourIndex(turn);
-
   const inCheck   = isInCheckAfterTheirMove(s.kings[cx], nextTurn, moved);
 
-  const firstMove = (inCheck) ? genEvasions(turn, moved) : genMoves(turn);
-  const lastMove  = s.nextMove - 1;
-  var   nextMove  = firstMove;
+  if (inCheck)
+    node.genEvasions(turn, moved)
+  else
+    node.genMoves(turn);
 
   var count = 0;
   var move  = 0;
 
-  cacheState();
+  node.cacheState();
 
-  while (nextMove <= lastMove) {
-
-    move = getNextMove(nextMove++, lastMove);
+  while (move = node.getNextMove()) {
 
     makeMove(move);
 
     if (!(move & MOVE_LEGAL_MASK) && isInCheckAfterOurMove(inCheck, s.kings[cx], nextTurn, move)) {
       unmakeMove(move);
-      uncacheState();
+      node.uncacheState();
       continue;
     }
 
-    count += perft(depth-1, nextTurn, move);
+    count += perft(node.child,depth-1, nextTurn, move);
 
     unmakeMove(move);
-    uncacheState();
+    node.uncacheState();
   }
-
-  s.nextMove = firstMove;
 
   return count;
 }
@@ -2030,14 +2067,13 @@ function uciExec(e) {
       case 'm': {
         //{{{  moves
         
-        initSearch();
-        
         printBoard(state.turn);
         
         const turn     = state.turn;
         const nextTurn = colourToggle(turn);
         const cx       = colourIndex(turn);
         const inCheck  = isInCheckAfterTheirMove(state.kings[cx], nextTurn, 0);
+        const node     = nodes[0];
         
         if (inCheck)
           console.log('in check');
@@ -2045,23 +2081,18 @@ function uciExec(e) {
           console.log('not in check');
         
         if (inCheck)
-          var firstMove = genEvasions(turn);
+          node.genEvasions(turn, 0);
         else
-          var firstMove = genMoves(turn);
-        
-        const lastMove  = state.nextMove - 1;
-        var   nextMove  = firstMove;
+          node.genMoves(turn);
         
         var move    = 0;
         var moveStr = '';
         var num     = 1;
         var flags   = '';
         
-        cacheState();
+        node.cacheState();
         
-        while (nextMove <= lastMove) {
-        
-          move = getNextMove(nextMove++, lastMove);
+        while (move = node.getNextMove()) {
         
           makeMove(move);
         
@@ -2071,7 +2102,7 @@ function uciExec(e) {
             flags = '  ';
         
           unmakeMove(move);
-          uncacheState();
+          node.uncacheState();
         
           moveStr = formatMove(move);
         
@@ -2084,8 +2115,6 @@ function uciExec(e) {
           console.log((''+num).padStart(2), moveStr.padEnd(5), flags, '0x'+(move>>>0).toString(16).padStart(8,'0'));
           num++;
         }
-        
-        state.nextMove = firstMove;
         
         break;
         
@@ -2106,11 +2135,9 @@ function uciExec(e) {
       case 'perft': {
         //{{{  perft
         
-        initSearch();
-        
         const depth  = parseInt(tokens[1]);
         const t      = Date.now();
-        const pmoves = perft(depth, state.turn, 0);
+        const pmoves = perft(nodes[0], depth, state.turn, 0);
         
         console.log(pmoves,'moves',Date.now()-t,'ms');
         
@@ -2214,9 +2241,7 @@ function uciExec(e) {
         
           uciExec('position ' + fen);
         
-          initSearch();
-        
-          const pmoves = perft(depth, state.turn, 0);
+          const pmoves = perft(nodes[0], depth, state.turn, 0);
           const err    = moves - pmoves;
         
           errs   += err;
@@ -2251,28 +2276,7 @@ function uciExec(e) {
 
 //}}}
 
-//{{{  global state
-
-const state = {
-
-  board:       Array(144),
-  turn:        0,
-  rights:      0,
-  ep:          0,
-  ply:         0,
-  kings:       [0,0],
-  nextMove:    0,
-  moves:       Array(MAX_PLY * MAX_MOVES),
-  ranks:       Array(MAX_PLY * MAX_MOVES),
-  cacheRights: Array(MAX_PLY),
-  cacheEp:     Array(MAX_PLY),
-}
-
-const uciio = {}
-
-//}}}
-
-initSearch();
+initNodes();
 uciExec('position startpos');
 uciArgv();
 
