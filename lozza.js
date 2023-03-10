@@ -3,7 +3,8 @@
 
 "use strict"
 
-const BUILD = "3";
+const BUILD  = "3";
+const TUNING = 1;
 
 //{{{  constants
 
@@ -89,9 +90,11 @@ const IS_WNBRQ   = [0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 const IS_WPNBRQ  = [0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 const IS_WPNBRQE = [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 const IS_WB      = [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+const IS_WR      = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 const IS_WBQ     = [0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 const IS_WRQ     = [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 const IS_WQ      = [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+const IS_WK      = [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 const IS_B       = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0];
 const IS_BE      = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0];
@@ -101,9 +104,11 @@ const IS_BNBRQ   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0]
 const IS_BPNBRQ  = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0]
 const IS_BPNBRQE = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0]
 const IS_BB      = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0];
+const IS_BR      = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0];
 const IS_BBQ     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0];
 const IS_BRQ     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0];
 const IS_BQ      = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+const IS_BK      = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0]
 
 const OBJ_CHAR = ['.','P','N','B','R','Q','K','x','y','p','n','b','r','q','k','z'];
 
@@ -177,6 +182,31 @@ const B88 = [26, 27, 28, 29, 30, 31, 32, 33,
              86, 87, 88, 89, 90, 91, 92, 93,
              98, 99, 100,101,102,103,104,105,
              110,111,112,113,114,115,116,117];
+
+const FLIP = [[0, 0, 0,   0,   0,   0,   0,   0,   0,   0,   0, 0,
+               0, 0, 0,   0,   0,   0,   0,   0,   0,   0,   0, 0,
+               0, 0, 26,  27,  28,  29,  30,  31,  32,  33,  0, 0,
+               0, 0, 38,  39,  40,  41,  42,  43,  44,  45,  0, 0,
+               0, 0, 50,  51,  52,  53,  54,  55,  56,  57,  0, 0,
+               0, 0, 62,  63,  64,  65,  66,  67,  68,  69,  0, 0,
+               0, 0, 74,  75,  76,  77,  78,  79,  80,  81,  0, 0,
+               0, 0, 86,  87,  88,  89,  90,  91,  92,  93,  0, 0,
+               0, 0, 98,  99,  100, 101, 102, 103, 104, 105, 0, 0,
+               0, 0, 110, 111, 112, 113, 114, 115, 116, 117, 0, 0,
+               0, 0, 0,   0,   0,   0,   0,   0,   0,   0,   0, 0,
+               0, 0, 0,   0,   0,   0,   0,   0,   0,   0,   0, 0],
+              [0, 0, 0,   0,   0,   0,   0,   0,   0,   0,   0, 0,
+               0, 0, 0,   0,   0,   0,   0,   0,   0,   0,   0, 0,
+               0, 0, 110, 111, 112, 113, 114, 115, 116, 117, 0, 0,
+               0, 0, 98,  99,  100, 101, 102, 103, 104, 105, 0, 0,
+               0, 0, 86,  87,  88,  89,  90,  91,  92,  93,  0, 0,
+               0, 0, 74,  75,  76,  77,  78,  79,  80,  81,  0, 0,
+               0, 0, 62,  63,  64,  65,  66,  67,  68,  69,  0, 0,
+               0, 0, 50,  51,  52,  53,  54,  55,  56,  57,  0, 0,
+               0, 0, 38,  39,  40,  41,  42,  43,  44,  45,  0, 0,
+               0, 0, 26,  27,  28,  29,  30,  31,  32,  33,  0, 0,
+               0, 0, 0,   0,   0,   0,   0,   0,   0,   0,   0, 0,
+               0, 0, 0,   0,   0,   0,   0,   0,   0,   0,   0, 0]];
 
 const COORDS = ['??', '??', '??', '??', '??', '??', '??', '??', '??', '??', '??', '??',
                 '??', '??', '??', '??', '??', '??', '??', '??', '??', '??', '??', '??',
@@ -682,7 +712,13 @@ const HOPPER = [
 //}}}
 
 //}}}
+//{{{  features
 
+const features = {
+  numPieces: Array(7)
+}
+
+//}}}
 //{{{  state
 
 const state = {
@@ -742,9 +778,9 @@ function initNodes() {
 
 //{{{  initMoveGen
 
-nodeStruct.prototype.initMoveGen = function (turn, inCheck, moved) {
+nodeStruct.prototype.initMoveGen = function (inCheck, moved) {
 
-  this.turn    = turn;
+  this.turn    = state.turn;
   this.inCheck = inCheck;
   this.moved   = moved;
 
@@ -765,9 +801,9 @@ nodeStruct.prototype.getNextMove = function () {
       this.quietNum  = 0;
 
       if (this.inCheck)
-        this.genEvasions(this.turn, this.moved);
+        this.genEvasions(this.moved);
       else
-        this.genMoves(this.turn);
+        this.genMoves();
 
       this.nextMove = 0;
       this.stage++;
@@ -841,13 +877,14 @@ nodeStruct.prototype.addQuiet = function (move) {
 
 //{{{  genMoves
 
-nodeStruct.prototype.genMoves = function (turn) {
+nodeStruct.prototype.genMoves = function () {
 
   const s = this.state;
   const b = s.board;
 
   const nextMove = s.nextMove;
 
+  const turn         = s.turn;
   const cx           = colourIndex(turn);
   const OUR_PIECE    = WB_OUR_PIECE[cx];
   const HOME_RANK    = WB_HOME_RANK[cx];
@@ -1196,13 +1233,14 @@ nodeStruct.prototype.genSliderMoves = function (frMove) {
 
 //{{{  genEvasions
 
-nodeStruct.prototype.genEvasions = function (turn, moved) {
+nodeStruct.prototype.genEvasions = function (moved) {
 
   const s = this.state;
   const b = s.board;
 
   const nextMove = s.nextMove;
 
+  const turn         = s.turn;
   const cx           = colourIndex(turn);
   const OUR_PIECE    = WB_OUR_PIECE[cx];
   const HOME_RANK    = WB_HOME_RANK[cx];
@@ -1267,6 +1305,7 @@ nodeStruct.prototype.cacheState = function() {
 
   const s = this.state;
 
+  this.cacheTurn   = s.turn;
   this.cacheRights = s.rights;
   this.cacheEp     = s.ep;
 }
@@ -1278,6 +1317,7 @@ nodeStruct.prototype.uncacheState = function() {
 
    const s = this.state;
 
+   s.turn   = this.cacheTurn;
    s.rights = this.cacheRights;
    s.ep     = this.cacheEp;
 }
@@ -1286,6 +1326,10 @@ nodeStruct.prototype.uncacheState = function() {
 
 //}}}
 //{{{  primitives
+
+function myround(x) {
+  return Math.sign(x) * Math.round(Math.abs(x));
+}
 
 function colourIndex (c) {
   return c >>> 3;
@@ -1325,6 +1369,56 @@ function objColour (obj) {
 
 function objPiece (obj) {
   return obj & PIECE_MASK;
+}
+
+//}}}
+//{{{  evaluate
+
+const EVAL_PST  = [[],[],[],[],[],[],[]];
+const EVAL_KPST = [[],[],[],[],[],[],[]];
+{
+
+}
+
+///////////////////
+const EVAL_MAT = [0,100,235,235,500,975,0];
+EVAL_PST[1] = Array(144).fill(0);
+EVAL_PST[2] = Array(144).fill(0);
+EVAL_PST[3] = Array(144).fill(0);
+EVAL_PST[4] = Array(144).fill(0);
+EVAL_PST[5] = Array(144).fill(0);
+EVAL_PST[6] = Array(144).fill(0);
+///////////////////
+
+function evaluate (turn) {
+
+  const s = state;
+  const b = s.board;
+
+  var e = 0;
+
+  features.numPieces.fill(0);
+
+  for (let sq=0; sq<64; sq++) {
+
+    const fr    = B88[sq];
+    const frObj = b[fr];
+
+    if (!frObj)
+      continue;
+
+    const frPiece   = objPiece(frObj);
+    const frColour  = objColour(frObj);
+    const frIndex   = colourIndex(frColour);
+    const frMult    = colourMultiplier(frColour);
+
+    e += EVAL_MAT[frPiece] * frMult;
+    e += EVAL_PST[frPiece][FLIP[frIndex][fr]] * frMult;
+
+    features.numPieces[frPiece] += frMult;
+  }
+
+  return e;
 }
 
 //}}}
@@ -1368,8 +1462,8 @@ function makeMove (move) {
   b[fr] = 0;
   b[to] = frObj;
 
+  s.turn = colourToggle(s.turn);
   s.rights &= MASK_RIGHTS[fr] & MASK_RIGHTS[to];
-
   s.ep = 0;
 
   if (move & MOVE_IKKY_MASK)
@@ -2000,20 +2094,88 @@ function position (sb, st, sr, sep) {
 }
 
 //}}}
+//{{{  playMove
+
+function playMove (uciMove) {
+
+  const node = nodes[0];
+  const s    = node.state;
+
+  node.initMoveGen(0, 0);
+
+  var move = 0;
+
+  node.cacheState();
+
+  while (move = node.getNextMove()) {
+
+    if (formatMove(move) == uciMove) {
+      makeMove(move);
+      s.turn = colourToggle(s.turn);
+      return;
+    }
+
+    unmakeMove(move);
+    node.uncacheState();
+  }
+
+  console.log('cannot play uci move', uciMove);
+}
+
+//}}}
+//{{{  go
+
+function go () {
+
+  const node = nodes[0];
+  const s    = node.state;
+
+  const turn      = s.turn;
+  const nextTurn  = colourToggle(turn);
+  const cx        = colourIndex(turn);
+  const inCheck   = isInCheckAfterTheirMove(s.kings[cx], nextTurn, 0);
+
+  node.initMoveGen(inCheck, 0);
+
+  var move = 0;
+
+  node.cacheState();
+
+  while (move = node.getNextMove()) {
+
+    makeMove(move);
+
+    if (!(move & MOVE_LEGAL_MASK) && isInCheckAfterOurMove(inCheck, s.kings[cx], nextTurn, move)) {
+      unmakeMove(move);
+      node.uncacheState();
+      continue;
+    }
+
+    unmakeMove(move);
+    node.uncacheState();
+
+    break;
+  }
+
+  uciSend('bestmove', formatMove(move));
+}
+
+//}}}
 //{{{  perft
 
-function perft (node, depth, turn, moved) {
+function perft (node, depth, moved) {
 
   if (depth == 0)
     return 1;
 
   const s = node.state;
 
+  const turn      = s.turn;
   const nextTurn  = colourToggle(turn);
   const cx        = colourIndex(turn);
   const inCheck   = isInCheckAfterTheirMove(s.kings[cx], nextTurn, moved);
 
-  node.initMoveGen(turn, inCheck, moved);
+  node.initMoveGen(inCheck, moved);
 
   var count = 0;
   var move  = 0;
@@ -2030,7 +2192,7 @@ function perft (node, depth, turn, moved) {
       continue;
     }
 
-    count += perft(node.child,depth-1, nextTurn, move);
+    count += perft(node.child,depth-1, move);
 
     unmakeMove(move);
     node.uncacheState();
@@ -2093,12 +2255,39 @@ function uciExec(e) {
 
     switch (command) {
 
+      case 'go':
+      case 'g': {
+        //{{{  go
+        
+        go();
+        break;
+        
+        //}}}
+      }
+
+      case 'stop': {
+        //{{{  stop
+        
+        break;
+        
+        //}}}
+      }
+
       case 'uci': {
         //{{{  uci
         
         uciSend('id name Lozza',BUILD);
         uciSend('id author Colin Jenkins');
         uciSend('uciok');
+        
+        break;
+        
+        //}}}
+      }
+
+      case 'ucinewgame':
+      case 'u': {
+        //{{{  ucinewgame
         
         break;
         
@@ -2125,12 +2314,20 @@ function uciExec(e) {
           case 's':
         
             position('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR', 'w', 'KQkq', '-');
+            if (tokens[2] == 'moves') {
+              for (var i=3; i < tokens.length; i++)
+                playMove(tokens[i]);
+            }
             break;
         
           case 'fen':
           case 'f':
         
             position(tokens[2], tokens[3], tokens[4], tokens[5]);
+            if (tokens[8] == 'moves') {
+              for (var i=9; i < tokens.length; i++)
+                playMove(tokens[i]);
+            }
             break;
         
           default:
@@ -2155,6 +2352,20 @@ function uciExec(e) {
         //}}}
       }
 
+      case 'eval':
+      case 'e': {
+        //{{{  eval
+        
+        const e = evaluate(state.turn);
+        
+        console.log('eval', e);
+        console.log('numPieces', features.numPieces.toString());
+        
+        break;
+        
+        //}}}
+      }
+
       case 'moves':
       case 'm': {
         //{{{  moves
@@ -2172,7 +2383,7 @@ function uciExec(e) {
         else
           console.log('not in check');
         
-        node.initMoveGen(turn, inCheck, 0);
+        node.initMoveGen(inCheck, 0);
         
         var move    = 0;
         var moveStr = '';
@@ -2227,7 +2438,7 @@ function uciExec(e) {
         
         const depth  = parseInt(tokens[1]);
         const t      = Date.now();
-        const pmoves = perft(nodes[0], depth, state.turn, 0);
+        const pmoves = perft(nodes[0], depth, 0);
         
         console.log(pmoves,'moves',Date.now()-t,'ms');
         
@@ -2331,7 +2542,7 @@ function uciExec(e) {
         
           uciExec('position ' + fen);
         
-          const pmoves = perft(nodes[0], depth, state.turn, 0);
+          const pmoves = perft(nodes[0], depth, 0);
           const err    = moves - pmoves;
         
           errs   += err;

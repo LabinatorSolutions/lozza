@@ -35,10 +35,8 @@ retune fixing material at std values (w/o final rounding).
 
 //{{{  other lozzas
 
-'lozza\trunk\bb.js'
-
 'lozza\trunk\history\2.5\lozza.js'
-'lozza\trunk\history\2.5\gdtuner.js'
+'lozza\trunk\history\2.5\tuner.js'
 
 'lozza\trunk\history\2.5\release\lozza.js'
 'lozza\trunk\history\2.5\release\lozza.bat'
@@ -68,9 +66,13 @@ retune fixing material at std values (w/o final rounding).
 
 //}}}
 
+'lozza\trunk\testing\gdtuner.js'
+'lozza\trunk\testing\gdtuner.txt'
+
 'lozza\trunk\testing\tuner.js'
 'lozza\trunk\testing\tuner.txt'
 
+'lozza\trunk\testing\addeval.js'
 'lozza\trunk\testing\constants.js'
 'lozza\trunk\testing\eval.js'
 'lozza\trunk\testing\eval_flip.js'
