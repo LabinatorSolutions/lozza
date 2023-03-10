@@ -3,9 +3,9 @@
 rem engines: coal, cand, loz25, loz24, leo23, tt51.
 
 set e1=coal
-set e2=cand
+set e2=coal
 
-set tc=20+0.2
+set tc=10+0.1
 set threads=1
 
 set elo0=0
@@ -31,7 +31,7 @@ set f=-pgnout cctry.pgn min fi
 
 if exist cctry.pgn del cctry.pgn
 
-rem set b=-debug
+set b=-debug
 set b=
 
 set args=%ee1 %ee2 %t %r %d %o %v %m %s %f %b

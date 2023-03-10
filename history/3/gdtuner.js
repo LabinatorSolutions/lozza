@@ -1,3 +1,4 @@
+//{{{  // wip - do not use
 
 // wip - do not use
 
@@ -10,7 +11,6 @@ const TUNING = 1;
 
 const MAX_PLY   = 100;
 const MAX_MOVES = 250;
-const MATE      = 3200 + MAX_PLY;
 
 const EMPTY = 0;
 
@@ -720,13 +720,6 @@ const features = {
 }
 
 //}}}
-//{{{  timing
-
-const timing = {
-  bm: 0,
-}
-
-//}}}
 //{{{  state
 
 const state = {
@@ -759,7 +752,6 @@ function nodeStruct (ply, state) {
   this.moved       = 0;
   this.nextMove    = 0;
   this.stage       = 0;
-  this.cacheTurn   = 0;
   this.cacheRights = 0;
   this.cacheEp     = 0;
   this.maxR        = 0;  // hack
@@ -787,9 +779,9 @@ function initNodes() {
 
 //{{{  initMoveGen
 
-nodeStruct.prototype.initMoveGen = function (inCheck, moved) {
+nodeStruct.prototype.initMoveGen = function (turn, inCheck, moved) {
 
-  this.turn    = state.turn;
+  this.turn    = turn;
   this.inCheck = inCheck;
   this.moved   = moved;
 
@@ -810,9 +802,9 @@ nodeStruct.prototype.getNextMove = function () {
       this.quietNum  = 0;
 
       if (this.inCheck)
-        this.genEvasions(this.moved);
+        this.genEvasions(this.turn, this.moved);
       else
-        this.genMoves();
+        this.genMoves(this.turn);
 
       this.nextMove = 0;
       this.stage++;
@@ -886,14 +878,13 @@ nodeStruct.prototype.addQuiet = function (move) {
 
 //{{{  genMoves
 
-nodeStruct.prototype.genMoves = function () {
+nodeStruct.prototype.genMoves = function (turn) {
 
   const s = this.state;
   const b = s.board;
 
   const nextMove = s.nextMove;
 
-  const turn         = s.turn;
   const cx           = colourIndex(turn);
   const OUR_PIECE    = WB_OUR_PIECE[cx];
   const HOME_RANK    = WB_HOME_RANK[cx];
@@ -1242,14 +1233,13 @@ nodeStruct.prototype.genSliderMoves = function (frMove) {
 
 //{{{  genEvasions
 
-nodeStruct.prototype.genEvasions = function (moved) {
+nodeStruct.prototype.genEvasions = function (turn, moved) {
 
   const s = this.state;
   const b = s.board;
 
   const nextMove = s.nextMove;
 
-  const turn         = s.turn;
   const cx           = colourIndex(turn);
   const OUR_PIECE    = WB_OUR_PIECE[cx];
   const HOME_RANK    = WB_HOME_RANK[cx];
@@ -1314,7 +1304,6 @@ nodeStruct.prototype.cacheState = function() {
 
   const s = this.state;
 
-  this.cacheTurn   = s.turn;
   this.cacheRights = s.rights;
   this.cacheEp     = s.ep;
 }
@@ -1326,7 +1315,6 @@ nodeStruct.prototype.uncacheState = function() {
 
    const s = this.state;
 
-   s.turn   = this.cacheTurn;
    s.rights = this.cacheRights;
    s.ep     = this.cacheEp;
 }
@@ -1383,19 +1371,19 @@ function objPiece (obj) {
 //}}}
 //{{{  evaluate
 
-const EVAL_PST = [[],[],[],[],[],[],[]];
+const EVAL_PST = [[],[],[],[],[],[],[]]
 
 ///////////////////
-const EVAL_MAT = [0,100,269,289,433,643,0];
-EVAL_PST[1] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,29,24,17,16,11,11,14,18,0,0,0,0,34,30,23,21,16,22,24,26,0,0,0,0,21,19,12,16,15,15,22,15,0,0,0,0,8,11,7,13,10,6,17,6,0,0,0,0,2,6,3,-5,1,6,18,4,0,0,0,0,8,13,6,-7,0,23,30,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-EVAL_PST[2] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-3,-1,-1,-2,-1,-2,-1,-2,0,0,0,0,-2,-2,-1,0,0,-1,-2,-1,0,0,0,0,-2,1,5,7,3,3,1,-1,0,0,0,0,-1,5,7,13,17,7,7,0,0,0,0,0,-1,-1,8,13,14,7,1,0,0,0,0,0,-2,0,24,6,5,28,1,-1,0,0,0,0,-2,-2,-3,8,4,0,-1,0,0,0,0,0,-2,-1,-3,-3,-4,-3,0,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-EVAL_PST[3] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-2,-1,-1,-1,-1,-1,-1,-2,0,0,0,0,-1,0,0,-1,0,-1,0,-1,0,0,0,0,-1,1,2,2,0,2,0,0,0,0,0,0,-1,5,4,5,6,3,5,0,0,0,0,0,0,3,10,8,8,12,1,0,0,0,0,0,0,3,8,20,17,8,4,1,0,0,0,0,-1,8,3,7,14,1,21,-1,0,0,0,0,-2,-1,2,-3,-3,4,-1,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-EVAL_PST[4] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,3,2,2,0,0,1,1,0,0,0,0,7,10,9,6,5,4,2,2,0,0,0,0,2,4,4,5,3,2,0,0,0,0,0,0,2,3,4,3,2,1,0,0,0,0,0,0,2,1,2,2,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,-1,0,0,0,0,-3,0,0,1,-1,1,-1,-6,0,0,0,0,6,4,10,14,11,14,-3,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-EVAL_PST[5] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-9,-6,-5,-4,-3,-2,-3,-4,0,0,0,0,-5,-6,-2,-3,-1,0,0,0,0,0,0,0,-5,-4,-3,0,0,0,0,1,0,0,0,0,-4,-4,-1,-1,1,1,-1,1,0,0,0,0,-4,-2,-2,0,0,0,1,0,0,0,0,0,-3,-2,-1,0,0,1,0,-1,0,0,0,0,-4,-4,5,-2,1,-3,-3,-1,0,0,0,0,-2,-4,-4,20,-5,-5,-1,-1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-EVAL_PST[6] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,2,1,1,2,3,3,1,0,0,0,0,1,3,5,3,3,5,7,2,0,0,0,0,0,4,6,7,8,9,8,1,0,0,0,0,-1,1,5,8,10,11,2,-4,0,0,0,0,-2,0,2,4,8,8,4,-5,0,0,0,0,-2,-2,0,-5,-1,4,8,0,0,0,0,0,-4,1,2,-12,5,-15,15,-7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+const EVAL_MAT = [0,100,235,235,500,975,0];
+EVAL_PST[1] = Array(144).fill(0);
+EVAL_PST[2] = Array(144).fill(0);
+EVAL_PST[3] = Array(144).fill(0);
+EVAL_PST[4] = Array(144).fill(0);
+EVAL_PST[5] = Array(144).fill(0);
+EVAL_PST[6] = Array(144).fill(0);
 ///////////////////
 
-function evaluate () {
+function evaluate (turn) {
 
   const s = state;
   const b = s.board;
@@ -1423,7 +1411,7 @@ function evaluate () {
     features.numPieces[frPiece] += frMult;
   }
 
-  return e * colourMultiplier(s.turn);
+  return e;
 }
 
 //}}}
@@ -1467,8 +1455,8 @@ function makeMove (move) {
   b[fr] = 0;
   b[to] = frObj;
 
-  s.turn = colourToggle(s.turn);
   s.rights &= MASK_RIGHTS[fr] & MASK_RIGHTS[to];
+
   s.ep = 0;
 
   if (move & MOVE_IKKY_MASK)
@@ -1820,9 +1808,6 @@ function isKingAttackedFrom (to, byCol, from) {
 
 function isInCheckAfterTheirMove (ourKingSq, theirColour, theirMove) {
 
-  if (!theirMove)
-    return isKingAttacked(ourKingSq, theirColour);
-
   const frObj = moveFromObj(theirMove);
   const from  = moveFromSq(theirMove);
   const to    = moveToSq(theirMove);
@@ -2102,133 +2087,25 @@ function position (sb, st, sr, sep) {
 }
 
 //}}}
-//{{{  playMove
-
-function playMove (uciMove) {
-
-  const node = nodes[0];
-  const s    = node.state;
-
-  node.initMoveGen(0, 0);
-
-  var move = 0;
-
-  node.cacheState();
-
-  while (move = node.getNextMove()) {
-
-    if (formatMove(move) == uciMove) {
-      makeMove(move);
-      return;
-    }
-
-    unmakeMove(move);
-    node.uncacheState();
-  }
-
-  console.log('cannot play uci move', uciMove);
-}
-
-//}}}
-//{{{  go
-
-function go () {
-
-  timing.bm = 0;
-
-  const node = nodes[0];
-
-  var score = search(node, -MATE-1, MATE+1, 5, 0);
-
-  uciSend('bestmove', formatMove(timing.bm));
-}
-
-//}}}
-//{{{  search
-
-function search (node, alpha, beta, depth, moved) {
-
-  const s = node.state;
-
-  const pvNode    = alpha != (beta - 1);
-  const rootNode  = node.ply == 0;
-  const turn      = s.turn;
-  const nextTurn  = colourToggle(turn);
-  const cx        = colourIndex(turn);
-  const inCheck   = isInCheckAfterTheirMove(s.kings[cx], nextTurn, moved);
-
-  if (depth <= 0 && !inCheck)
-    return evaluate();
-
-  node.cacheState();
-
-  var move   = 0;
-  var score  = 0;
-  var played = 0;
-
-  node.initMoveGen(inCheck, moved);
-
-  while (move = node.getNextMove()) {
-
-    makeMove(move);
-
-    if (!(move & MOVE_LEGAL_MASK) && isInCheckAfterOurMove(inCheck, s.kings[cx], nextTurn, move)) {
-      //{{{  legal?
-      
-      unmakeMove(move);
-      node.uncacheState();
-      
-      continue;
-      
-      //}}}
-    }
-
-    played++;
-
-    score = -search(node.child, -beta, -alpha, depth-1, move);
-
-    unmakeMove(move);
-    node.uncacheState();
-
-    if (score > alpha) {
-      alpha = score;
-      if (rootNode) {
-        timing.bm = move;
-        console.log(formatMove(timing.bm));
-      }
-      if (score >= beta) {
-         return score;
-      }
-    }
-  }
-
-  if (!played)
-    return -MATE
-  else
-    return alpha;
-}
-
-//}}}
 //{{{  perft
 
-function perft (node, depth, moved) {
+function perft (node, depth, turn, moved) {
 
   if (depth == 0)
     return 1;
 
   const s = node.state;
 
-  const turn      = s.turn;
   const nextTurn  = colourToggle(turn);
   const cx        = colourIndex(turn);
   const inCheck   = isInCheckAfterTheirMove(s.kings[cx], nextTurn, moved);
 
-  node.cacheState();
+  node.initMoveGen(turn, inCheck, moved);
 
   var count = 0;
   var move  = 0;
 
-  node.initMoveGen(inCheck, moved);
+  node.cacheState();
 
   while (move = node.getNextMove()) {
 
@@ -2240,7 +2117,7 @@ function perft (node, depth, moved) {
       continue;
     }
 
-    count += perft(node.child, depth-1, move);
+    count += perft(node.child,depth-1, nextTurn, move);
 
     unmakeMove(move);
     node.uncacheState();
@@ -2303,39 +2180,12 @@ function uciExec(e) {
 
     switch (command) {
 
-      case 'go':
-      case 'g': {
-        //{{{  go
-        
-        go();
-        break;
-        
-        //}}}
-      }
-
-      case 'stop': {
-        //{{{  stop
-        
-        break;
-        
-        //}}}
-      }
-
       case 'uci': {
         //{{{  uci
         
         uciSend('id name Lozza',BUILD);
         uciSend('id author Colin Jenkins');
         uciSend('uciok');
-        
-        break;
-        
-        //}}}
-      }
-
-      case 'ucinewgame':
-      case 'u': {
-        //{{{  ucinewgame
         
         break;
         
@@ -2362,20 +2212,12 @@ function uciExec(e) {
           case 's':
         
             position('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR', 'w', 'KQkq', '-');
-            if (tokens[2] == 'moves') {
-              for (var i=3; i < tokens.length; i++)
-                playMove(tokens[i]);
-            }
             break;
         
           case 'fen':
           case 'f':
         
             position(tokens[2], tokens[3], tokens[4], tokens[5]);
-            if (tokens[8] == 'moves') {
-              for (var i=9; i < tokens.length; i++)
-                playMove(tokens[i]);
-            }
             break;
         
           default:
@@ -2400,11 +2242,11 @@ function uciExec(e) {
         //}}}
       }
 
-      case 'eval':
+      case 'features':
       case 'e': {
         //{{{  eval
         
-        const e = evaluate();
+        const e = evaluate(state.turn);
         
         console.log('eval', e);
         console.log('numPieces', features.numPieces.toString());
@@ -2431,7 +2273,7 @@ function uciExec(e) {
         else
           console.log('not in check');
         
-        node.initMoveGen(inCheck, 0);
+        node.initMoveGen(turn, inCheck, 0);
         
         var move    = 0;
         var moveStr = '';
@@ -2486,7 +2328,7 @@ function uciExec(e) {
         
         const depth  = parseInt(tokens[1]);
         const t      = Date.now();
-        const pmoves = perft(nodes[0], depth, 0);
+        const pmoves = perft(nodes[0], depth, state.turn, 0);
         
         console.log(pmoves,'moves',Date.now()-t,'ms');
         
@@ -2590,7 +2432,7 @@ function uciExec(e) {
         
           uciExec('position ' + fen);
         
-          const pmoves = perft(nodes[0], depth, 0);
+          const pmoves = perft(nodes[0], depth, state.turn, 0);
           const err    = moves - pmoves;
         
           errs   += err;
@@ -2648,4 +2490,239 @@ process.stdin.on('end', function() {
 });
 
 //}}}
+
+//}}}
+//
+// Copy lozza.js above here.
+//
+
+const epds   = [];
+const params = [];
+
+const gEpdFile = 'data/quiet-labeled-sf.epd';
+const gOutFile = 'gdtuner.txt';
+
+//{{{  functions
+
+//{{{  addp
+
+function addp (a,i,j,k,coeff) {
+  params.push({a: a, i: i, j: j, k: k, coeff: coeff, gr: 0});
+}
+
+//}}}
+//{{{  calcErr
+
+function calcErr () {
+
+  var err = 0;
+
+  for (var i=0; i < epds.length; i++) {
+
+    var epd = epds[i];
+
+    position(epd.board, epd.turn, epd.rights, epd.ep);
+
+    var e1 = epd.eval;
+    var e2 = evaluate(state.turn);
+
+    err += Math.abs(e1-e2);
+  }
+
+  return err / epds.length;
+}
+
+//}}}
+//{{{  loga
+
+function loga (p) {
+
+  var a = Array(p.length);
+
+  for (var i=0; i < p.length; i++)
+    a[i] = myround(p[i]);
+
+  return '[' + a.toString() + '];\r\n';
+}
+
+//}}}
+//{{{  saveparams
+
+function saveparams (err, epochs) {
+
+  var out = '';
+
+  out += 'const EVAL_PST = ' + loga(EVAL_MAT);
+
+  out += 'EVAL_PST[1] = ' + loga(EVAL_PST[1]);
+  out += 'EVAL_PST[2] = ' + loga(EVAL_PST[2]);
+  out += 'EVAL_PST[3] = ' + loga(EVAL_PST[3]);
+  out += 'EVAL_PST[4] = ' + loga(EVAL_PST[4]);
+  out += 'EVAL_PST[5] = ' + loga(EVAL_PST[5]);
+  out += 'EVAL_PST[6] = ' + loga(EVAL_PST[6]);
+
+  fs.writeFileSync(gOutFile, out);
+}
+
+//}}}
+//{{{  grunt
+
+function is (colour, piece, sq) {
+  return state.board[sq] == (colour|piece) ? 1 : 0;
+}
+
+function grunt () {
+
+  //{{{  create params
+  
+  for (var i=KNIGHT; i <= QUEEN; i++) {
+    addp(EVAL_MAT, i, 0, 0, function (i,j,k) {return features.numPieces[i]});
+  }
+  
+  for (var j=PAWN; j <= KING; j++) {
+    for (var sq=0; sq < 64; sq++) {
+      var i = B88[sq];
+      addp(EVAL_PST[j], i, j, 0, function (i,j,k) {return is(WHITE,j,i) - is(BLACK,j,FLIP[i])});
+    }
+  }
+  
+  for (var j=PAWN; j <= KING; j++) {
+    for (var sq=0; sq < 64; sq++) {
+      var i = B88[sq];
+      for (var sq2=0; sq2 < 64; sq2++) {
+        var k = B88[sq2];
+        addp(EVAL_PST[j][i], k, j, i, function (i,j,k) {return ((is(WHITE,KING,k)&&is(WHITE,j,k))|0) - ((is(BLACK,KING,k)&&is(BLACK,j,FLIP[k]))|0)});
+      }
+    }
+  }
+  
+  
+  //}}}
+  //{{{  tune params
+  
+  var epoch      = 0;
+  var numParams  = params.length;
+  var batchSize  = 10000;
+  var numBatches = epds.length / batchSize | 0;
+  var err        = 0;
+  var lastErr    = 0;
+  var lr         = 0.001;
+  
+  console.log('num params =', numParams);
+  console.log('batch size =', batchSize);
+  console.log('num batches =', numBatches);
+  console.log('lr =', lr);
+  
+  while (true) {
+  
+    if (epoch % 10 == 0) {
+      //{{{  report loss
+      
+      err = calcErr();
+      
+      console.log(epoch,err,err-lastErr);
+      
+      lastErr = err;
+      
+      saveparams(err,epoch);
+      
+      //}}}
+    }
+    else {
+      process.stdout.write(epoch+'\r');
+    }
+  
+    epoch++;
+  
+    for (var batch=0; batch < numBatches; batch++) {
+      //{{{  reset gradient sums
+      
+      for (var i=0; i < numParams; i++)
+        params[i].gr = 0;
+      
+      //}}}
+      //{{{  accumulate gradients
+      
+      for (var i=0; i < batchSize; i++) {
+      
+        var epd = epds[Math.random() * epds.length | 0];
+      
+        position(epd.board, epd.turn, epd.rights, epd.ep);
+      
+        var e1 = epd.eval;
+        var e2 = evaluate(state.turn);
+      
+        for (var j=0; j < numParams; j++) {
+          var p = params[j];
+          p.gr += p.coeff(p.i, p.j, p.k) * (e2 - e1);
+        }
+      }
+      
+      //}}}
+      //{{{  apply mean gradient
+      
+      for (var i=0; i < numParams; i++) {
+        var p    = params[i];
+        var gr   = p.gr / batchSize;
+        p.a[p.i] -= gr * lr;
+      }
+      
+      //}}}
+    }
+  }
+  
+  console.log('Done',err);
+  
+  //}}}
+
+  process.exit();
+}
+
+//}}}
+
+//}}}
+
+var thisPosition = 0;
+
+const readline = require('readline');
+
+const rl = readline.createInterface({
+    input: fs.createReadStream(gEpdFile),
+    output: process.stdout,
+    crlfDelay: Infinity,
+    terminal: false
+});
+
+rl.on('line', function (line) {
+
+  thisPosition += 1;
+
+  if (thisPosition % 100000 == 0)
+    process.stdout.write(thisPosition+'\r');
+
+  line = line.replace(/(\r\n|\n|\r|;|")/gm,'');
+
+  line = line.trim();
+  if (!line.length)
+    return;
+
+  var parts = line.split(' ');
+
+  if (parts.length && parts.length != 5) {
+    console.log('file format',line);
+    process.exit();
+  }
+
+  epds.push({board:   parts[0],
+             turn:    parts[1],
+             rights:  parts[2],
+             ep:      parts[3],
+             eval:    parseInt(parts[4])});
+
+});
+
+rl.on('close', function(){
+  console.log('positions =',epds.length);
+  grunt();
+});
 
