@@ -6,7 +6,7 @@
 },
 {
   "name": "cand",
-  "command": "node c:\\projects\\lozza\\trunk\\history\\2.6\\lozza.js",
+  "command": "node c:\\projects\\lozza\\trunk\\history\\3\\lozza.js",
   "protocol": "uci"
 },
 {
