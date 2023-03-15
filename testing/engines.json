@@ -11,7 +11,7 @@
 },
 {
   "name": "loz25",
-  "command": "node c:\\projects\\lozza\\trunk\\history\\2.5\\release\\lozza.js",
+  "command": "node c:\\projects\\lozza\\trunk\\lozza25.js",
   "protocol": "uci"
 },
 {
