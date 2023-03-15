@@ -8,10 +8,9 @@ const TUNING = 1;
 
 //{{{  constants
 
-const MAX_INT   = Number.MAX_SAFE_INTEGER;
 const MAX_PLY   = 100;
 const MAX_MOVES = 250;
-const MATE      = 3200 + MAX_PLY;
+const MATE      = 32000;
 
 const EMPTY = 0;
 
@@ -750,7 +749,7 @@ const state = {
 //{{{  nodeStruct
 
 function nodeStruct (ply, state) {
-  this.ply         = ply;
+  this.ply         = ply+1;
   this.state       = state;
   this.parent      = 0;
   this.child       = 0;
@@ -4229,15 +4228,50 @@ function go () {
   const node = nodes[0];
 
   var score = 0;
+  var alpha = 0;
+  var beta  = 0;
+  var delta = 0;
 
-  for (var d=1; d <= t.targetDepth; d++) {
+  for (let ply=1; ply <= t.targetDepth; ply++) {
 
-    score = search(node, -MATE-1, MATE+1, d, 0);
+    alpha = -MATE;
+    beta  = MATE;
+    delta = 10;
+
+    if (ply >= 4) {
+      alpha = Math.max(-MATE, score - delta);
+      beta  = Math.min(MATE,  score + delta);
+    }
+
+    while (1) {
+
+      score = search(node, alpha, beta, ply, 0);
+
+      if (t.done)
+        break;
+
+      if (score > alpha && score < beta) {
+        uciSend('info', 'depth', ply, 'nodes', t.nodes, 'score', score, 'pv', formatMove(t.bm));
+        break;
+      }
+
+      delta += delta / 2 | 0;
+
+      if (score <= alpha) {
+        //uciSend('info', 'depth', ply, 'nodes', t.nodes, 'lowerbound', score, 'pv', formatMove(t.bm));
+        alpha = Math.max(-MATE, score - delta);
+        beta  = Math.min(MATE, ((alpha + beta) / 2) | 0);
+        t.bm = 0;
+      }
+      else if (score >= beta) {
+        //uciSend('info', 'depth', ply, 'nodes', t.nodes, 'upperbound', score, 'pv', formatMove(t.bm));
+        alpha = Math.max(-MATE, ((alpha + beta) / 2) | 0);
+        beta  = Math.min(MATE,  score + delta);
+      }
+    }
 
     if (t.done)
       break;
-
-    uciSend('info', 'nodes', t.nodes, 'score', score, 'pv', formatMove(t.bm));
   }
 
   uciSend('bestmove', formatMove(timing.bm));
@@ -4260,7 +4294,7 @@ function search (node, alpha, beta, depth, moved) {
                 !node.child
                )){
   
-    timing.done = 1;
+    t.done = 1;
     return 0;
   }
   
@@ -4268,12 +4302,16 @@ function search (node, alpha, beta, depth, moved) {
 
   const s = node.state;
 
+  const oAlpha    = alpha;
   const pvNode    = alpha != (beta - 1);
-  const rootNode  = node.ply == 0;
+  const rootNode  = node.ply == 1;
   const turn      = s.turn;
   const nextTurn  = colourToggle(turn);
   const cx        = colourIndex(turn);
   const inCheck   = isInCheckAfterTheirMove(s.kings[cx], nextTurn, moved);
+
+  var bestScore = -MATE;
+  var bestMove  = 0;
 
   if (depth <= 0 && !inCheck)
     return qsearch(node, alpha, beta, depth, moved);
@@ -4311,21 +4349,25 @@ function search (node, alpha, beta, depth, moved) {
     if (timing.done)
       return 0;
 
-    if (score > alpha) {
-      alpha = score;
-      if (rootNode) {
-        timing.bm = move;
-      }
-      if (score >= beta) {
-        return score;
+    if (score > bestScore) {
+      bestScore = score;
+      bestMove  = move;
+      if (score > alpha) {
+        alpha = score;
+        if (rootNode) {
+          timing.bm = move;
+        }
+        if (score >= beta) {
+          return score;
+        }
       }
     }
   }
 
   if (!played)
-    return -MATE
+    return inCheck ? -MATE + node.ply : 0;
   else
-    return alpha;
+    return bestScore;
 }
 
 //}}}
@@ -4345,7 +4387,7 @@ function qsearch (node, alpha, beta, depth, moved) {
                 !node.child
                )){
   
-    timing.done = 1;
+    t.done = 1;
     return 0;
   }
   
@@ -4803,7 +4845,7 @@ function uciExec(e) {
         
         //{{{  fens
         
-        const mbfens = [
+        const fens = [
           ['fen 4k3/8/8/8/8/8/R7/R3K2R                                  w Q    -  0 1', 3, 4729,      'castling-2'],
           ['fen 4k3/8/8/8/8/8/R7/R3K2R                                  w K    -  0 1', 3, 4686,      'castling-3'],
           ['fen 4k3/8/8/8/8/8/R7/R3K2R                                  w -    -  0 1', 3, 4522,      'castling-4'],
@@ -4875,7 +4917,7 @@ function uciExec(e) {
         if (tokens.length > 1)
           var num = parseInt(tokens[1]);
         else
-          var num = mbfens.length;
+          var num = fens.length;
         
         var errs = 0;
         
@@ -4883,7 +4925,7 @@ function uciExec(e) {
         
         for (var i=0; i < num; i++) {
         
-          const p = mbfens[i];
+          const p = fens[i];
         
           const fen   = p[0];
           const depth = p[1];
