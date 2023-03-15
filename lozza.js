@@ -39,7 +39,8 @@ const MOVE_PROMOTE_MASK  = 0x10000000;
 const MOVE_PROMAS_MASK   = 0x60000000;  // NBRQ.
 const MOVE_LEGAL_MASK    = 0x80000000;
 
-const MOVE_IKKY_MASK = MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | MOVE_PROMOTE_MASK | MOVE_EPTAKE_MASK | MOVE_EPMAKE_MASK;
+const MOVE_CAPTURE_MASK = MOVE_TOOBJ_MASK | MOVE_EPTAKE_MASK;
+const MOVE_IKKY_MASK    = MOVE_KINGMOVE_MASK | MOVE_CASTLE_MASK | MOVE_PROMOTE_MASK | MOVE_EPTAKE_MASK | MOVE_EPMAKE_MASK;
 
 const PAWN   = 1;
 const KNIGHT = 2;
@@ -3987,6 +3988,38 @@ function formatMove (move) {
 }
 
 //}}}
+//{{{  logMove
+
+function logMove (move) {
+
+  if (!move) {
+    console.log('NULL MOVE');
+    return;
+  }
+
+  const fr = moveFromSq(move);
+  const to = moveToSq(move);
+
+  const frObj = moveFromObj(move);
+  const toObj = moveToObj(move);
+
+  const frCoord = COORDS[fr];
+  const toCoord = COORDS[to];
+
+  const frPiece = objPiece(frObj)
+  const frCol   = objColour(frObj);
+  const frName  = OBJ_CHAR[frObj];
+
+  const toPiece = objPiece(toObj);
+  const toCol   = objColour(toObj);
+  const toName  = OBJ_CHAR[toObj];
+
+  const pro = (move & MOVE_PROMOTE_MASK) ? OBJ_CHAR[movePromotePiece(move)|BLACK] : '';
+
+  console.log(frCoord, toCoord, pro, OBJ_CHAR[frObj], OBJ_CHAR[toObj]);
+}
+
+//}}}
 //{{{  position
 
 function position (sb, st, sr, sep) {
@@ -4243,7 +4276,7 @@ function search (node, alpha, beta, depth, moved) {
   const inCheck   = isInCheckAfterTheirMove(s.kings[cx], nextTurn, moved);
 
   if (depth <= 0 && !inCheck)
-    return evaluate();
+    return qsearch(node, alpha, beta, depth, moved);
 
   node.cacheState();
 
@@ -4284,7 +4317,7 @@ function search (node, alpha, beta, depth, moved) {
         timing.bm = move;
       }
       if (score >= beta) {
-         return score;
+        return score;
       }
     }
   }
@@ -4293,6 +4326,95 @@ function search (node, alpha, beta, depth, moved) {
     return -MATE
   else
     return alpha;
+}
+
+//}}}
+//{{{  qsearch
+
+function qsearch (node, alpha, beta, depth, moved) {
+
+  //{{{  housekeeping
+  
+  const t = timing;
+  
+  t.nodes++;
+  
+  if (t.bm && (
+                (t.finishTime  && (Date.now() >  t.finishTime))  ||
+                (t.targetNodes && (t.nodes    >= t.targetNodes)) ||
+                !node.child
+               )){
+  
+    timing.done = 1;
+    return 0;
+  }
+  
+  //}}}
+
+  const e = evaluate();
+
+  if (e >= beta)
+    return e;
+
+  if (alpha < e)
+    alpha = e;
+
+  const s = node.state;
+
+  const turn      = s.turn;
+  const nextTurn  = colourToggle(turn);
+  const cx        = colourIndex(turn);
+  const inCheck   = isInCheckAfterTheirMove(s.kings[cx], nextTurn, moved);
+
+  node.cacheState();
+
+  var move   = 0;
+  var score  = 0;
+  var played = 0;
+
+  node.initMoveGen(inCheck, moved);
+
+  while (move = node.getNextMove()) {
+
+    if (node.stage > 1)
+      break;
+
+    if (!(move & MOVE_CAPTURE_MASK)) {
+      continue;
+    }
+
+    makeMove(move);
+
+    if (!(move & MOVE_LEGAL_MASK) && isInCheckAfterOurMove(inCheck, s.kings[cx], nextTurn, move)) {
+      //{{{  legal?
+      
+      unmakeMove(move);
+      node.uncacheState();
+      
+      continue;
+      
+      //}}}
+    }
+
+    played++;
+
+    score = -qsearch(node.child, -beta, -alpha, depth-1, move);
+
+    unmakeMove(move);
+    node.uncacheState();
+
+    if (timing.done)
+      return 0;
+
+    if (score > alpha) {
+      alpha = score;
+      if (score >= beta) {
+        return score;
+      }
+    }
+  }
+
+  return alpha;
 }
 
 //}}}
@@ -4425,7 +4547,8 @@ function uciExec(e) {
               i += 2;
               break;
             }
-            case 'movetime': {
+            case 'movetime':
+            case 'mt': {
               moveTime = parseInt(tokens[i+1]);
               i += 2;
               break;
@@ -4674,11 +4797,11 @@ function uciExec(e) {
         //}}}
       }
 
-      case 'mbench':
-      case 'mb': {
-        //{{{  mbench
+      case 'perftbench':
+      case 'pb': {
+        //{{{  perftbench
         
-        //{{{  mbench fens
+        //{{{  fens
         
         const mbfens = [
           ['fen 4k3/8/8/8/8/8/R7/R3K2R                                  w Q    -  0 1', 3, 4729,      'castling-2'],
