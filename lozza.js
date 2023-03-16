@@ -3470,8 +3470,8 @@ function evaluate () {
 
     e += EVAL_MAT [frPiece]                                * frMult;
     e += EVAL_PST [frPiece][ourPiecePSTSq]                 * frMult;
-    //e += EVAL_KPST[frPiece][ourPiecePSTSq][ourKingPSTSq]   * frMult;
-    //e += EVAL_kPST[frPiece][ourPiecePSTSq][theirKingPSTSq] * frMult;
+    e += EVAL_KPST[frPiece][ourPiecePSTSq][ourKingPSTSq]   * frMult;
+    e += EVAL_kPST[frPiece][ourPiecePSTSq][theirKingPSTSq] * frMult;
 
     features.numPieces[frPiece] += frMult;
   }
