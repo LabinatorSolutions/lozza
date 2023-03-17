@@ -8136,10 +8136,7 @@ process.exit();
 }}}
 {{{  split.js
 
-if (process.argv[2])
-  var epdfile = process.argv[2];
-else
-  var epdfile = 'eth';
+var epdfile = 'eth';
 
 var split   = 1000000;
 var o       = '';

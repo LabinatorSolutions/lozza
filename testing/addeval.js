@@ -1,16 +1,16 @@
 
-const epdin  = 'data/pedantic.epd';
-const epdout = 'data/pedantic-sf.epd';
+const epdin  = 'data/' + process.argv[2] + '.epd';
+const epdout = 'data/' + process.argv[2] + '-sf.epd';
 
-const firstLine = 1;
-const epdStart  = 3;
+const firstLine = 0;
+const epdStart  = 0;
 
 const { spawn } = require("child_process");
 
-var fs      = require('fs');
-var next    = -1;
-var child   = 0;
-var out     = '';
+var fs    = require('fs');
+var next  = -1;
+var child = 0;
+var out   = '';
 
 //{{{  functions
 
@@ -61,7 +61,7 @@ for (var i=firstLine; i < lines.length; i++) {
 
   var line = lines[i];
 
-  line = line.replace(/(\,)/gm,' ');
+  //line = line.replace(/(\,)/gm,' ');
   line = line.replace(/(\r\n|\n|\r)/gm,'');
   line = line.trim();
 
@@ -76,9 +76,9 @@ for (var i=firstLine; i < lines.length; i++) {
   //console.log(line);
 
   epds.push({board:   parts[epdStart+0],
-             turn:    parts[epdStart+0],
-             rights:  parts[epdStart+0],
-             ep:      parts[epdStart+0]});
+             turn:    parts[epdStart+1],
+             rights:  parts[epdStart+2],
+             ep:      parts[epdStart+3]});
 }
 
 lines = ''; // release
@@ -99,6 +99,7 @@ child.stdout.on('data', function (data) {
   else {
     var epd  = epds[next];
     var fen  = epd.board + ' ' + epd.turn + ' ' + epd.rights + ' ' + epd.ep;
+    //console.log(fen);
     var eval = getEval(sfdata);
     out = out + fen + ' ' + eval + '\r\n';
     if (out.length > 1000000 || next == epds.length-1) {

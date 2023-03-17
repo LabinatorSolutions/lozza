@@ -74,6 +74,7 @@ retune fixing material at std values (w/o final rounding).
 'lozza\trunk\testing\tuner.js'
 'lozza\trunk\testing\tuner.txt'
 
+'lozza\trunk\testing\split.js'
 'lozza\trunk\testing\addeval.js'
 'lozza\trunk\testing\constants.js'
 'lozza\trunk\testing\eval.js'
