@@ -203,7 +203,6 @@ const FILE = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
 //}}}
 
-/*
 //{{{  DIST
 
 var d = Array(144);
@@ -230,6 +229,7 @@ for (var i=0; i<144; i++) {
 console.log('];');
 
 //}}}
+/*
 //{{{  ADJACENT
 
 var d = Array(144);
