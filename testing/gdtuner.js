@@ -7540,14 +7540,14 @@ function loga (p) {
 //}}}
 //{{{  saveparams
 
-function saveparams (err) {
+function saveparams (epochs, err) {
 
   var d = new Date().toGMTString();
 
-  var out = '{{{  tuned stuff\r\n//';
+  var out = '{{{  tuned stuff\r\n// ';
 
-  out +=  d + '\r\n';
-  out +=  err + '\r\n';
+  out +=  d + '\r\n// ';
+  out +=  epochs + ' ' + err + '\r\n';
 
   for (var u=0; u<7; u++) {
     for (var v=0; v<144; v++) {
@@ -7688,7 +7688,7 @@ function grunt () {
   
     epoch++;
   
-    if (epoch % 1 == 0) {
+    if (epoch > 1 && (epoch % 1 == 0)) {
       //{{{  report loss
       
       err = calcErr();
@@ -7697,7 +7697,7 @@ function grunt () {
       
       lastErr = err;
       
-      saveparams(err);
+      saveparams(epoch, err);
       
       //}}}
     }
