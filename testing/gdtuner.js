@@ -7673,27 +7673,27 @@ function grunt () {
   var epoch      = 0;
   var batchSize  = 10000;
   var lr         = 0.001;
+  var rate       = 1;
   
   console.log('num data files =', datafiles.length);
   console.log('num params =', params.length);
   console.log('batch size =', batchSize);
   console.log('lr =', lr);
+  console.log('report rate =', rate);
   
-  var err     = calcErr();
+  var err     = 0;
   var lastErr = err;
-  
-  console.log('initial loss=', err);
   
   while (true) {
   
     epoch++;
   
-    if (epoch > 1 && (epoch % 1 == 0)) {
+    if ((epoch % rate) == 0) {
       //{{{  report loss
       
       err = calcErr();
       
-      console.log(epoch,err,err-lastErr);
+      console.log(epoch, err, err-lastErr);
       
       lastErr = err;
       
@@ -7702,7 +7702,7 @@ function grunt () {
       //}}}
     }
     else
-      process.stdout.write(batch+'\r');
+      process.stdout.write(epoch+'\r');
   
     for (var fn=0; fn < datafiles.length; fn++) {
   

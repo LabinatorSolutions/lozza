@@ -4,31 +4,13 @@
 // A Javascript chess engine inspired by Fabien Letouzey's Fruit 2.1.
 //
 
-var BUILD   = "2.5";
-var RELEASE = 1;
+var BUILD   = "3";
+var TUNING  = 0;
 var SILENT  = 0;
 
 //{{{  history
 /*
 
-2.5 10/02/23 Test for draws in QS. Bench 4549628.
-2.5 10/02/23 Simplify UCI reporting.
-2.5 09/02/23 Process command line args when invoked with Node.
-2.5 09/02/23 Add a bench command using Ethereal FENs at depth 9. Bench 4625388.
-2.5 09/02/23 Use TT in qsearch, but do not overwrite existing entries with depth > 0.
-2.5 05/02/23 Clear best move on fail low and don't allow timeout until there is a best move.
-2.5 03/02/23 Return/store bestScore not oAlpha on fail low in search.
-2.5 03/02/23 Increase/decrease alpha/beta on fail high/low during ID.
-2.5 03/02/23 Update best move on fail high.
-2.5 01/02/23 Round the pawn and attack values before the phase calculation. Retune.
-2.5 01/02/23 Don't use end game tempo. Retune.
-2.5 14/01/23 Retune using +- mode.
-2.5 29/12/22 Add eval to TT.
-2.5 28/12/22 Add doubled rooks to eval.
-2.5 23/11/22 Simplify mobility weights for small tuning dataset.
-2.5 21/11/22 Add basic pawn chain feature to eval.
-2.5 21/11/22 Retune using Zurichess's quiet-labeled.epd.
-2.5 22/11/22 Make eval weights more visible (and in testing/tuner.js).
 
 */
 
@@ -68,9 +50,6 @@ function docmd(x) {
 
 //}}}
 //{{{  wbmap
-//
-// Removed on release.
-//
 
 function wbmap (sq) {          // ##ifdef
   var m = (143-sq)/12|0;       // ##ifdef
@@ -6614,7 +6593,7 @@ lozBoard.prototype.evaluate = function (turn) {
   var idx   = this.ploHash & PTTMASK;
   var flags = this.pttFlags[idx];
   
-  if (RELEASE && (flags & PTT_EXACT) && this.pttLo[idx] == this.ploHash && this.pttHi[idx] == this.phiHash) {
+  if (!TUNING && (flags & PTT_EXACT) && this.pttLo[idx] == this.ploHash && this.pttHi[idx] == this.phiHash) {
     //{{{  get tt
     
     pawnsS = this.pttScoreS[idx];
@@ -7966,7 +7945,7 @@ lozBoard.prototype.evaluate = function (turn) {
   evalS += trappedS;
   evalE += trappedE;
   
-  if (RELEASE) {
+  if (!TUNING) {
     evalS += tempoS;
     evalE += tempoE;
   }
@@ -7997,7 +7976,8 @@ lozBoard.prototype.evaluate = function (turn) {
   
   var e = (evalS * (TPHASE - phase) + evalE * phase) / TPHASE;
   
-  e = myround(e) | 0;
+  if (!TUNING)
+    e = myround(e) | 0;
   
   //}}}
   //{{{  verbose
