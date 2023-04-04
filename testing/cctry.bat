@@ -5,7 +5,7 @@ rem engines: coal, cand, loz25, loz24, leo23, tt51.
 set e1=coal
 set e2=loz25
 
-set tc=20+0.2
+set tc=60+1
 set threads=4
 
 set elo0=0

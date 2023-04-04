@@ -11,6 +11,7 @@ var SILENT  = 0;
 //{{{  history
 /*
 
+3 Add own/their king based PSTs.
 
 */
 
