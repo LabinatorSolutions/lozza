@@ -1,5 +1,5 @@
 
-var epdfile = 'etha';
+var epdfile = 'eth_a';
 
 var split   = 1000000;
 var o       = '';
