@@ -1,8 +1,8 @@
 # Lozza
 
-A Javascript chess engine inspired by Fabien Letouzey's Fruit 2.1. 
+Lozza was an experient to see how a basic Javascript chess engine running under ```Node.js``` could do in the CCRL chess engine rating list. Lozza's algorithms are based on the Chess Programming Wiki and it's evaluation function was inspired by Fabien Letouzey's Fruit 2.1. As such Lozza has a hand coded evaluation without use of networks. Lozza acheived a rating of 2700.   
 
-It's easy to use Lozza in your web projects by firing it up a web worker and then communicating using the UCI protocol.
+You can also use Lozza in your web projects by firing it up a web worker and then communicating using the UCI protocol.
 
 Lozza code is folded using ```{{{``` and ```}}}``` (emacs convention) and most easily read using an editor with a folding capability.
 
@@ -14,7 +14,7 @@ https://github.com/op12no2/lozza/releases
 
 ## Basic use in web pages
 
-All you need is ```lozza.js``` from the latest release. The one in the root is usually broken in some way. 
+All you need is ```lozza.js``` from the root of the repo.  
 
 Here is a little example to do a 10 ply search:-
 
