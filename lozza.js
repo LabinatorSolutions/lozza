@@ -8,31 +8,6 @@ var BUILD   = "2.5";
 var RELEASE = 1;
 var SILENT  = 0;
 
-//{{{  history
-/*
-
-2.5 10/02/23 Test for draws in QS. Bench 4549628.
-2.5 10/02/23 Simplify UCI reporting.
-2.5 09/02/23 Process command line args when invoked with Node.
-2.5 09/02/23 Add a bench command using Ethereal FENs at depth 9. Bench 4625388.
-2.5 09/02/23 Use TT in qsearch, but do not overwrite existing entries with depth > 0.
-2.5 05/02/23 Clear best move on fail low and don't allow timeout until there is a best move.
-2.5 03/02/23 Return/store bestScore not oAlpha on fail low in search.
-2.5 03/02/23 Increase/decrease alpha/beta on fail high/low during ID.
-2.5 03/02/23 Update best move on fail high.
-2.5 01/02/23 Round the pawn and attack values before the phase calculation. Retune.
-2.5 01/02/23 Don't use end game tempo. Retune.
-2.5 14/01/23 Retune using +- mode.
-2.5 29/12/22 Add eval to TT.
-2.5 28/12/22 Add doubled rooks to eval.
-2.5 23/11/22 Simplify mobility weights for small tuning dataset.
-2.5 21/11/22 Add basic pawn chain feature to eval.
-2.5 21/11/22 Retune using Zurichess's quiet-labeled.epd.
-2.5 22/11/22 Make eval weights more visible (and in testing/tuner.js).
-
-*/
-
-//}}}
 //{{{  detect host
 
 var HOST_WEB     = 0;
@@ -833,15 +808,6 @@ var randoms = [
 //}}}
 
 //{{{  eval weights
-//
-// file = quiet-labeled.epd
-// num positions = 725000
-// num features = 925
-// k = 1.43
-// loss = 0.05590185234616502
-// epochs = 26
-// last update = Mon Jan 30 2023 10:57:56 GMT+0000 (Greenwich Mean Time)
-//
 
 const MATERIAL = [0,100,394,388,588,1207,10000];
 
