@@ -2,9 +2,11 @@
 
 Lozza was a Javascript project with two goals:-
 
-1. To provide a relatively strong UCI chess engine that could be easily included in web projects (examples below).
+1. To provide a relatively strong UCI chess engine that could be easily included in web pages (examples below).
 
 2. To see how well a traditional (no NNUE, no bitboards) Javascript chess engine running under ```Node.js``` could do in the CCRL chess engine rating list (there were none at the time). Lozza's algorithms are based on the Chess Programming Wiki and it's evaluation function was inspired by Fabien Letouzey's Fruit 2.1. Lozza acheived a rating of 2700.   
+
+No further work is planned on Lozza.
 
 ## Basic use in web pages
 
