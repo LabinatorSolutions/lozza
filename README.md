@@ -1,10 +1,10 @@
 # Lozza
 
-Lozza was an experient to see how a traditional (no NNUE, no bitboards) Javascript chess engine running under ```Node.js``` could do in the CCRL chess engine rating list. Lozza's algorithms are based on the Chess Programming Wiki and it's evaluation function was inspired by Fabien Letouzey's Fruit 2.1. Lozza acheived a rating of 2700.   
+Lozza was a Javascript project with two goals:-
 
-You can easily use Lozza in your web projects by firing it up a web worker and then communicating using the UCI protocol.
+1. To provide a relatively strong UCI chess engine that could be easily included in web projects (examples below).
 
-Lozza code is folded using ```{{{``` and ```}}}``` (emacs convention) and most easily read using an editor with a folding capability.
+2. To see how well a traditional (no NNUE, no bitboards) Javascript chess engine running under ```Node.js``` could do in the CCRL chess engine rating list (there were none at the time). Lozza's algorithms are based on the Chess Programming Wiki and it's evaluation function was inspired by Fabien Letouzey's Fruit 2.1. Lozza acheived a rating of 2700.   
 
 ## Basic use in web pages
 
@@ -20,8 +20,8 @@ lozza.onmessage = function (e) {
                                          //parse messages from here as required
 };
 
-lozza.postMessage('uci');                // get build etc
-lozza.postMessage('ucinewgame');         // reset TT
+lozza.postMessage('uci');                // lozza uses the uci communication protocol
+lozza.postMessage('ucinewgame');         // reset tt
 lozza.postMessage('position startpos');
 lozza.postMessage('go depth 10');        // 10 ply search
 ```
@@ -29,6 +29,8 @@ lozza.postMessage('go depth 10');        // 10 ply search
 Try this example here:-
 
 https://op12no2.github.io/lozza-ui/ex.htm
+
+Please note that Lozza's code is folded using ```{{{``` and ```}}}``` (emacs convention) and most easily read using an editor with a folding capability.
 
 ## More examples
 
