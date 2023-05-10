@@ -4,9 +4,9 @@ Lozza was a project with two goals:-
 
 1. To provide a relatively strong Javascript chess engine that could be easily included in web pages (examples below).
 
-2. To see how well a traditional (no NNUE, no bitboards) Javascript chess engine running under ```Node.js``` could do in the CCRL chess engine rating list (there were none at the time). Lozza's algorithms are based on the Chess Programming Wiki and it's evaluation function was inspired by Fabien Letouzey's Fruit 2.1. Lozza acheived a rating of 2700.   
+2. To see how well a traditional (no NNUE, no bitboards) Javascript chess engine running under ```Node.js``` could do in the CCRL chess engine rating list (there were none at the time). Lozza's algorithms are based on the Chess Programming Wiki and it's evaluation function was inspired by Fabien Letouzey's Fruit 2.1. Lozza acheived a rating of ~2700.   
 
-No further work is planned on Lozza, but there are lots of things that could improve it: SEE pruning, more pruning techniques in search, singular extensions, search parameter tuning, staged move generation (including trying the TT move before any moves are generated), optimisations so that calls to ```isKingInCheck``` are minimised, more use of ```const``` and ```let```, better mobility taking into account unsafe squares (attacked by a P (or PN for RQ)), more eval terms, our king and their king based PSTs, better TT - it's a very simple always-replace scheme, better move generation code, simplified Qsearch - it's a bit of a mess.  
+No further work is planned on Lozza, but there are lots of things that could improve it: SEE pruning and move-ordering, more pruning techniques in search, singular extensions, search parameter tuning, staged move generation (including trying the TT move before any moves are generated) - or at least seperate lists for captures and slides which improves sort times, optimisations so that calls to ```isKingInCheck``` are minimised, more use of ```const``` and ```let```, better mobility taking into account unsafe squares (attacked by a P - or PN for RQ), more eval terms, our king and their king based PSTs, better TT - it's a very simple always-replace scheme, better move generation code (it's a mess), simplified Qsearch - it's also a bit of a mess.  
 
 ## Basic use in web pages
 
