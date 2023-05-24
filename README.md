@@ -55,7 +55,7 @@ https://github.com/op12no2/lozza/releases
 
 ## Fire up Lozza from the command line
 
-Lozza accesses stdio via ```Node.js``` and will run on any platfrom that supports ```Node.js```.  To type UCI commands into Lozza, start ```Node.js``` with ```lozza.js``` as the parameter and then enter UCI commands.  Look at the UCI class in ```lozza.js``` for command extensions.  For example:-
+Lozza accesses stdio via ```Node.js``` and will run on any platfrom that supports ```Node.js```.  To type UCI commands into Lozza, start ```Node.js``` with ```lozza.js``` as the parameter and then enter UCI commands.  Look at the ```lozUCI``` class in ```lozza.js``` for command extensions.  For example:-
 
 ```
 node lozza.js
