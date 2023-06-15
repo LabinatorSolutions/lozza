@@ -59,7 +59,7 @@ https://github.com/op12no2/lozza/releases
 Lozza accesses stdio via ```Node.js``` and will run on any platfrom that supports ```Node.js```.  To type UCI commands into Lozza, start ```Node.js``` with ```lozza.js``` or ```lozza``` the parameter and then enter UCI commands.  Look at the ```lozUCI``` class in ```lozza.js``` for command extensions.  For example:-
 
 ```
-node lozza
+> node lozza
 ucinewgame
 bench
 eval
@@ -70,7 +70,7 @@ quit
 Commands can also be given on invocation, for example:-
 
 ```
-node lozza ucinewgame bench "position startpos" board "go movetime 100" quit
+> node lozza ucinewgame bench "position startpos" board "go movetime 100" quit
 ```
 
 NB: ```bench``` does a cumulative node count while searching a list of FENs. It's particularly useful when checking that changes that should not affect searching have in fact not affected searching :)
