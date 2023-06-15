@@ -2,9 +2,9 @@
 
 Lozza was a project with two goals:-
 
-1. To provide a relatively strong UCI based Javascript chess engine that could be easily included in web pages (examples below).
+1. To provide a UCI based Javascript chess engine that could be easily included in web pages (examples below).
 
-2. To see how well a traditional mailbox (single thread, no NNUE, no bitboards) Javascript chess engine could do in the CCRL chess engine rating list (there were no Javascript engines at the time). Lozza's search is based on the Chess Programming Wiki and it's evaluation function was inspired by Fabien Letouzey's Fruit 2.1. Lozza acheived a rating of ~2700.   
+2. To see how well a traditional mailbox (single thread, no NNUE, no bitboards) Javascript chess engine could do in the CCRL chess engine rating list (there were no Javascript engines at the time). Lozza's search is based on the Chess Programming Wiki and it's evaluation function was inspired by Fabien Letouzey's Fruit 2.1.   
 
 I don't plan to do any further work on Lozza, but there are lots of things that could be improved should somebody decide to pick it up: SEE pruning and move-ordering. More pruning techniques in search - e.g. history pruning. Singular extensions, countermove etc. Search parameter tuning. Staged move generation - including trying the TT move before any moves are generated - or at least seperate lists for captures and slides which improves sort times. Optimisations so that calls to ```isKingInCheck``` are minimised. More use of ```const``` and ```let```. Better mobility taking into account unsafe squares - attacked by a P - or PN for RQ. Additional our king and their king based PSTs (1). Better TT - it's currently a very simple always-replace scheme. Better move generation code - it's a mess. Simplified Qsearch - it's also a bit of a mess. Change to a 0x88 board - I used 12x12 and wrote the move generation code before I had looked at the wiki.  More eval terms (2).
 
@@ -40,7 +40,7 @@ Please note that Lozza's code is folded using ```{{{``` and ```}}}``` (emacs con
 
 ## More examples
 
-A sister repo has more examples for playing and analysing etc. with Lozza.
+A sister repo has more web-based examples for playing and analysing etc. with Lozza.
 
 https://github.com/op12no2/lozza-ui
 
@@ -73,7 +73,7 @@ Commands can also be given on invocation, for example:-
 > node lozza ucinewgame bench "position startpos" board "go movetime 100" quit
 ```
 
-NB: ```bench``` does a cumulative node count while searching a list of FENs. It's particularly useful when checking that changes that should not affect searching have in fact not affected searching :)
+NB: ```bench``` does a cumulative node count while searching a list of FENs. It's particularly useful when checking that changes that should not affect searching have in fact not affected searching :) 
 
 ## Acknowledgements
 
