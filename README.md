@@ -73,7 +73,7 @@ Commands can also be given on invocation, for example:-
 > node lozza ucinewgame bench "position startpos" board "go movetime 100" quit
 ```
 
-NB: ```bench``` does a cumulative node count while searching a list of FENs. It's particularly useful when checking that changes that should not affect searching have in fact not affected searching :) 
+NB: ```bench``` does a cumulative node count while searching a list of FENs, displaying the total and the time it took. It's particularly useful when checking that changes that should not affect searching have in fact not affected searching.  
 
 ## Acknowledgements
 
