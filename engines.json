@@ -1,0 +1,13 @@
+[
+{
+  "name": "lozza",
+  "command": "\"c:\\program files\\nodejs\\node.exe\" c:\\projects\\lozza\\lozza.js",
+  "protocol": "uci"
+},
+{
+  "name": "lozza3",
+  "command": "\"c:\\program files\\nodejs\\node.exe\" c:\\projects\\lozza\\lozza3.js",
+  "protocol": "uci"
+}
+]
+
