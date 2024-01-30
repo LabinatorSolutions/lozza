@@ -71,7 +71,7 @@ https://www.chessprogramming.org/Fruit - Fruit
 
 https://www.chessprogramming.org/Main_Page - Chess programming wiki
 
-http://ccrl.chessdom.com/ccrl/4040 - CCRL rating list
+https://computerchess.org.uk/ccrl/4040/ - CCRL rating list
 
 https://www.wbec-ridderkerk.nl/html/UCIProtocol.html - UCI protocol
 
