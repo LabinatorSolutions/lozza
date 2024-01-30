@@ -1,16 +1,6 @@
 # Lozza
 
-Lozza was a project with two goals:-
-
-1. To provide a UCI based Javascript chess engine that could easily be included in web pages (examples below).
-
-2. To see how well a traditional mailbox (single thread, no NNUE, no bitboards) Javascript chess engine could do in the CCRL chess engine rating list (there were no Javascript engines listed at the time). Lozza's search is based on the Chess Programming Wiki and it's evaluation function was inspired by Fabien Letouzey's Fruit 2.1.   
-
-I don't plan to do any further work on Lozza, but there are lots of things that could be improved should somebody decide to pick it up: SEE pruning and move-ordering. More pruning techniques in search - e.g. history pruning. Singular extensions, countermove etc. Search parameter tuning. Staged move generation - including trying the TT move before any moves are generated - or at least seperate lists for captures and slides which improves sort times. Optimisations so that calls to ```isKingInCheck``` are minimised. More use of ```const``` and ```let```. Better mobility taking into account unsafe squares - attacked by a P - or PN for RQ. Additional our king and their king based PSTs (1). Better TT - it's currently a very simple always-replace scheme. Better move generation code - it's a mess. Simplified Qsearch - it's also a bit of a mess. Root move sorting. Change to a 0x88 board - I used 12x12 and wrote the move generation code before I had looked at the wiki.  More eval terms (2).
-
-(1) I did a quick experiment with this on top of existing PSTs and got +30 ELO at LTC training on a small data set. Lots of potential here using a bigger data set.
-
-(2) Adding terms to eval always seems to help, even if they are computationally expensive on a mailbox board.
+A UCI Javascript chess engine inspired by Fruit.
 
 ## Basic use in web pages
 
@@ -84,3 +74,4 @@ https://www.chessprogramming.org/Main_Page - Chess programming wiki
 http://ccrl.chessdom.com/ccrl/4040 - CCRL rating list
 
 https://www.wbec-ridderkerk.nl/html/UCIProtocol.html - UCI protocol
+
