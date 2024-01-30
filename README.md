@@ -1,6 +1,6 @@
 # Lozza
 
-A UCI Javascript chess engine inspired by Fruit.
+A Javascript chess engine inspired by Fabien Letouzey's Fruit 2.1.
 
 ## Basic use in web pages
 
