@@ -4,7 +4,7 @@ A Javascript chess engine inspired by Fabien Letouzey's Fruit 2.1.
 
 ## Basic use in web pages
 
-All you need is ```lozza.js``` from the root of the repo.  
+All you need is ```lozza.js``` from the latest release. The root lozza.js is always WIP and not recommended.  
 
 Here is a little example to do a 10 ply search:-
 
