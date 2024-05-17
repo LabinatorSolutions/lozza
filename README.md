@@ -51,7 +51,6 @@ Lozza accesses stdio via ```Node.js``` and will run on any platfrom that support
 ```
 > node lozza
 ucinewgame
-bench
 position startpos
 eval
 go depth 10
