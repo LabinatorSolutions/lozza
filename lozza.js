@@ -1554,7 +1554,7 @@ function lozChess () {
       else {
         for (var k=0; k < BISHOP_OFFSETS.length; k++) {
           var msq = psq;
-          for (s=0; s < 8; s++) {
+          for (var s=0; s < 8; s++) {
             msq += BISHOP_OFFSETS[k];
             if (this.board.b[msq] == EDGE)
               break;
