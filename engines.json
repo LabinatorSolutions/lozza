@@ -1,0 +1,13 @@
+[
+{
+  "name": "lozza25",
+  "command": "/home/xyzzy/.nvm/versions/node/v18.12.1/bin/node /home/xyzzy/lozza/lozza25.js",
+  "protocol": "uci"
+},
+{
+  "name": "lozza26",
+  "command": "/home/xyzzy/.nvm/versions/node/v18.12.1/bin/node /home/xyzzy/lozza/lozza26.js",
+  "protocol": "uci"
+}
+]
+

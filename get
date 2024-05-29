@@ -1,0 +1,2 @@
+cp /mnt/c/projects/lozza/lozza26.js .
+dos2unix lozza26.js
