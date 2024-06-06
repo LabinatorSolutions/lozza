@@ -1,9 +1,9 @@
 #!/bin/bash
 
-tc="tc=0/20+.2"
+tc="tc=0/30+0.3"
 
-e1="-engine conf=lozza26 $tc"
-e2="-engine conf=lozza25 $tc"
+e1="-engine conf=lozza26coal $tc"
+e2="-engine conf=lozza26cand $tc"
 
 threads=4
 

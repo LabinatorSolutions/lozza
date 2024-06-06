@@ -5,8 +5,13 @@
   "protocol": "uci"
 },
 {
-  "name": "lozza26",
-  "command": "/home/xyzzy/.nvm/versions/node/v18.12.1/bin/node /home/xyzzy/lozza/lozza26.js",
+  "name": "lozza26coal",
+  "command": "/home/xyzzy/.nvm/versions/node/v18.12.1/bin/node /home/xyzzy/lozza/lozza26coal.js",
+  "protocol": "uci"
+},
+{
+  "name": "lozza26cand",
+  "command": "/home/xyzzy/.nvm/versions/node/v18.12.1/bin/node /home/xyzzy/lozza/lozza26cand.js",
   "protocol": "uci"
 }
 ]

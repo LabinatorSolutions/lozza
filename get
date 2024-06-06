@@ -1,2 +1,6 @@
-cp /mnt/c/projects/lozza/lozza26.js .
-dos2unix lozza26.js
+cp /mnt/c/projects/lozza/lozza26coal.js .
+dos2unix lozza26coal.js
+cp /mnt/c/projects/lozza/lozza26cand.js .
+dos2unix lozza26cand.js
+diff lozza26coal.js lozza26cand.js
+
