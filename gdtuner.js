@@ -1,6 +1,4 @@
-
-(function() {
-
+//{{{    let TUNING = 0;
   let TUNING = 0;
 
   //{{{  v8
@@ -495,185 +493,198 @@
   //}}}
   //{{{  weights
   //
+  // file = quiet-labeled.epd
   // num positions = 725000
   // num features = 745
-  // k = 4
-  // loss = 0.061410196062739224
-  // epochs = 240
-  // last update = Fri Jun 14 2024 11:53:12 GMT+0100 (British Summer Time)
+  // k = 1.7
+  // loss = 0.06145616629103831
+  // epochs = 51
+  // last update = Thu Jun 13 2024 16:42:10 GMT+0100 (British Summer Time)
   //
   
-  const MATERIAL_MID = [100,341,363,483,1023,20000];
-  const MATERIAL_END = [142,270,296,474,887,20000];
+  const MATERIAL_MID = [100,339,362,482,994,20000];
+  const MATERIAL_END = [141,271,297,477,908,20000];
   
   const WPAWN_MID = [
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-       0,    0,   76,  131,   63,  105,   87,  135,   17,  -34,    0,    0,
-       0,    0,  -34,  -18,    6,   12,   55,   48,    1,  -44,    0,    0,
-       0,    0,  -43,   -9,  -14,    2,    5,   -6,    0,  -45,    0,    0,
-       0,    0,  -56,  -23,  -24,   -6,   -1,  -11,   -6,  -46,    0,    0,
-       0,    0,  -54,  -25,  -24,  -29,  -15,  -13,   17,  -34,    0,    0,
-       0,    0,  -63,  -22,  -40,  -43,  -35,    7,   21,  -44,    0,    0,
+       0,    0,  106,  175,   89,  108,   95,  145,   47,   22,    0,    0,
+       0,    0,  -34,  -17,    8,   13,   56,   49,    2,  -44,    0,    0,
+       0,    0,  -43,   -9,  -13,    2,    4,   -6,   -1,  -46,    0,    0,
+       0,    0,  -57,  -25,  -26,   -8,   -2,  -12,   -9,  -49,    0,    0,
+       0,    0,  -54,  -27,  -26,  -31,  -17,  -15,   14,  -36,    0,    0,
+       0,    0,  -64,  -24,  -42,  -45,  -36,    5,   18,  -46,    0,    0,
        0,    0,  -15,   -5,    0,    5,    5,    0,   -5,  -15,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
   ];
+  
   const WPAWN_END = [
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-       0,    0,  129,  113,  101,   71,   85,   69,  117,  145,    0,    0,
-       0,    0,   50,   53,   35,   17,   -2,   -5,   33,   38,    0,    0,
-       0,    0,  -13,  -26,  -37,  -48,  -55,  -48,  -36,  -31,    0,    0,
-       0,    0,  -31,  -40,  -53,  -59,  -60,  -61,  -50,  -50,    0,    0,
-       0,    0,  -41,  -42,  -57,  -48,  -51,  -57,  -56,  -58,    0,    0,
-       0,    0,  -30,  -41,  -40,  -40,  -39,  -53,  -53,  -56,    0,    0,
+       0,    0,   78,   80,   95,   74,   84,   68,  100,  113,    0,    0,
+       0,    0,   52,   56,   37,   18,    0,   -3,   35,   40,    0,    0,
+       0,    0,  -10,  -23,  -35,  -45,  -52,  -46,  -33,  -29,    0,    0,
+       0,    0,  -28,  -37,  -50,  -57,  -58,  -58,  -47,  -47,    0,    0,
+       0,    0,  -38,  -39,  -54,  -45,  -48,  -54,  -53,  -55,    0,    0,
+       0,    0,  -27,  -38,  -37,  -37,  -36,  -50,  -50,  -53,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
   ];
+  
   const WKNIGHT_MID = [
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-       0,    0, -189,  -95,  -44,  -36,   90,  -92,  -10, -113,    0,    0,
-       0,    0,  -69,  -37,   79,   41,   33,   73,    9,   -4,    0,    0,
-       0,    0,  -39,   71,   46,   74,  104,  139,   86,   56,    0,    0,
-       0,    0,   -3,   26,   27,   63,   47,   83,   28,   31,    0,    0,
-       0,    0,   -4,   14,   23,   21,   36,   29,   29,    2,    0,    0,
-       0,    0,  -13,    0,   22,   19,   28,   28,   33,   -6,    0,    0,
-       0,    0,  -22,  -49,   -4,    6,    8,   27,   -7,   -8,    0,    0,
-       0,    0, -113,  -10,  -52,  -28,   -7,  -20,   -7,  -14,    0,    0,
+       0,    0, -189,  -95,  -42,  -36,   90,  -90,  -10, -112,    0,    0,
+       0,    0,  -70,  -37,   82,   39,   33,   76,    9,   -4,    0,    0,
+       0,    0,  -38,   72,   46,   75,  105,  142,   86,   58,    0,    0,
+       0,    0,   -2,   26,   28,   63,   47,   83,   28,   32,    0,    0,
+       0,    0,   -5,   14,   23,   21,   36,   29,   29,    1,    0,    0,
+       0,    0,  -14,   -1,   21,   19,   28,   27,   33,   -7,    0,    0,
+       0,    0,  -23,  -48,   -4,    5,    7,   27,   -9,  -10,    0,    0,
+       0,    0, -111,  -12,  -54,  -28,   -8,  -20,   -8,  -15,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
   ];
+  
   const WKNIGHT_END = [
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-       0,    0,  -45,  -36,  -11,  -36,  -48,  -29,  -68,  -94,    0,    0,
-       0,    0,  -27,  -12,  -34,  -11,  -17,  -37,  -29,  -57,    0,    0,
-       0,    0,  -30,  -32,    1,   -3,  -20,  -25,  -33,  -53,    0,    0,
-       0,    0,  -23,   -5,   15,   11,   12,   -2,   -3,  -26,    0,    0,
-       0,    0,  -25,  -13,    9,   17,    7,    9,   -3,  -29,    0,    0,
-       0,    0,  -31,  -10,  -11,    5,    1,  -14,  -29,  -31,    0,    0,
-       0,    0,  -46,  -22,  -17,  -14,  -11,  -29,  -29,  -53,    0,    0,
-       0,    0,  -26,  -62,  -27,  -20,  -29,  -25,  -61,  -69,    0,    0,
+       0,    0,  -45,  -37,  -11,  -35,  -48,  -31,  -68,  -93,    0,    0,
+       0,    0,  -27,  -11,  -36,  -10,  -18,  -38,  -29,  -58,    0,    0,
+       0,    0,  -30,  -32,    2,   -2,  -20,  -25,  -33,  -54,    0,    0,
+       0,    0,  -22,   -4,   15,   11,   12,   -2,   -2,  -27,    0,    0,
+       0,    0,  -24,  -13,   10,   18,    8,    9,   -3,  -27,    0,    0,
+       0,    0,  -31,  -10,  -11,    6,    2,  -13,  -29,  -30,    0,    0,
+       0,    0,  -45,  -23,  -17,  -13,  -10,  -29,  -29,  -52,    0,    0,
+       0,    0,  -32,  -62,  -25,  -21,  -30,  -26,  -60,  -70,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
   ];
+  
   const WBISHOP_MID = [
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-       0,    0,  -19,   14,  -97,  -52,  -33,  -31,    2,    5,    0,    0,
-       0,    0,  -11,   28,   -5,  -15,   46,   69,   31,  -34,    0,    0,
-       0,    0,   -1,   48,   55,   54,   48,   71,   46,   14,    0,    0,
-       0,    0,    9,   21,   31,   63,   52,   54,   22,   12,    0,    0,
-       0,    0,    8,   29,   27,   38,   48,   26,   23,   17,    0,    0,
-       0,    0,   14,   30,   27,   30,   27,   42,   31,   22,    0,    0,
-       0,    0,   18,   31,   29,   14,   23,   33,   48,   18,    0,    0,
-       0,    0,  -24,   10,    1,  -10,   -2,    3,  -29,  -12,    0,    0,
+       0,    0,  -18,   14,  -95,  -51,  -33,  -30,    2,    7,    0,    0,
+       0,    0,  -12,   30,   -5,  -12,   47,   71,   33,  -32,    0,    0,
+       0,    0,   -2,   49,   57,   54,   49,   73,   48,   14,    0,    0,
+       0,    0,   10,   20,   32,   64,   53,   54,   21,   11,    0,    0,
+       0,    0,    7,   29,   26,   37,   47,   25,   23,   16,    0,    0,
+       0,    0,   13,   29,   26,   29,   26,   41,   30,   22,    0,    0,
+       0,    0,   19,   29,   29,   12,   22,   33,   47,   17,    0,    0,
+       0,    0,  -24,   10,    0,  -11,   -3,    2,  -29,  -12,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
   ];
+  
   const WBISHOP_END = [
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-       0,    0,  -32,  -38,  -17,  -19,  -18,  -25,  -28,  -41,    0,    0,
-       0,    0,  -25,  -23,  -10,  -24,  -23,  -33,  -23,  -28,    0,    0,
-       0,    0,  -17,  -28,  -20,  -22,  -22,  -19,  -18,  -15,    0,    0,
-       0,    0,  -21,  -10,   -7,  -11,   -7,  -12,  -17,  -17,    0,    0,
-       0,    0,  -23,  -18,   -6,   -1,  -12,  -10,  -21,  -26,    0,    0,
-       0,    0,  -30,  -22,  -10,   -9,   -6,  -18,  -24,  -33,    0,    0,
-       0,    0,  -32,  -38,  -25,  -18,  -15,  -28,  -36,  -47,    0,    0,
-       0,    0,  -37,  -26,  -44,  -21,  -25,  -36,  -20,  -32,    0,    0,
+       0,    0,  -32,  -37,  -17,  -19,  -18,  -25,  -29,  -43,    0,    0,
+       0,    0,  -26,  -24,  -10,  -25,  -24,  -33,  -24,  -29,    0,    0,
+       0,    0,  -16,  -28,  -21,  -22,  -23,  -19,  -19,  -15,    0,    0,
+       0,    0,  -21,   -9,   -7,  -11,   -6,  -12,  -16,  -16,    0,    0,
+       0,    0,  -23,  -18,   -5,    0,  -12,   -9,  -21,  -26,    0,    0,
+       0,    0,  -29,  -21,  -10,   -9,   -5,  -17,  -24,  -33,    0,    0,
+       0,    0,  -33,  -37,  -25,  -17,  -15,  -28,  -36,  -46,    0,    0,
+       0,    0,  -39,  -27,  -43,  -21,  -25,  -36,  -20,  -32,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
   ];
+  
   const WROOK_MID = [
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-       0,    0,   37,   56,   34,   81,   76,    0,   19,   34,    0,    0,
-       0,    0,   33,   32,   75,   75,   96,   89,   23,   47,    0,    0,
-       0,    0,  -11,   17,   24,   31,    9,   59,   71,   13,    0,    0,
-       0,    0,  -32,  -15,    2,   22,   16,   34,   -6,  -25,    0,    0,
-       0,    0,  -45,  -33,  -16,   -5,    0,  -13,    7,  -27,    0,    0,
-       0,    0,  -52,  -28,  -19,  -23,   -4,   -8,   -7,  -37,    0,    0,
-       0,    0,  -51,  -19,  -25,  -16,   -6,    3,   -9,  -74,    0,    0,
-       0,    0,  -25,  -19,   -6,    4,    6,   -8,  -35,  -25,    0,    0,
+       0,    0,   33,   56,   31,   78,   77,   -2,   15,   34,    0,    0,
+       0,    0,   34,   34,   74,   76,   97,   89,   23,   47,    0,    0,
+       0,    0,  -11,   18,   29,   30,   13,   55,   74,   15,    0,    0,
+       0,    0,  -31,  -15,    3,   25,   17,   35,   -5,  -26,    0,    0,
+       0,    0,  -45,  -32,  -15,   -6,    0,  -13,    8,  -29,    0,    0,
+       0,    0,  -53,  -29,  -19,  -25,   -5,   -8,   -7,  -37,    0,    0,
+       0,    0,  -52,  -20,  -25,  -16,   -6,    3,  -10,  -75,    0,    0,
+       0,    0,  -25,  -19,   -5,    5,    7,   -7,  -36,  -25,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
   ];
+  
   const WROOK_END = [
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-       0,    0,   28,   21,   34,   21,   21,   34,   27,   23,    0,    0,
-       0,    0,   25,   29,   20,   21,    2,    9,   26,   17,    0,    0,
-       0,    0,   29,   27,   24,   24,   25,    7,    6,   16,    0,    0,
-       0,    0,   29,   25,   33,   20,   22,   17,   19,   27,    0,    0,
-       0,    0,   29,   30,   30,   25,   18,   17,   11,   14,    0,    0,
-       0,    0,   23,   23,   17,   22,   14,   10,   12,    9,    0,    0,
-       0,    0,   21,   16,   23,   25,   13,   13,   10,   26,    0,    0,
-       0,    0,   17,   26,   27,   23,   19,   16,   26,    0,    0,    0,
+       0,    0,   31,   22,   35,   22,   22,   35,   29,   23,    0,    0,
+       0,    0,   25,   29,   21,   21,    3,   10,   26,   18,    0,    0,
+       0,    0,   29,   26,   23,   25,   23,    9,    5,   15,    0,    0,
+       0,    0,   29,   26,   33,   19,   22,   17,   18,   27,    0,    0,
+       0,    0,   29,   29,   30,   25,   18,   17,   10,   14,    0,    0,
+       0,    0,   23,   24,   17,   23,   14,   10,   12,    9,    0,    0,
+       0,    0,   22,   17,   23,   25,   13,   12,   10,   26,    0,    0,
+       0,    0,   16,   25,   26,   23,   18,   15,   26,   -1,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
   ];
+  
   const WQUEEN_MID = [
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-       0,    0,  -23,    0,   23,   20,  119,  105,   69,   52,    0,    0,
-       0,    0,  -12,  -31,    2,    6,  -21,   83,   34,   64,    0,    0,
-       0,    0,   -1,   -6,   18,    8,   33,   80,   56,   68,    0,    0,
-       0,    0,  -23,  -20,   -8,   -9,    5,   20,    3,    6,    0,    0,
-       0,    0,    1,  -23,   -1,   -3,    3,    5,    8,    6,    0,    0,
-       0,    0,  -10,   14,   -3,    7,    3,   10,   21,   10,    0,    0,
-       0,    0,  -26,    0,   22,   10,   17,   23,   10,   12,    0,    0,
-       0,    0,    7,   -6,    1,   21,   -8,  -21,  -24,  -40,    0,    0,
+       0,    0,  -23,   -1,   23,   19,  120,   99,   71,   52,    0,    0,
+       0,    0,  -11,  -31,    5,    6,  -20,   80,   37,   64,    0,    0,
+       0,    0,    0,   -6,   19,    8,   35,   80,   59,   70,    0,    0,
+       0,    0,  -25,  -20,   -8,   -8,    3,   21,    2,    5,    0,    0,
+       0,    0,    0,  -24,   -3,   -5,    2,    4,    8,    6,    0,    0,
+       0,    0,  -11,   13,   -4,    5,    2,    9,   20,   10,    0,    0,
+       0,    0,  -27,   -2,   21,    9,   16,   23,    8,   12,    0,    0,
+       0,    0,    6,   -7,   -1,   20,   -9,  -22,  -25,  -41,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
   ];
+  
   const WQUEEN_END = [
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-       0,    0,    3,   36,   35,   37,  -11,  -13,   -5,   22,    0,    0,
-       0,    0,  -11,   31,   42,   52,   79,   12,   32,   -6,    0,    0,
-       0,    0,  -16,   12,   11,   64,   59,   21,   21,    4,    0,    0,
-       0,    0,   20,   34,   32,   56,   70,   51,   75,   49,    0,    0,
-       0,    0,  -15,   45,   29,   60,   44,   41,   48,   30,    0,    0,
-       0,    0,    1,  -30,   24,   12,   20,   25,   15,   16,    0,    0,
-       0,    0,  -12,  -14,  -28,  -10,  -10,  -19,  -36,  -31,    0,    0,
-       0,    0,  -28,  -25,  -18,  -49,    2,  -19,  -11,  -33,    0,    0,
+       0,    0,    2,   36,   35,   36,  -11,   -9,   -6,   21,    0,    0,
+       0,    0,  -12,   30,   40,   54,   80,   14,   31,   -6,    0,    0,
+       0,    0,  -17,   12,   11,   64,   58,   22,   19,    4,    0,    0,
+       0,    0,   21,   35,   33,   57,   72,   52,   75,   50,    0,    0,
+       0,    0,  -15,   46,   31,   61,   45,   43,   49,   30,    0,    0,
+       0,    0,    1,  -29,   24,   14,   20,   27,   18,   16,    0,    0,
+       0,    0,  -12,  -13,  -28,   -9,   -8,  -20,  -35,  -31,    0,    0,
+       0,    0,  -28,  -26,  -16,  -48,    3,  -20,  -11,  -36,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
   ];
+  
   const WKING_MID = [
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-       0,    0,  -28,  106,   87,   49, -106,  -55,   60,   46,    0,    0,
-       0,    0,  108,   71,   52,   76,   38,   42,  -20, -102,    0,    0,
-       0,    0,   76,   79,   94,   24,   49,   90,  111,    6,    0,    0,
-       0,    0,   17,    6,   34,  -15,   -9,  -18,   13,  -50,    0,    0,
-       0,    0,  -52,   36,  -31,  -79,  -78,  -48,  -38,  -59,    0,    0,
-       0,    0,   31,   14,  -16,  -50,  -48,  -39,    6,  -12,    0,    0,
-       0,    0,   35,   36,    5,  -55,  -36,   -8,   37,   43,    0,    0,
-       0,    0,   14,   69,   37,  -50,   26,  -16,   56,   54,    0,    0,
+       0,    0,  -27,   98,   77,   43, -106,  -55,   60,   45,    0,    0,
+       0,    0,   95,   70,   51,   61,   30,   40,  -21, -100,    0,    0,
+       0,    0,   75,   81,   90,   11,   44,   66,  100,    6,    0,    0,
+       0,    0,   16,    7,   30,  -15,  -10,  -18,   12,  -50,    0,    0,
+       0,    0,  -50,   36,  -32,  -78,  -76,  -44,  -38,  -57,    0,    0,
+       0,    0,   30,   13,  -14,  -47,  -44,  -34,    7,  -11,    0,    0,
+       0,    0,   38,   40,    9,  -51,  -31,   -3,   41,   49,    0,    0,
+       0,    0,   15,   73,   42,  -45,   31,  -11,   62,   59,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
   ];
+  
   const WKING_END = [
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-       0,    0,  -88,  -70,  -52,  -49,  -13,    4,  -25,  -38,    0,    0,
-       0,    0,  -49,  -18,  -20,  -18,  -12,    7,    4,    9,    0,    0,
-       0,    0,  -27,  -14,  -15,  -11,  -12,    8,    4,  -10,    0,    0,
-       0,    0,  -34,   -3,   -3,    7,    3,   14,    3,  -11,    0,    0,
-       0,    0,  -35,  -32,    4,   16,   18,    9,   -5,  -23,    0,    0,
-       0,    0,  -48,  -27,   -8,    6,    9,    3,  -15,  -27,    0,    0,
-       0,    0,  -56,  -39,  -16,   -3,   -2,  -13,  -32,  -48,    0,    0,
-       0,    0,  -82,  -70,  -50,  -27,  -55,  -31,  -58,  -82,    0,    0,
+       0,    0,  -83,  -65,  -50,  -47,  -13,    3,  -24,  -38,    0,    0,
+       0,    0,  -48,  -15,  -18,  -16,  -11,    9,    6,    8,    0,    0,
+       0,    0,  -25,  -13,  -13,   -9,  -12,   12,    6,  -10,    0,    0,
+       0,    0,  -34,   -2,   -2,    7,    4,   14,    3,  -11,    0,    0,
+       0,    0,  -35,  -31,    4,   15,   17,    8,   -5,  -24,    0,    0,
+       0,    0,  -47,  -27,   -8,    5,    8,    1,  -15,  -28,    0,    0,
+       0,    0,  -57,  -40,  -17,   -4,   -4,  -15,  -33,  -50,    0,    0,
+       0,    0,  -82,  -72,  -52,  -28,  -57,  -34,  -60,  -84,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
        0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
   ];
+  
   //}}}
   //{{{  weight config
   
@@ -1847,6 +1858,7 @@
   
   const features  = {};
   features.pieces = [0,0,0,0,0,0];
+  features.e      = 0;
   features.mg     = 0;
   features.eg     = 0;
   features.phase  = 0;
@@ -3311,5 +3323,503 @@
   
   //}}}
 
-})();
+//}}}
+//
+// Copy dev lozza.js above here.
+//
+
+TUNING = 1;
+
+loz.newGame();
+
+fs    = require('fs');
+board = loz.board;
+
+var epds   = [];
+var params = [];
+
+var gK             = 4;
+var gPrefix        = 'eth';
+var gSuffix        = '';
+var gNumFiles      = 11;               // first file is <gPrefix>0<gSuffix>.epd etc.
+var gUseScore      = false;            // train against sigmoid(score) not sigmoid (wdl).
+var gWDLIndex      = 6;                // or the score index if gUseScore is set.
+var gBatchSize     = 10000;
+var gLearningRate  = 10;
+var gResetAdagrad  = false;
+var gOutFile       = 'gdtuner.txt';
+var gErrStep       = 10;               // update results and get loss rate.
+var gMaxEpochs     = 2000;
+
+//{{{  add weights to output
+
+var lastOut = '';
+
+function saveparams (err, epochs) {
+
+  var d    = new Date();
+  var out1 = '//{{{  weights\r\n';
+
+  out1 += '//';
+  out1 += '\r\n';
+  //out1 += '// file = ' + gFile;
+  //out1 += '\r\n';
+  out1 += '// num positions = ' + epds.length;
+  out1 += '\r\n';
+  out1 += '// num features = ' + params.length;
+  out1 += '\r\n';
+  out1 += '// k = ' + gK;
+  out1 += '\r\n';
+  out1 += '// loss = ' + err;
+  out1 += '\r\n';
+  out1 += '// epochs = ' + epochs;
+  out1 += '\r\n';
+  out1 += '// last update = ' + d;
+  out1 += '\r\n';
+  out1 += '//';
+  out1 += '\r\n\r\n';
+
+  var out = '';
+
+  out += loga(MATERIAL_MID, 'MATERIAL_MID');
+  out += loga(MATERIAL_END, 'MATERIAL_END');
+
+  out += '\r\n';
+
+  out += logpst(WPAWN_MID,     'WPAWN_MID');
+  out += logpst(WPAWN_END,     'WPAWN_END');
+  out += logpst(WKNIGHT_MID,   'WKNIGHT_MID');
+  out += logpst(WKNIGHT_END,   'WKNIGHT_END');
+  out += logpst(WBISHOP_MID,   'WBISHOP_MID');
+  out += logpst(WBISHOP_END,   'WBISHOP_END');
+  out += logpst(WROOK_MID,     'WROOK_MID');
+  out += logpst(WROOK_END,     'WROOK_END');
+  out += logpst(WQUEEN_MID,    'WQUEEN_MID');
+  out += logpst(WQUEEN_END,    'WQUEEN_END');
+  out += logpst(WKING_MID,     'WKING_MID');
+  out += logpst(WKING_END,     'WKING_END');
+
+  out = out + '//}}}\r\n';
+
+  fs.writeFileSync(gOutFile, out1+out);
+}
+
+//}}}
+
+//{{{  functions
+
+//{{{  getprob
+
+function getprob (r) {
+  if (r == '1/2-1/2')
+    return 0.5;
+  else if (r == '1-0')
+    return 1.0;
+  else if (r == '0-1')
+    return 0.0;
+  else if (r == '"1/2-1/2"')
+    return 0.5;
+  else if (r == '"1-0"')
+    return 1.0;
+  else if (r == '"0-1"')
+    return 0.0;
+  else if (r == '[0.5]')
+    return 0.5;
+  else if (r == '[1.0]')
+    return 1.0;
+  else if (r == '[0.0]')
+    return 0.0;
+  else
+    console.log('unknown result',r);
+}
+
+//}}}
+//{{{  is
+
+function is (p,sq) {
+  return board[sq] == p;
+}
+
+//}}}
+//{{{  findK
+//
+// https://github.com/AndyGrant/Ethereal/blob/master/src/tuner.c#L300
+//
+
+function findK () {
+
+    console.log('finding K...');
+
+    var start = -10;
+    var finish = 10;
+    var step = 1;
+    var err = 0;
+    var best = 99999;
+
+    for (var i = 0; i < 3; i++) {
+
+      gK = start - step;
+      while (gK < finish) {
+        gK += step;
+        err = calcErr();
+        if (err <= best) {
+          best = err,
+          start = gK;
+        }
+      }
+
+      console.log(start, best);
+
+      finish = start + step;
+      start = start - step;
+      step  = step  / 10.0;
+    }
+}
+
+//}}}
+//{{{  addp
+
+function addp (s,a,i,coeff) {
+  params.push({s: s, v: a[i], a: a, i: i, coeff: coeff, gr: 0, ag: 0});
+}
+
+//}}}
+//{{{  myround
+
+function myround(x) {
+  return Math.sign(x) * Math.round(Math.abs(x));
+}
+
+//}}}
+//{{{  sigmoid
+
+function sigmoid (x) {
+  return 1.0 / (1.0 + Math.exp(-gK*x/400.0));
+}
+
+//}}}
+//{{{  calcErr
+
+function calcErr () {
+
+  //console.log('calc err in');
+
+  var err = 0;
+  var num = Vtotal;
+
+  for (var i=0; i < num; i++) {
+
+    var vi  = Vindex(i);
+    var epd = epds[vi];
+
+    loz.position(epd.board,epd.turn,epd.rights,epd.ep);
+
+    var pr = epd.prob;
+    var ev = loz.evaluate();
+    var sg = sigmoid(ev);
+
+    if (isNaN(ev) || isNaN(pr) || isNaN(sg) || sg > 1.0 || pr > 1.0 || sg < 0.0 || pr < 0.0) {
+      console.log('nan eek',pr,sg,ev);
+      process.exit();
+    }
+
+    err += (pr-sg) * (pr-sg);
+  }
+
+  //console.log('calc err out');
+
+  return err / num;
+}
+
+//}}}
+//{{{  loga
+
+function loga (p,s) {
+
+  var a = Array(p.length);
+
+  for (var i=0; i < p.length; i++)
+    a[i] = myround(p[i]) | 0;
+
+  return 'const ' + s + ' = [' + a.toString() + '];\r\n';
+}
+
+//}}}
+//{{{  logpst
+
+function logpst (p,s) {
+
+  //return loga(p,s);
+
+  var a = Array(p.length);
+
+  for (var i=0; i < p.length; i++)
+    a[i] = myround(p[i]) | 0;
+
+  var o = 'const ';
+
+  o = o + s + ' = [';
+
+  for (var i=0; i < 144; i++) {
+    if ((i % 12) == 0)
+      o = o + '\r\n  ';
+    o = o + a[i].toString().padStart(4,' ');
+    if (i < 143)
+      o = o + ', ';
+  }
+
+  o = o + '\r\n];\r\n';
+
+  return o;
+}
+
+//}}}
+//{{{  grunt
+
+function grunt () {
+
+  findK();
+  process.exit();
+
+  console.log('creating params...');
+
+  //{{{  create params
+  
+  addp('',MATERIAL_MID, KNIGHT-1, function (dummy,mg,eg) {return mg*features.pieces[KNIGHT-1];});
+  addp('',MATERIAL_MID, BISHOP-1, function (dummy,mg,eg) {return mg*features.pieces[BISHOP-1];});
+  addp('',MATERIAL_MID, ROOK-1,   function (dummy,mg,eg) {return mg*features.pieces[ROOK-1];});
+  addp('',MATERIAL_MID, QUEEN-1,  function (dummy,mg,eg) {return mg*features.pieces[QUEEN-1];});
+  
+  addp('',MATERIAL_END, PAWN-1,   function (dummy,mg,eg) {return eg*features.pieces[PAWN-1];});
+  addp('',MATERIAL_END, KNIGHT-1, function (dummy,mg,eg) {return eg*features.pieces[KNIGHT-1];});
+  addp('',MATERIAL_END, BISHOP-1, function (dummy,mg,eg) {return eg*features.pieces[BISHOP-1];});
+  addp('',MATERIAL_END, ROOK-1,   function (dummy,mg,eg) {return eg*features.pieces[ROOK-1];});
+  addp('',MATERIAL_END, QUEEN-1,  function (dummy,mg,eg) {return eg*features.pieces[QUEEN-1];});
+  
+  for (var i=8; i < 56; i++) {
+    var sq = B88[i];
+    addp('',WPAWN_MID, sq, function (sq,mg,eg) {return (is(W_PAWN,sq) - is(B_PAWN,flip(sq))) * mg;});
+    addp('',WPAWN_END, sq, function (sq,mg,eg) {return (is(W_PAWN,sq) - is(B_PAWN,flip(sq))) * eg;});
+  }
+  
+  for (var i=0; i < 64; i++) {
+    var sq = B88[i];
+    addp('',WKNIGHT_MID, sq, function (sq,mg,eg) {return (is(W_KNIGHT,sq) - is(B_KNIGHT,flip(sq))) * mg;});
+    addp('',WKNIGHT_END, sq, function (sq,mg,eg) {return (is(W_KNIGHT,sq) - is(B_KNIGHT,flip(sq))) * eg;});
+    addp('',WBISHOP_MID, sq, function (sq,mg,eg) {return (is(W_BISHOP,sq) - is(B_BISHOP,flip(sq))) * mg;});
+    addp('',WBISHOP_END, sq, function (sq,mg,eg) {return (is(W_BISHOP,sq) - is(B_BISHOP,flip(sq))) * eg;});
+    addp('',WROOK_MID,   sq, function (sq,mg,eg) {return (is(W_ROOK,sq)   - is(B_ROOK,  flip(sq))) * mg;});
+    addp('',WROOK_END,   sq, function (sq,mg,eg) {return (is(W_ROOK,sq)   - is(B_ROOK,  flip(sq))) * eg;});
+    addp('',WQUEEN_MID,  sq, function (sq,mg,eg) {return (is(W_QUEEN,sq)  - is(B_QUEEN, flip(sq))) * mg;});
+    addp('',WQUEEN_END,  sq, function (sq,mg,eg) {return (is(W_QUEEN,sq)  - is(B_QUEEN, flip(sq))) * eg;});
+    addp('',WKING_MID,   sq, function (sq,mg,eg) {return (is(W_KING,sq)   - is(B_KING,  flip(sq))) * mg;});
+    addp('',WKING_END,   sq, function (sq,mg,eg) {return (is(W_KING,sq)   - is(B_KING,  flip(sq))) * eg;});
+  }
+  
+  //}}}
+
+  console.log('tuning...');
+
+  //{{{  tune params
+  
+  console.log('positions =',Vtotal);
+  
+  var epoch      = 0;
+  var numParams  = params.length;
+  var numBatches = Vtotal / gBatchSize | 0;
+  var err        = 0;
+  var lastErr    = 0;
+  
+  var K2 = gK / 200.0;
+  
+  while (gMaxEpochs--) {
+  
+    if (epoch % gErrStep == 0) {
+      //{{{  report loss
+      
+      err = calcErr();
+      
+      console.log(epoch, err, err-lastErr);
+      
+      lastErr = err;
+      
+      saveparams(err,epoch);
+      
+      //}}}
+      //{{{  check for crazy values
+      /*
+      for (var i=0; i < numParams; i++) {
+        var p = params[i];
+        var delta = Math.abs(p.v - p.a[p.i]);
+        if (delta > 5 && p.s)
+          console.log(p.s,p.v,p.a[p.i],delta);
+      }
+      */
+      //}}}
+      //{{{  reset adagrad
+      
+      if (gResetAdagrad) {
+        for (var i=0; i < numParams; i++)
+          params[i].ag = 0;
+      }
+      
+      //}}}
+    }
+    else {
+      process.stdout.write(epoch+'\r');
+    }
+  
+    epoch++;
+  
+    for (var batch=0; batch < numBatches; batch++) {
+      //{{{  reset gradient sums
+      
+      for (var i=0; i < numParams; i++)
+        params[i].gr = 0;
+      
+      //}}}
+      //{{{  accumulate gradients
+      
+      for (var i=batch*gBatchSize; i < (batch+1)*gBatchSize; i++) {
+      
+        var vi  = Vindex(i);
+        var epd = epds[vi];
+      
+        loz.position(epd.board,epd.turn,epd.rights,epd.ep);
+        loz.features();
+      
+        var pr = epd.prob;
+        var ev = loz.evaluate();
+        var sg = sigmoid(ev);
+        var mg = features.mg;
+        var eg = features.eg;
+      
+        for (var j=0; j < numParams; j++) {
+          var p = params[j];
+          p.gr += p.coeff(p.i,mg,eg) * (sg * (1 - sg)) * (sg - pr);  // chain rule
+        }
+      }
+      
+      //}}}
+      //{{{  apply mean gradient
+      
+      for (var i=0; i < numParams; i++) {
+        var p    = params[i];
+        var gr   = K2 * p.gr / gBatchSize;
+        p.ag     += gr * gr;
+        p.a[p.i] -= (gLearningRate / Math.sqrt(p.ag + 1e-8)) * gr;  // adagrad
+      }
+      
+      //}}}
+      //{{{  sync
+      
+      for (let i=0; i < 144; i++) {
+      
+        let j = flip(i);
+      
+        BPAWN_MID[j]   = WPAWN_MID[i];
+        BKNIGHT_MID[j] = WKNIGHT_MID[i];
+        BBISHOP_MID[j] = WBISHOP_MID[i];
+        BROOK_MID[j]   = WROOK_MID[i];
+        BQUEEN_MID[j]  = WQUEEN_MID[i];
+        BKING_MID[j]   = WKING_MID[i];
+      
+        BPAWN_END[j]   = WPAWN_END[i];
+        BKNIGHT_END[j] = WKNIGHT_END[i];
+        BBISHOP_END[j] = WBISHOP_END[i];
+        BROOK_END[j]   = WROOK_END[i];
+        BQUEEN_END[j]  = WQUEEN_END[i];
+        BKING_END[j]   = WKING_END[i];
+      }
+      
+      //}}}
+    }
+  }
+  
+  console.log('Done',err);
+  
+  //}}}
+
+  process.exit();
+}
+
+//}}}
+//{{{  readfile
+
+function readfile() {
+
+  //process.stdout.write(Vfileno+'\r');
+
+  var data  = fs.readFileSync('data/' + gPrefix + Vfileno + gSuffix + '.epd', 'utf8');
+  var lines = data.split('\n');
+
+  data = '';
+  epds = [];
+
+  for (var i=0; i < lines.length; i++) {
+
+    var line = lines[i];
+
+    line = line.replace(/(\r\n|\n|\r|"|;)/gm,'');
+    line = line.trim();
+
+    if (!line.length)
+      continue;
+
+    var parts = line.split(' ');
+
+    if (!parts.length)
+      continue;
+
+    if (gUseScore)
+      var train = sigmoid(parseFloat(parts[gWDLIndex]));
+    else
+      var train = getprob(parts[gWDLIndex]);
+
+    epds.push({board:   parts[0],
+               turn:    parts[1],
+               rights:  parts[2],
+               ep:      parts[3],
+               prob:    train});
+  }
+}
+
+//}}}
+//{{{  Vindex
+
+function Vindex(n) {
+
+  var f = Vf[n];
+  var i = Vi[n];
+
+  if (Vfileno != f) {
+    Vfileno = f;
+    readfile();
+  }
+
+  return i;
+}
+
+//}}}
+
+//}}}
+
+var Vf      = [];
+var Vi      = [];
+var Vtotal  = 0;
+var Vfileno = 0;
+
+console.log('indexing files...');
+
+for (var i=0; i < gNumFiles; i++) {
+  Vfileno = i;
+  readfile();
+  for (var j=0; j < epds.length; j++) {
+    Vf[Vtotal] = i;
+    Vi[Vtotal] = j;
+    Vtotal++;
+  }
+}
+
+grunt();
 
