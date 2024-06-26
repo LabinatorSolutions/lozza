@@ -1,8 +1,10 @@
 # Lozza
 
-A Javascript chess engine inspired by Fabien Letouzey's Fruit 2.1.
+A Javascript chess engine inspired by Fabien Letouzey's Fruit 2.1. Try her here:-
 
-## Basic use in web pages
+https://op12no2.github.io/lozza-ui
+
+## Basic use in your web pages
 
 All you need is ```lozza.js``` from repo root.  
 
