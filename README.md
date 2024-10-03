@@ -1,6 +1,6 @@
 # Lozza
 
-A Javascript chess engine inspired by Fabien Letouzey's Fruit 2.1. Try her here:-
+A UCI Javascript chess engine. Try her here:-
 
 https://op12no2.github.io/lozza-ui
 
@@ -67,8 +67,6 @@ Commands can also be given on invocation, for example:-
 NB: ```bench``` does a cumulative node count while searching a list of FENs, displaying the total and the time it took. It's particularly useful when checking that changes that should not affect searching have in fact not affected searching.  
 
 ## Acknowledgements
-
-https://www.chessprogramming.org/Fruit - Fruit
 
 https://www.chessprogramming.org/Main_Page - Chess programming wiki
 
