@@ -23,9 +23,9 @@ const path = require('path');
 
 const dataFiles       = ['data/data1.shuf','data/data2.shuf'];
 
-const acti            = ACTI_RELU;
-const hiddenSize      = 75;
-const interp          = 0.5;
+const acti            = ACTI_SRELU;
+const hiddenSize      = 80;
+const interp          = 0.4;
 
 const shuffle         = true;
 const batchSize       = 500;
