@@ -50,7 +50,7 @@ https://github.com/op12no2/lozza/releases
 
 ## Fire up Lozza from the command line
 
-Lozza accesses stdio via ```Node.js``` and will run on any platfrom that supports ```Node.js```.  To type UCI commands into Lozza, start ```Node.js``` with ```lozza.js``` or ```lozza``` as the parameter and then enter UCI commands.  Look at the ```lozUCI``` class in ```lozza.js``` for the subset of UCI implemented and some command extensions.  For example:-
+Lozza accesses stdio via ```Node.js``` and will run on any platfrom that supports ```Node.js```.  To type UCI commands into Lozza, start ```Node.js``` with ```lozza.js``` or ```lozza``` as the parameter and then enter UCI commands. For example:-
 
 ```
 > node lozza
@@ -66,7 +66,19 @@ Commands can also be given on invocation, for example:-
 > node lozza ucinewgame bench "position startpos" board "go movetime 100" quit
 ```
 
-NB: ```bench``` does a cumulative node count while searching a list of FENs, displaying the total and the time it took. It's particularly useful when checking that changes that should not affect searching have in fact not affected searching.  
+## Commands specific to Lozza
+
+```board``` displays the board as a FEN string.
+
+```bench``` does a cumulative node count while searching a list of FENs, displaying the total and the time it took. It's particularly useful when checking that changes that should not affect searching have in fact not affected searching.  
+
+```et``` tests the UE part of NNUE.
+
+```pt``` performs a sequence of PERFT tests. 
+
+```net``` displays network properties.
+
+```datagen``` performs internal data generation for use with ```trainer.js```. Contact me for more details.
 
 ## Acknowledgements
 
