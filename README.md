@@ -80,7 +80,7 @@ Commands can also be given on invocation, for example:-
 
 ```net``` displays network properties.
 
-```datagen``` performs internal data generation for use with ```trainer.js```. The command I am currently to train networks is ```node lozza "dagaten file f games 60000 softnodes 6000 hardnodes 1000000 rand 10 first 16" q```. Run on as many threads as possible.  Where ```f``` is a random number.  
+```datagen``` performs internal data generation for use with ```trainer.js```. The command I currently use to train networks is ```node lozza "dagaten file $RANDOM$RANDOM$RANDOM.fen games 60000 softnodes 6000 hardnodes 1000000 rand 10 first 16" q```. Run on as many threads as possible and repeated as necessary. See the ```datagen``` script in the ```scripts``` directory.
 
 ## Acknowledgements
 
