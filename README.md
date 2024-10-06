@@ -68,15 +68,15 @@ NB: ```bench``` does a cumulative node count while searching a list of FENs, dis
 
 ## Acknowledgements
 
-https://www.chessprogramming.org/Main_Page - Chess programming wiki
+https://www.chessprogramming.org/Main_Page - Chess programming wiki.
 
-https://computerchess.org.uk/ccrl/4040 - CCRL rating list
+https://computerchess.org.uk/ccrl/4040 - CCRL rating list.
 
-https://www.wbec-ridderkerk.nl/html/UCIProtocol.html - UCI protocol
+https://www.wbec-ridderkerk.nl/html/UCIProtocol.html - UCI protocol.
 
-https://discord.gg/uM8J3x46 - Engine Programming Discord
+https://discord.gg/uM8J3x46 - Engine Programming Discord - thanks for answering my newbie NNUE questions.
 
-https://talkchess.com - Talkchess forums
+https://talkchess.com - Talkchess forums.
 
-https://www.chessprogramming.org/Fruit - Fruit 2.1
+https://www.chessprogramming.org/Fruit - Fruit 2.1.
 
