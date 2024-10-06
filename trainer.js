@@ -14,6 +14,7 @@ const ACTI_RELU   = 1;
 const ACTI_CRELU  = 2;
 const ACTI_SRELU  = 3;
 const ACTI_SCRELU = 4;
+const ACTI_RELU3  = 5;
 
 const fs = require('fs');
 const readline = require('readline');
@@ -23,9 +24,9 @@ const path = require('path');
 
 const dataFiles       = ['data/data1.shuf','data/data2.shuf'];
 
-const acti            = ACTI_SRELU;
-const hiddenSize      = 80;
-const interp          = 0.4;
+const acti            = ACTI_RELU3;
+const hiddenSize      = 75;
+const interp          = 0.5;
 
 const shuffle         = true;
 const batchSize       = 500;
@@ -194,6 +195,15 @@ function dscrelu(x) {
   return (x > 0 && x < 1) ? 2*x : 0;
 }
 
+function relu3(x) {
+  const y = Math.max(0, x);
+  return y * y * y;
+}
+
+function drelu3(x) {
+  return x > 0 ? 3 * x * x : 0;
+}
+
 function activationFunction(x) {
   switch (acti) {
     case ACTI_RELU:
@@ -204,6 +214,8 @@ function activationFunction(x) {
       return srelu(x);
     case ACTI_SCRELU:
       return screlu(x);
+    case ACTI_RELU3:
+      return relu3(x);
   }
 }
 
@@ -217,6 +229,8 @@ function activationDerivative(x) {
       return dsrelu(x);
     case ACTI_SCRELU:
       return dscrelu(x);
+    case ACTI_RELU3:
+      return drelu3(x);
   }
 }
 
@@ -230,6 +244,8 @@ function activationName(x) {
       return "srelu";
     case ACTI_SCRELU:
       return "screlu";
+    case ACTI_RELU3:
+      return "relu3";
   }
 }
 
