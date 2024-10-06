@@ -1,3 +1,5 @@
+If you are testing Lozza please use the release not the repo version; thanks.
+
 # Lozza
 
 A UCI Javascript chess engine. Try her here:-
