@@ -68,6 +68,8 @@ Commands can also be given on invocation, for example:-
 
 ## Commands specific to Lozza
 
+```eval``` displays the current evaluation of the board.
+
 ```board``` displays the board as a FEN string.
 
 ```bench``` does a cumulative node count while searching a list of FENs, displaying the total and the time it took. It's particularly useful when checking that changes that should not affect searching have in fact not affected searching.  
