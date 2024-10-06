@@ -8,7 +8,7 @@ https://op12no2.github.io/lozza-ui
 
 ## Basic use in your web pages
 
-All you need is ```lozza.js``` from repo root.  
+All you need is ```lozza.js``` from the latest release.  
 
 Here is a little example to do a 10 ply search:-
 
