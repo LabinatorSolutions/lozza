@@ -2,7 +2,7 @@
 // https://github.com/op12no2/lozza
 //
 
-var BUILD   = "3";
+var BUILD   = "3.1";
 var SILENT  = 0;
 var DATAGEN = 0;
 
@@ -190,7 +190,10 @@ var IS_K      = [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0];
 var IS_KN     = [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0];
 
 var IS_W      = [0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-var IS_W2     = [0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+if (DATAGEN)
+  var IS_W2   = [0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+else
+  var IS_W2   = [0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var IS_WE     = [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var IS_WP     = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var IS_WN     = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -201,7 +204,10 @@ var IS_WRQ    = [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var IS_WQ     = [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 var IS_B      = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0];
-var IS_B2     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0];
+if (DATAGEN)
+  var IS_B2   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0];
+else
+  var IS_B2   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0];
 var IS_BE     = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0];
 var IS_BP     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0];
 var IS_BN     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0];
@@ -920,7 +926,12 @@ function crelu(x) {
 
 function srelu(x) {
   const y = Math.max(0, x);
-  return y * y;
+  return y * y ;
+}
+
+function relu3(x) {
+  const y = Math.max(0, x);
+  return y * y * y;
 }
 
 function screlu(x) {
@@ -2529,7 +2540,7 @@ lozChess.prototype.go = function() {
         
         //}}}
 
-        if (Math.abs(score) == INFINITY)
+        if (DATAGEN && Math.abs(score) == INFINITY)
           break;
 
         if (this.stats.timeOut)
@@ -2861,12 +2872,12 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
   var R         = 0;
   var E         = 0;
   var lonePawns = (turn == WHITE && board.wCount == board.wCounts[PAWN]+1) || (turn == BLACK && board.bCount == board.bCounts[PAWN]+1);
-  var eval      = INFINITY;
+  var ev        = INFINITY;
   var doBeta    = !pvNode && !inCheck && !lonePawns && nullOK == NULL_Y && !board.betaMate(beta);
 
   //{{{  prune?
   
-  if (doBeta && depth <= 2 && ((eval = board.getEval(eval,node,turn)) - depth * 200) >= beta) {
+  if (doBeta && depth <= 2 && ((ev = board.getEval(ev,node,turn)) - depth * 200) >= beta) {
     return beta;
   }
   
@@ -2881,7 +2892,7 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
   
   R = 3;
   
-  if (doBeta && depth > 2 && (eval = board.getEval(eval,node,turn)) > beta) {
+  if (doBeta && depth > 2 && (ev = board.getEval(ev,node,turn)) > beta) {
   
     board.loHash ^= board.loEP[board.ep];
     board.hiHash ^= board.hiEP[board.ep];
@@ -2923,7 +2934,7 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
   var numSlides      = 0;
   var givesCheck     = INCHECK_UNKNOWN;
   var keeper         = false;
-  var doFutility     = !inCheck && depth <= 4 && ((eval = board.getEval(eval,node,turn)) + depth * 120) < alpha && !lonePawns;
+  var doFutility     = !inCheck && depth <= 4 && ((ev = board.getEval(ev,node,turn)) + depth * 120) < alpha && !lonePawns;
   var doLMR          = !inCheck && depth >= 3;
   var doLMP          = !pvNode && !inCheck && depth <= 2 && !lonePawns;
   var doIID          = !node.hashMove && pvNode && depth > 3;
@@ -3055,7 +3066,7 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
 
         if (bestScore >= beta) {
           node.addKiller(bestScore, bestMove);
-          board.ttPut(TT_BETA, depth, bestScore, bestMove, node.ply, alpha, beta, eval);
+          board.ttPut(TT_BETA, depth, bestScore, bestMove, node.ply, alpha, beta, ev);
           board.addHistory(depth*depth*depth, bestMove);
           return bestScore;
         }
@@ -3074,12 +3085,12 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
   if (numLegalMoves == 0) {
   
     if (inCheck) {
-      //board.ttPut(TT_EXACT, depth, -MATE + node.ply, 0, node.ply, alpha, beta, eval);
+      //board.ttPut(TT_EXACT, depth, -MATE + node.ply, 0, node.ply, alpha, beta, ev);
       return -MATE + node.ply;
     }
   
     else {
-      //board.ttPut(TT_EXACT, depth, 0, 0, node.ply, alpha, beta, eval);
+      //board.ttPut(TT_EXACT, depth, 0, 0, node.ply, alpha, beta, ev);
       return 0;
     }
   }
@@ -3087,11 +3098,11 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
   //}}}
 
   if (bestScore > oAlpha) {
-    board.ttPut(TT_EXACT, depth, bestScore, bestMove, node.ply, alpha, beta, eval);
+    board.ttPut(TT_EXACT, depth, bestScore, bestMove, node.ply, alpha, beta, ev);
     return bestScore;
   }
   else {
-    board.ttPut(TT_ALPHA, depth, bestScore, bestMove, node.ply, alpha, beta, eval);
+    board.ttPut(TT_ALPHA, depth, bestScore, bestMove, node.ply, alpha, beta, ev);
     return bestScore;
   }
 }
@@ -3117,7 +3128,7 @@ lozChess.prototype.qSearch = function (node, depth, turn, alpha, beta, sq) {
   var board         = this.board;
   var numLegalMoves = 0;
   var move          = 0;
-  var eval          = INFINITY;
+  var ev            = INFINITY;
   var phase         = 0;
   var nextTurn      = ~turn & COLOR_MASK;
   var to            = 0;
@@ -3137,11 +3148,11 @@ lozChess.prototype.qSearch = function (node, depth, turn, alpha, beta, sq) {
     var inCheck = false;
 
   if (!inCheck) {
-    eval = board.getEval(eval, node, turn);
-    if (eval >= beta)
-      return eval;
-    if (eval >= alpha)
-      alpha = eval;
+    ev = board.getEval(ev, node, turn);
+    if (ev >= beta)
+      return ev;
+    if (ev >= alpha)
+      alpha = ev;
     phase = board.cleanPhase(board.phase);
   }
 
@@ -3161,7 +3172,7 @@ lozChess.prototype.qSearch = function (node, depth, turn, alpha, beta, sq) {
 
     //{{{  prune?
     
-    if (!inCheck && phase <= EPHASE && !(move & MOVE_PROMOTE_MASK) && eval + 200 + MATERIAL[((move & MOVE_TOOBJ_MASK) >>> MOVE_TOOBJ_BITS) & PIECE_MASK] < alpha) {
+    if (!inCheck && phase <= EPHASE && !(move & MOVE_PROMOTE_MASK) && ev + 200 + MATERIAL[((move & MOVE_TOOBJ_MASK) >>> MOVE_TOOBJ_BITS) & PIECE_MASK] < alpha) {
     
       continue;
     }
@@ -3197,7 +3208,7 @@ lozChess.prototype.qSearch = function (node, depth, turn, alpha, beta, sq) {
 
     if (score > alpha) {
       if (score >= beta) {
-        board.ttPut(TT_BETA, 0, beta, 0, node.ply, alpha, beta, eval);
+        board.ttPut(TT_BETA, 0, beta, 0, node.ply, alpha, beta, ev);
         return score;
       }
       alpha = score;
@@ -3217,7 +3228,7 @@ lozChess.prototype.qSearch = function (node, depth, turn, alpha, beta, sq) {
   
   //}}}
 
-  board.ttPut(TT_ALPHA, 0, alpha, 0, node.ply, alpha, beta, eval);
+  board.ttPut(TT_ALPHA, 0, alpha, 0, node.ply, alpha, beta, ev);
 
   return alpha;
 }
@@ -3740,6 +3751,7 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
   DATAGEN = 1;
 
   const node = lozza.rootNode;
+  const WIN = 400;
 
   var move = 0;
   var givesCheck = '';
@@ -3750,9 +3762,13 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
   var fens = [];
   var result = '';
   var o = '';
+  var lastScore = 0;
 
   for (var i=0; i < games; i++) {
     //{{{  play game
+    
+    if ((i % 10) == 0)
+      console.log(file,i,'/',games);
     
     ply = 0;
     fens = [];
@@ -3760,12 +3776,14 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
     docmd('u');
     docmd('p s');
     
-    if (Math.random() > 0.5)
+    if (Math.random() >= 0.5)
       this.turn = colourToggle(this.turn);
     
     while (true) {
+    
        ply++;
        fen = this.fen(this.turn);
+    
        //{{{  get move
        
        if (ply <= random) {
@@ -3781,9 +3799,17 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
            nodes = nodes * (first - ply);
          //console.log(nodes);
          docmd('go nodes ' + hardNodes + ' softnodes ' + nodes);
+         //{{{  sort out score
+         
+         if (this.turn == BLACK)
+           lozza.stats.bestScore = -lozza.stats.bestScore;
+         
+         //}}}
          move = lozza.stats.bestMove;
          if (!move) {
-           if (this.turn == WHITE)
+           if (Math.abs(lastScore) < WIN)
+             result = '0.5';
+           else if (this.turn == WHITE)
              result = '0.0';  // sic
            else
              result = '1.0';
@@ -3800,7 +3826,9 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
          inCheck = '-';
        
        //}}}
+    
        this.makeMove(node,move);
+    
        //{{{  well ahead?
        
        //if (Math.abs(lozza.stats.bestScore > 2000)) {
@@ -3812,9 +3840,9 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
        //{{{  draw?
        
        if (this.repHi - this.repLo > 40) {
-         if (lozza.stats.bestScore > 400)
+         if (lozza.stats.bestScore >= 400)
            result = '1.0';
-         else if (lozza.stats.bestScore < -400)
+         else if (lozza.stats.bestScore <= -400)
            result = '0.0';
          else
            result = '0.5';
@@ -3835,12 +3863,6 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
          givesCheck = '-';
        
        //}}}
-       //{{{  sort out score
-       
-       if (this.turn == BLACK)
-         lozza.stats.bestScore = -lozza.stats.bestScore;
-       
-       //}}}
        //{{{  noisy?
        
        if (moveIsNoisy(move))
@@ -3849,17 +3871,19 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
          noisy = '-';
        
        //}}}
+    
        if (ply > first)
          fens.push(fen + ' ' + lozza.stats.bestScore + ' ' + this.formatMove(move,UCI_FMT) + ' ' + noisy + ' ' + inCheck + ' ' + givesCheck);
+    
+       lastScore = lozza.stats.bestScore;
        this.turn = colourToggle(this.turn);
     }
     
     if (result != 'x') {
       for (var j=0; j < fens.length; j++) {
-        //console.log(fens[j],result);
         o += fens[j] + ' ' + result + '\r\n';
         if (o.length > 100000) {
-          fs.writeFileSync(file,o);
+          fs.appendFileSync(file,o);
           o = '';
         }
       }
@@ -3869,8 +3893,10 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
   }
 
   if (o.length) {
-    fs.writeFileSync(file,o);
+    fs.appendFileSync(file,o);
   }
+
+  console.log(file,'done');
 
   DATAGEN = 0;
   SILENT = 0;
@@ -5397,10 +5423,10 @@ lozBoard.prototype.formatMove = function (move, fmt) {
 // Assumes eval has been initialised to INFINITY and that ttGet() has been called.
 //
 
-lozBoard.prototype.getEval = function (eval,node,turn) {
+lozBoard.prototype.getEval = function (ev,node,turn) {
 
-  if (eval != INFINITY) {
-    return eval;                   // We've already got it.
+  if (ev != INFINITY) {
+    return ev;                     // We've already got it.
   }
 
   if (node.hashEval != INFINITY) {
@@ -5903,7 +5929,7 @@ lozBoard.prototype.evaluate = function (turn) {
   let e = net_o_b;
 
   for (let i=0; i < net_h1_size; i+=1) {
-    e += net_o_w[i] * srelu(this.net_h1_a[i]);
+    e += net_o_w[i] * net_activation(this.net_h1_a[i]);
   }
 
   return e * cx | 0;
@@ -5940,7 +5966,7 @@ lozBoard.prototype.netSlowEval = function (turn) {
   let e = net_o_b;
 
   for (let i=0; i < net_h1_size; i++) {
-    e += net_o_w[i] * srelu(h1[i]);
+    e += net_o_w[i] * net_activation(h1[i]);
   }
 
   return e * cx | 0;
@@ -6881,7 +6907,7 @@ onmessage = function(e) {
       //{{{  uci
       
       uci.send('id name Lozza',BUILD);
-      uci.send('id author Colin Jenkins');
+      uci.send('id author ColinJ');
       uci.send('uciok');
       
       break;
