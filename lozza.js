@@ -2,7 +2,7 @@
 // https://github.com/op12no2/lozza
 //
 
-var BUILD   = "3.1";
+var BUILD   = "3.11";
 var SILENT  = 0;
 var DATAGEN = 0;
 
@@ -3767,7 +3767,7 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
   for (var i=0; i < games; i++) {
     //{{{  play game
     
-    if ((i % 10) == 0)
+    if ((i % 100) == 0)
       console.log(file,i,'/',games);
     
     ply = 0;
@@ -3829,14 +3829,6 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
     
        this.makeMove(node,move);
     
-       //{{{  well ahead?
-       
-       //if (Math.abs(lozza.stats.bestScore > 2000)) {
-         //console.log('ahead');
-         //break;
-       //}
-       
-       //}}}
        //{{{  draw?
        
        if (this.repHi - this.repLo > 40) {
@@ -3872,8 +3864,24 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
        
        //}}}
     
-       if (ply > first)
+       if (ply > first) {
          fens.push(fen + ' ' + lozza.stats.bestScore + ' ' + this.formatMove(move,UCI_FMT) + ' ' + noisy + ' ' + inCheck + ' ' + givesCheck);
+         //console.log(fen + ' ' + lozza.stats.bestScore + ' ' + this.formatMove(move,UCI_FMT) + ' ' + noisy + ' ' + inCheck + ' ' + givesCheck);
+       }
+    
+       //{{{  wl?
+       
+       if (lozza.stats.bestScore == 19999) {
+         result = '1.0';
+         break;
+       }
+       
+       else if (lozza.stats.bestScore == -19999) {
+         result = '0.0';
+         break;
+       }
+       
+       //}}}
     
        lastScore = lozza.stats.bestScore;
        this.turn = colourToggle(this.turn);
