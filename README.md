@@ -1,4 +1,4 @@
-If you are testing Lozza please use the release not the repo version; thanks.
+If you are testing Lozza please use the version in the release and not the repo; thanks (it's usually broken).
 
 # Lozza
 
