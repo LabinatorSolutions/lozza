@@ -2,7 +2,7 @@
 // https://github.com/op12no2/lozza
 //
 
-var BUILD   = "3.11";
+var BUILD   = "3.12";
 var SILENT  = 0;
 var DATAGEN = 0;
 
@@ -3754,7 +3754,6 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
   const WIN = 400;
 
   var move = 0;
-  var givesCheck = '';
   var inCheck = '';
   var noisy = '';
   var ply = 0;
@@ -3762,7 +3761,6 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
   var fens = [];
   var result = '';
   var o = '';
-  var lastScore = 0;
 
   for (var i=0; i < games; i++) {
     //{{{  play game
@@ -3786,36 +3784,44 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
     
        //{{{  get move
        
+       lozza.stats.bestScore = 0;
+       lozza.stats.bestMove  = 0;
+       
        if (ply <= random) {
          move = this.randomMove();
          if (!move) {
            result = 'x';  // ignore this game
            break;
          }
+         //console.log(ply,this.formatMove(move,SAN_FMT));
        }
+       
        else {
+       
          var nodes = softNodes;
          if (ply < first)
            nodes = nodes * (first - ply);
-         //console.log(nodes);
+       
          docmd('go nodes ' + hardNodes + ' softnodes ' + nodes);
-         //{{{  sort out score
-         
+       
          if (this.turn == BLACK)
            lozza.stats.bestScore = -lozza.stats.bestScore;
-         
-         //}}}
+       
          move = lozza.stats.bestMove;
+       
          if (!move) {
-           if (Math.abs(lastScore) < WIN)
-             result = '0.5';
-           else if (this.turn == WHITE)
-             result = '0.0';  // sic
-           else
-             result = '1.0';
+           result = 'x';
            break;
          }
        }
+       
+       //}}}
+       //{{{  noisy?
+       
+       if (moveIsNoisy(move))
+         noisy = 'n';
+       else
+         noisy = '-';
        
        //}}}
        //{{{  in check?
@@ -3829,65 +3835,38 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
     
        this.makeMove(node,move);
     
-       //{{{  draw?
+       //{{{  wld?
        
-       if (this.repHi - this.repLo > 40) {
-         if (lozza.stats.bestScore >= 400)
-           result = '1.0';
-         else if (lozza.stats.bestScore <= -400)
-           result = '0.0';
-         else
-           result = '0.5';
+       if (lozza.stats.bestScore >= MINMATE) {
+         //console.log('white win');
+         result = '1.0';
+         break;
+       }
+       
+       else if (lozza.stats.bestScore <= -MINMATE) {
+         //console.log('black win');
+         result = '0.0';
          break;
        }
        
        if (this.isDraw()) {
+         //console.log('isdraw');
          result = '0.5';
          break;
        }
        
        //}}}
-       //{{{  gives check?
-       
-       if (this.isKingAttacked(this.turn))
-         givesCheck = 'g';
-       else
-         givesCheck = '-';
-       
-       //}}}
-       //{{{  noisy?
-       
-       if (moveIsNoisy(move))
-         noisy = 'n';
-       else
-         noisy = '-';
-       
-       //}}}
     
        if (ply > first) {
-         fens.push(fen + ' ' + lozza.stats.bestScore + ' ' + this.formatMove(move,UCI_FMT) + ' ' + noisy + ' ' + inCheck + ' ' + givesCheck);
-         //console.log(fen + ' ' + lozza.stats.bestScore + ' ' + this.formatMove(move,UCI_FMT) + ' ' + noisy + ' ' + inCheck + ' ' + givesCheck);
+         fens.push(fen + ' ' + lozza.stats.bestScore + ' ' + this.formatMove(move,UCI_FMT) + ' ' + noisy + ' ' + inCheck);
+         //console.log(fen + ' ' + lozza.stats.bestScore + ' ' + this.formatMove(move,UCI_FMT) + ' ' + noisy + ' ' + inCheck);
        }
     
-       //{{{  wl?
-       
-       if (lozza.stats.bestScore == 19999) {
-         result = '1.0';
-         break;
-       }
-       
-       else if (lozza.stats.bestScore == -19999) {
-         result = '0.0';
-         break;
-       }
-       
-       //}}}
-    
-       lastScore = lozza.stats.bestScore;
        this.turn = colourToggle(this.turn);
     }
     
     if (result != 'x') {
+      //console.log(i,result);
       for (var j=0; j < fens.length; j++) {
         o += fens[j] + ' ' + result + '\r\n';
         if (o.length > 100000) {
@@ -3896,7 +3875,8 @@ lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random
         }
       }
     }
-    
+    //else
+      //console.log(i,'no result');
     //}}}
   }
 
