@@ -24,7 +24,7 @@ const path = require('path');
 
 const dataFiles       = ['data/data1.shuf','data/data2.shuf'];
 
-const acti            = ACTI_RELU3;
+const acti            = ACTI_SRELU;
 const hiddenSize      = 75;
 const interp          = 0.5;
 
@@ -51,11 +51,6 @@ const id = activationName() + '_' + hiddenSize + '_' + Math.trunc(interp * 10) +
 console.log(id);
 
 //{{{  line constants
-//
-// 0                         1    2      3  4    5   6     7    8         9           10             11
-// 8/8/8/8/6p1/5nk1/p7/3RrK2 w    -      -  3    169 -1124 d1e1 n         c           -              0.0
-// board                     turn rights ep game ply score move noisy n|- incheck c|- givescheck g|- wdl 0.0|0.5|1.0
-//
 
 const PART_BOARD      = 0;
 const PART_TURN       = 1;
@@ -64,11 +59,9 @@ const PART_EP         = 3;
 const PART_GAME       = 4;
 const PART_PLY        = 5;
 const PART_SCORE      = 6;
-const PART_MOVE       = 7;
+const PART_INCHECK    = 7;
 const PART_NOISY      = 8;
-const PART_INCHECK    = 9;
-const PART_GIVESCHECK = 10;
-const PART_WDL        = 11;
+const PART_WDL        = 9;
 
 //}}}
 
@@ -138,8 +131,8 @@ async function* createLineStream(filenames) {
 //}}}
 //{{{  lerp
 
-function lerp(eval, wdl, t) {
-  let sg = sigmoid(eval);
+function lerp(score, wdl, t) {
+  let sg = sigmoid(score);
   let l = sg + (wdl - sg) * t;
   return l;
 }
@@ -487,7 +480,7 @@ function decodeLine(line) {
   const parts = line.split(' ');
 
   const board = parts[PART_BOARD].trim();
-  const eval  = parseFloat(parts[PART_SCORE].trim());
+  const score = parseFloat(parts[PART_SCORE].trim());
   const wdl   = parseFloat(parts[PART_WDL].trim());
 
   var x = 0;
@@ -497,7 +490,7 @@ function decodeLine(line) {
 
   let target = 0.0;
 
-  if (!skipP(parts,eval,wdl)) {
+  if (!skipP(parts,score,wdl)) {
 
     //{{{  decode board
     
@@ -527,7 +520,7 @@ function decodeLine(line) {
     
     //}}}
 
-    target = lerp(eval,wdl,interp);
+    target = lerp(score,wdl,interp);
   }
 
   return {activeIndices, target: [target]};
@@ -536,7 +529,7 @@ function decodeLine(line) {
 //}}}
 //{{{  skipP
 
-function skipP (parts,eval,wdl) {
+function skipP (parts,score,wdl) {
 
   const noisy = parts[PART_NOISY].trim();
   if (noisy == 'n')
@@ -544,16 +537,6 @@ function skipP (parts,eval,wdl) {
 
   const inCh  = parts[PART_INCHECK].trim();
   if (inCh == 'c')
-    return true;
-
-  const gvCh  = parts[PART_GIVESCHECK].trim();
-  if (gvCh == 'g')
-    return true;
-
-  if (parts[PART_MOVE].trim().length == 5)  // promotion
-    return true;
-
-  if (wdl == 0.5 && Math.abs(eval) > 300)
     return true;
 
   return false;
@@ -682,10 +665,10 @@ async function calculateNumBatches(filenames) {
       process.exit();
     }
 
-    const eval = parseFloat(parts[PART_SCORE].trim());
-    const wdl  = parseFloat(parts[PART_WDL].trim());
+    const score = parseFloat(parts[PART_SCORE].trim());
+    const wdl   = parseFloat(parts[PART_WDL].trim());
 
-    if (!skipP(parts,eval,wdl)) {
+    if (!skipP(parts,score,wdl)) {
 
       count++;
 

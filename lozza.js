@@ -2,8 +2,9 @@
 // https://github.com/op12no2/lozza
 //
 
-var BUILD   = "3";
-var SILENT  = 0;
+var BUILD      = "3";
+var SILENT     = 0;
+var RANDOMEVAL = 0;
 
 //{{{  history
 /*
@@ -81,6 +82,7 @@ var M_BLACK = -1;                 // +1/-1 colour multiplier, compute with: (-tu
 
 var PIECE_MASK = 0x7;
 var COLOR_MASK = 0x8;
+var COLOUR_MASK = 0x8;
 
 var VALUE_PAWN = 100;             // safe - tuning root
 
@@ -140,6 +142,7 @@ var MOVE_SPARE2_MASK   = 0x80000000;
 
 var MOVE_SPECIAL_MASK  = MOVE_CASTLE_MASK | MOVE_PROMOTE_MASK | MOVE_EPTAKE_MASK | MOVE_EPMAKE_MASK; // need extra work in make move.
 var KEEPER_MASK        = MOVE_CASTLE_MASK | MOVE_PROMOTE_MASK | MOVE_EPTAKE_MASK | MOVE_TOOBJ_MASK;  // futility etc.
+const MOVE_NOISY_MASK    = MOVE_TOOBJ_MASK | MOVE_EPTAKE_MASK;
 
 var NULL   = 0;
 var PAWN   = 1;
@@ -2518,6 +2521,9 @@ lozChess.prototype.go = function() {
       
         this.report('cp',score,depth);
       
+        if (this.stats.bestMove && this.stats.maxNodes > 0 && this.stats.nodes >= this.stats.maxNodes)
+          this.stats.timeOut = 1;
+      
         break;
       }
       
@@ -2548,7 +2554,8 @@ lozChess.prototype.go = function() {
       
         this.report('lowerbound',score,depth);
       
-        this.stats.bestMove = 0;
+        if (!this.stats.maxNodes)
+          this.stats.bestMove = 0;
       }
       
       //}}}
@@ -2721,7 +2728,8 @@ lozChess.prototype.search = function (node, depth, turn, alpha, beta) {
 
         alpha = bestScore;
 
-        this.stats.bestMove = bestMove;
+        this.stats.bestMove  = bestMove;
+        this.stats.bestScore = bestScore;
 
         if (bestScore >= beta) {
           node.addKiller(bestScore, bestMove);
@@ -2741,6 +2749,12 @@ lozChess.prototype.search = function (node, depth, turn, alpha, beta) {
 
   if (numLegalMoves == 1)
     this.stats.timeOut = 1;  // only one legal move so don't waste any more time.
+
+  if (numLegalMoves == 0) {
+    this.stats.timeOut = 1;  // silly position
+    this.stats.bestMove = 0;
+    this.stats.bestScore = 0;
+  }
 
   if (bestScore > oAlpha) {
     board.ttPut(TT_EXACT, depth, bestScore, bestMove, node.ply, alpha, beta, INFINITY);
@@ -5249,7 +5263,10 @@ lozBoard.prototype.evaluate = function (turn) {
   
   //}}}
 
-  return this.netFastEval(turn);
+  if (RANDOMEVAL)
+    return Math.trunc((Math.random() * 1000) - 500);
+  else
+    return this.netFastEval(turn);
 }
 
 //}}}
@@ -5520,38 +5537,6 @@ lozBoard.prototype.fen = function (turn) {
 }
 
 //}}}
-//{{{  .randomMove
-
-lozBoard.prototype.randomMove = function () {
-
-  var move     = 0;
-  var node     = lozza.rootNode;
-  var nextTurn = ~this.turn & COLOR_MASK;
-  var moves    = [];
-
-  node.cache();
-
-  this.genMoves(node, this.turn);
-
-  while (move = node.getNextMove()) {
-
-    this.makeMove(node,move);
-
-    var attacker = this.isKingAttacked(nextTurn);
-
-    this.unmakeMove(node,move);
-    node.uncache();
-
-    if (attacker)
-      continue;
-
-    moves.push(move);
-  }
-
-  return moves[Math.trunc(Math.random() * moves.length)];
-}
-
-//}}}
 //{{{  .playMove
 
 lozBoard.prototype.playMove = function (moveStr) {
@@ -5589,6 +5574,8 @@ lozBoard.prototype.playMove = function (moveStr) {
     node.uncache();
   }
 
+  console.log('play move unmatched',moveStr)
+  process.exit();
   return false;
 }
 
@@ -6284,6 +6271,7 @@ lozStats.prototype.init = function () {
   this.timeOut   = 0;
   this.selDepth  = 0;
   this.bestMove  = 0;
+  this.bestScore = 0;
 }
 
 //}}}
@@ -6294,7 +6282,7 @@ lozStats.prototype.checkTime = function () {
   if (this.bestMove && this.moveTime > 0 && ((Date.now() - this.startTime) > this.moveTime))
     this.timeOut = 1;
 
-  if (this.bestMove && this.maxNodes > 0 && this.nodes >= this.maxNodes)
+  if (this.bestMove && this.maxNodes > 0 && this.nodes >= this.maxNodes * 10)
     this.timeOut = 1;
 }
 
