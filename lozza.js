@@ -2,15 +2,12 @@
 // https://github.com/op12no2/lozza
 //
 
-var BUILD   = "3.12";
+var BUILD   = "3";
 var SILENT  = 0;
-var DATAGEN = 0;
 
 //{{{  history
 /*
 
-3 06/10/24 Add internal datagen. Add n command.
-3 03/10/24 Add bench, et and pt commands.
 3 03/10/24 Integrate the NNUE from my Cwtch experiment (https://github.com/op12no2/cwtch).
 
 */
@@ -143,7 +140,6 @@ var MOVE_SPARE2_MASK   = 0x80000000;
 
 var MOVE_SPECIAL_MASK  = MOVE_CASTLE_MASK | MOVE_PROMOTE_MASK | MOVE_EPTAKE_MASK | MOVE_EPMAKE_MASK; // need extra work in make move.
 var KEEPER_MASK        = MOVE_CASTLE_MASK | MOVE_PROMOTE_MASK | MOVE_EPTAKE_MASK | MOVE_TOOBJ_MASK;  // futility etc.
-const MOVE_NOISY_MASK    = MOVE_TOOBJ_MASK | MOVE_EPTAKE_MASK;
 
 var NULL   = 0;
 var PAWN   = 1;
@@ -190,10 +186,6 @@ var IS_K      = [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0];
 var IS_KN     = [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0];
 
 var IS_W      = [0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-if (DATAGEN)
-  var IS_W2   = [0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-else
-  var IS_W2   = [0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var IS_WE     = [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var IS_WP     = [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var IS_WN     = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -204,10 +196,6 @@ var IS_WRQ    = [0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 var IS_WQ     = [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 var IS_B      = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0];
-if (DATAGEN)
-  var IS_B2   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0];
-else
-  var IS_B2   = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0];
 var IS_BE     = [1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0];
 var IS_BP     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0];
 var IS_BN     = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0];
@@ -885,7 +873,7 @@ function formatMove (move) {
 //{{{  board primitives
 
 function objColour (obj) {
-  return obj & COLOR_MASK;
+  return obj & COLOUR_MASK;
 }
 
 function objPiece (obj) {
@@ -905,7 +893,7 @@ function colourMultiplier (c) {
 }
 
 function colourToggle (c) {
-  return ~c & COLOR_MASK;
+  return ~c & COLOUR_MASK;
 }
 
 function flip (sq) {
@@ -926,12 +914,7 @@ function crelu(x) {
 
 function srelu(x) {
   const y = Math.max(0, x);
-  return y * y ;
-}
-
-function relu3(x) {
-  const y = Math.max(0, x);
-  return y * y * y;
+  return y * y;
 }
 
 function screlu(x) {
@@ -2465,11 +2448,6 @@ lozChess.prototype.go = function() {
   if (spec.maxNodes > 0)
     this.stats.maxNodes = spec.maxNodes;
   
-  //console.log(spec.softNodes);
-  
-  if (spec.softNodes > 0)
-    this.stats.softNodes = spec.softNodes;
-  
   if (spec.moveTime == 0) {
   
     if (spec.movesToGo > 0)
@@ -2509,105 +2487,88 @@ lozChess.prototype.go = function() {
   var lastScore   = 0;
   var lastDepth   = 0;
 
-  if (!board.isKingAttacked(board.turn)) {
+  for (ply=1; ply <= maxPly; ply++) {
 
-    for (ply=1; ply <= maxPly; ply++) {
+    this.stats.ply = ply;
 
-      this.stats.ply = ply;
+    alpha = -INFINITY;
+    beta  = INFINITY;
+    delta = 10;
 
-      alpha = -INFINITY;
-      beta  = INFINITY;
-      delta = 10;
+    if (ply >= 4) {
+      alpha = Math.max(-INFINITY, score - delta);
+      beta  = Math.min(INFINITY,  score + delta);
+    }
 
-      if (!DATAGEN && ply >= 4) {
-        alpha = Math.max(-INFINITY, score - delta);
-        beta  = Math.min(INFINITY,  score + delta);
-      }
+    depth = ply;
 
-      depth = ply;
+    while (1) {
 
-      while (1) {
-
-        score = this.search(this.rootNode, depth, board.turn, alpha, beta);
-
-        //{{{  soft nodes
-        
-        if (DATAGEN && this.stats.bestMove && this.stats.softNodes && this.stats.nodes > this.stats.softNodes) {
-          //console.log('softnodes', this.stats.softNodes, this.stats.nodes);
-          this.stats.timeOut = 1;
-          break;
-        }
-        
-        //}}}
-
-        if (DATAGEN && Math.abs(score) == INFINITY)
-          break;
-
-        if (this.stats.timeOut)
-          break;
-
-        lastScore = score;
-        lastDepth = depth;
-
-        //{{{  better?
-        
-        if (score > alpha && score < beta) {
-        
-          this.report('cp',score,depth);
-        
-          break;
-        }
-        
-        //}}}
-        //{{{  mate?
-        
-        if (Math.abs(score) >= MINMATE && Math.abs(score) <= MATE) {
-        
-          var mateScore = (MATE - Math.abs(score)) / 2 | 0;
-          if (score < 0)
-            mateScore = -mateScore;
-        
-          this.report('mate',mateScore,depth);
-        
-          break;
-        }
-        
-        //}}}
-
-        delta += delta / 2 | 0;
-
-        //{{{  upper bound?
-        
-        if (score <= alpha) {
-        
-          alpha = Math.max(-INFINITY, score - delta);
-          beta  = Math.min(INFINITY, ((alpha + beta) / 2) | 0);
-        
-          this.report('upperbound',score,depth);
-        
-          if (!DATAGEN)
-            this.stats.bestMove = 0;
-        }
-        
-        //}}}
-        //{{{  lower bound?
-        
-        else if (score >= beta) {
-        
-          alpha = Math.max(-INFINITY, ((alpha + beta) / 2) | 0);
-          beta  = Math.min(INFINITY,  score + delta);
-        
-          this.report('lowerbound',score,depth);
-        
-          //depth = Math.max(1,depth-1);
-        }
-        
-        //}}}
-      }
+      score = this.search(this.rootNode, depth, board.turn, alpha, beta);
 
       if (this.stats.timeOut)
         break;
+
+      lastScore = score;
+      lastDepth = depth;
+
+      //{{{  better?
+      
+      if (score > alpha && score < beta) {
+      
+        this.report('cp',score,depth);
+      
+        break;
+      }
+      
+      //}}}
+      //{{{  mate?
+      
+      if (Math.abs(score) >= MINMATE && Math.abs(score) <= MATE) {
+      
+        var mateScore = (MATE - Math.abs(score)) / 2 | 0;
+        if (score < 0)
+          mateScore = -mateScore;
+      
+        this.report('mate',mateScore,depth);
+      
+        break;
+      }
+      
+      //}}}
+
+      delta += delta / 2 | 0;
+
+      //{{{  lower bound?
+      
+      if (score <= alpha) {
+      
+        alpha = Math.max(-INFINITY, score - delta);
+        beta  = Math.min(INFINITY, ((alpha + beta) / 2) | 0);
+      
+        this.report('lowerbound',score,depth);
+      
+        this.stats.bestMove = 0;
+      }
+      
+      //}}}
+      //{{{  upper bound?
+      
+      else if (score >= beta) {
+      
+        alpha = Math.max(-INFINITY, ((alpha + beta) / 2) | 0);
+        beta  = Math.min(INFINITY,  score + delta);
+      
+        this.report('upperbound',score,depth);
+      
+        //depth = Math.max(1,depth-1);
+      }
+      
+      //}}}
     }
+
+    if (this.stats.timeOut)
+      break;
   }
 
   if (lozzaHost == HOST_WEB) {
@@ -2760,8 +2721,7 @@ lozChess.prototype.search = function (node, depth, turn, alpha, beta) {
 
         alpha = bestScore;
 
-        this.stats.bestMove  = bestMove;
-        this.stats.bestScore = bestScore;
+        this.stats.bestMove = bestMove;
 
         if (bestScore >= beta) {
           node.addKiller(bestScore, bestMove);
@@ -2872,12 +2832,12 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
   var R         = 0;
   var E         = 0;
   var lonePawns = (turn == WHITE && board.wCount == board.wCounts[PAWN]+1) || (turn == BLACK && board.bCount == board.bCounts[PAWN]+1);
-  var ev        = INFINITY;
+  var eval      = INFINITY;
   var doBeta    = !pvNode && !inCheck && !lonePawns && nullOK == NULL_Y && !board.betaMate(beta);
 
   //{{{  prune?
   
-  if (doBeta && depth <= 2 && ((ev = board.getEval(ev,node,turn)) - depth * 200) >= beta) {
+  if (doBeta && depth <= 2 && ((eval = board.getEval(eval,node,turn)) - depth * 200) >= beta) {
     return beta;
   }
   
@@ -2892,7 +2852,7 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
   
   R = 3;
   
-  if (doBeta && depth > 2 && (ev = board.getEval(ev,node,turn)) > beta) {
+  if (doBeta && depth > 2 && (eval = board.getEval(eval,node,turn)) > beta) {
   
     board.loHash ^= board.loEP[board.ep];
     board.hiHash ^= board.hiEP[board.ep];
@@ -2934,7 +2894,7 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
   var numSlides      = 0;
   var givesCheck     = INCHECK_UNKNOWN;
   var keeper         = false;
-  var doFutility     = !inCheck && depth <= 4 && ((ev = board.getEval(ev,node,turn)) + depth * 120) < alpha && !lonePawns;
+  var doFutility     = !inCheck && depth <= 4 && ((eval = board.getEval(eval,node,turn)) + depth * 120) < alpha && !lonePawns;
   var doLMR          = !inCheck && depth >= 3;
   var doLMP          = !pvNode && !inCheck && depth <= 2 && !lonePawns;
   var doIID          = !node.hashMove && pvNode && depth > 3;
@@ -3066,7 +3026,7 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
 
         if (bestScore >= beta) {
           node.addKiller(bestScore, bestMove);
-          board.ttPut(TT_BETA, depth, bestScore, bestMove, node.ply, alpha, beta, ev);
+          board.ttPut(TT_BETA, depth, bestScore, bestMove, node.ply, alpha, beta, eval);
           board.addHistory(depth*depth*depth, bestMove);
           return bestScore;
         }
@@ -3085,12 +3045,12 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
   if (numLegalMoves == 0) {
   
     if (inCheck) {
-      //board.ttPut(TT_EXACT, depth, -MATE + node.ply, 0, node.ply, alpha, beta, ev);
+      //board.ttPut(TT_EXACT, depth, -MATE + node.ply, 0, node.ply, alpha, beta, eval);
       return -MATE + node.ply;
     }
   
     else {
-      //board.ttPut(TT_EXACT, depth, 0, 0, node.ply, alpha, beta, ev);
+      //board.ttPut(TT_EXACT, depth, 0, 0, node.ply, alpha, beta, eval);
       return 0;
     }
   }
@@ -3098,11 +3058,11 @@ lozChess.prototype.alphabeta = function (node, depth, turn, alpha, beta, nullOK,
   //}}}
 
   if (bestScore > oAlpha) {
-    board.ttPut(TT_EXACT, depth, bestScore, bestMove, node.ply, alpha, beta, ev);
+    board.ttPut(TT_EXACT, depth, bestScore, bestMove, node.ply, alpha, beta, eval);
     return bestScore;
   }
   else {
-    board.ttPut(TT_ALPHA, depth, bestScore, bestMove, node.ply, alpha, beta, ev);
+    board.ttPut(TT_ALPHA, depth, bestScore, bestMove, node.ply, alpha, beta, eval);
     return bestScore;
   }
 }
@@ -3128,7 +3088,7 @@ lozChess.prototype.qSearch = function (node, depth, turn, alpha, beta, sq) {
   var board         = this.board;
   var numLegalMoves = 0;
   var move          = 0;
-  var ev            = INFINITY;
+  var eval          = INFINITY;
   var phase         = 0;
   var nextTurn      = ~turn & COLOR_MASK;
   var to            = 0;
@@ -3148,11 +3108,11 @@ lozChess.prototype.qSearch = function (node, depth, turn, alpha, beta, sq) {
     var inCheck = false;
 
   if (!inCheck) {
-    ev = board.getEval(ev, node, turn);
-    if (ev >= beta)
-      return ev;
-    if (ev >= alpha)
-      alpha = ev;
+    eval = board.getEval(eval, node, turn);
+    if (eval >= beta)
+      return eval;
+    if (eval >= alpha)
+      alpha = eval;
     phase = board.cleanPhase(board.phase);
   }
 
@@ -3172,7 +3132,7 @@ lozChess.prototype.qSearch = function (node, depth, turn, alpha, beta, sq) {
 
     //{{{  prune?
     
-    if (!inCheck && phase <= EPHASE && !(move & MOVE_PROMOTE_MASK) && ev + 200 + MATERIAL[((move & MOVE_TOOBJ_MASK) >>> MOVE_TOOBJ_BITS) & PIECE_MASK] < alpha) {
+    if (!inCheck && phase <= EPHASE && !(move & MOVE_PROMOTE_MASK) && eval + 200 + MATERIAL[((move & MOVE_TOOBJ_MASK) >>> MOVE_TOOBJ_BITS) & PIECE_MASK] < alpha) {
     
       continue;
     }
@@ -3208,7 +3168,7 @@ lozChess.prototype.qSearch = function (node, depth, turn, alpha, beta, sq) {
 
     if (score > alpha) {
       if (score >= beta) {
-        board.ttPut(TT_BETA, 0, beta, 0, node.ply, alpha, beta, ev);
+        board.ttPut(TT_BETA, 0, beta, 0, node.ply, alpha, beta, eval);
         return score;
       }
       alpha = score;
@@ -3228,7 +3188,7 @@ lozChess.prototype.qSearch = function (node, depth, turn, alpha, beta, sq) {
   
   //}}}
 
-  board.ttPut(TT_ALPHA, 0, alpha, 0, node.ply, alpha, beta, ev);
+  board.ttPut(TT_ALPHA, 0, alpha, 0, node.ply, alpha, beta, eval);
 
   return alpha;
 }
@@ -3637,7 +3597,7 @@ lozBoard.prototype.position = function () {
   this.hiHash ^= this.hiEP[this.ep];
   
   //}}}
-/*
+
   //{{{  init running evals
   
   //this.runningEvalS = 0;
@@ -3691,7 +3651,7 @@ lozBoard.prototype.position = function () {
   
   
   //}}}
-*/
+
   this.compact();
 
   for (var i=0; i < spec.moves.length; i++) {
@@ -3712,182 +3672,6 @@ lozBoard.prototype.position = function () {
   }
 
   return 1;
-}
-
-//}}}
-//{{{  .dataGen
-
-lozBoard.prototype.dataGen = function (file, games, softNodes, hardNodes, random, first) {
-
-  const fs = require('fs');
-
-  //{{{  check args
-  
-  try {
-    fs.accessSync(file, fs.constants.F_OK);
-    console.log('file exists!',file);
-    process.exit();
-  } catch (err) {
-    ;
-  }
-  
-  console.log('file',file,'games',games,'softnodes',softNodes,'hardnodes',hardNodes,'randomply',random,'firstply',first);
-  
-  //}}}
-  //{{{  randomise
-  
-  let now = new Date();
-  let midnight = new Date(now);
-  midnight.setHours(0, 0, 0, 0);
-  let n = Math.floor((now - midnight) / 1000);
-  for (let i=0; i < n; i++)
-    Math.random();
-  
-  //}}}
-
-  fs.writeFileSync(file,'');
-
-  SILENT = 1;
-  DATAGEN = 1;
-
-  const node = lozza.rootNode;
-  const WIN = 400;
-
-  var move = 0;
-  var inCheck = '';
-  var noisy = '';
-  var ply = 0;
-  var fen = '';
-  var fens = [];
-  var result = '';
-  var o = '';
-
-  for (var i=0; i < games; i++) {
-    //{{{  play game
-    
-    if ((i % 100) == 0)
-      console.log(file,i,'/',games);
-    
-    ply = 0;
-    fens = [];
-    
-    docmd('u');
-    docmd('p s');
-    
-    if (Math.random() >= 0.5)
-      this.turn = colourToggle(this.turn);
-    
-    while (true) {
-    
-       ply++;
-       fen = this.fen(this.turn);
-    
-       //{{{  get move
-       
-       lozza.stats.bestScore = 0;
-       lozza.stats.bestMove  = 0;
-       
-       if (ply <= random) {
-         move = this.randomMove();
-         if (!move) {
-           result = 'x';  // ignore this game
-           break;
-         }
-         //console.log(ply,this.formatMove(move,SAN_FMT));
-       }
-       
-       else {
-       
-         var nodes = softNodes;
-         if (ply < first)
-           nodes = nodes * (first - ply);
-       
-         docmd('go nodes ' + hardNodes + ' softnodes ' + nodes);
-       
-         if (this.turn == BLACK)
-           lozza.stats.bestScore = -lozza.stats.bestScore;
-       
-         move = lozza.stats.bestMove;
-       
-         if (!move) {
-           result = 'x';
-           break;
-         }
-       }
-       
-       //}}}
-       //{{{  noisy?
-       
-       if (moveIsNoisy(move))
-         noisy = 'n';
-       else
-         noisy = '-';
-       
-       //}}}
-       //{{{  in check?
-       
-       if (this.isKingAttacked(colourToggle(this.turn)))
-         inCheck = 'c';
-       else
-         inCheck = '-';
-       
-       //}}}
-    
-       this.makeMove(node,move);
-    
-       //{{{  wld?
-       
-       if (lozza.stats.bestScore >= MINMATE) {
-         //console.log('white win');
-         result = '1.0';
-         break;
-       }
-       
-       else if (lozza.stats.bestScore <= -MINMATE) {
-         //console.log('black win');
-         result = '0.0';
-         break;
-       }
-       
-       if (this.isDraw()) {
-         //console.log('isdraw');
-         result = '0.5';
-         break;
-       }
-       
-       //}}}
-    
-       if (ply > first) {
-         fens.push(fen + ' ' + lozza.stats.bestScore + ' ' + this.formatMove(move,UCI_FMT) + ' ' + noisy + ' ' + inCheck);
-         //console.log(fen + ' ' + lozza.stats.bestScore + ' ' + this.formatMove(move,UCI_FMT) + ' ' + noisy + ' ' + inCheck);
-       }
-    
-       this.turn = colourToggle(this.turn);
-    }
-    
-    if (result != 'x') {
-      //console.log(i,result);
-      for (var j=0; j < fens.length; j++) {
-        o += fens[j] + ' ' + result + '\r\n';
-        if (o.length > 100000) {
-          fs.appendFileSync(file,o);
-          o = '';
-        }
-      }
-    }
-    //else
-      //console.log(i,'no result');
-    //}}}
-  }
-
-  if (o.length) {
-    fs.appendFileSync(file,o);
-  }
-
-  console.log(file,'done');
-
-  DATAGEN = 0;
-  SILENT = 0;
 }
 
 //}}}
@@ -3984,7 +3768,7 @@ lozBoard.prototype.genMoves = function(node, turn) {
     var pList        = this.wList;
     var theirKingSq  = this.bList[0];
     var pCount       = this.wCount;
-    var CAPTURE      = IS_B2;
+    var CAPTURE      = IS_B;
   
     if (rights) {
   
@@ -4007,7 +3791,7 @@ lozBoard.prototype.genMoves = function(node, turn) {
     var pList        = this.bList;
     var theirKingSq  = this.wList[0];
     var pCount       = this.bCount;
-    var CAPTURE      = IS_W2;
+    var CAPTURE      = IS_W;
   
     if (rights) {
   
@@ -4363,7 +4147,7 @@ lozBoard.prototype.genQMoves = function(node, turn) {
     var pList        = this.wList;
     var theirKingSq  = this.bList[0];
     var pCount       = this.wCount;
-    var CAPTURE      = IS_B2;
+    var CAPTURE      = IS_B;
   }
   
   else {
@@ -4375,7 +4159,7 @@ lozBoard.prototype.genQMoves = function(node, turn) {
     var pList        = this.bList;
     var theirKingSq  = this.wList[0];
     var pCount       = this.bCount;
-    var CAPTURE      = IS_W2;
+    var CAPTURE      = IS_W;
   }
   
   //}}}
@@ -4535,7 +4319,7 @@ lozBoard.prototype.genQMovesTo = function(node, turn, sq) {
     var pList        = this.wList;
     var theirKingSq  = this.bList[0];
     var pCount       = this.wCount;
-    var CAPTURE      = IS_B2;
+    var CAPTURE      = IS_B;
   }
   
   else {
@@ -4547,7 +4331,7 @@ lozBoard.prototype.genQMovesTo = function(node, turn, sq) {
     var pList        = this.bList;
     var theirKingSq  = this.wList[0];
     var pCount       = this.bCount;
-    var CAPTURE      = IS_W2;
+    var CAPTURE      = IS_W;
   }
   
   //}}}
@@ -5406,15 +5190,78 @@ lozBoard.prototype.formatMove = function (move, fmt) {
 }
 
 //}}}
+//{{{  .evaluate
+
+lozBoard.prototype.evaluate = function (turn) {
+
+  //this.hashCheck(turn);
+
+  //{{{  init
+  
+  var numPieces = this.wCount + this.bCount;
+  
+  var wNumQueens  = this.wCounts[QUEEN];
+  var wNumRooks   = this.wCounts[ROOK];
+  var wNumBishops = this.wCounts[BISHOP];
+  var wNumKnights = this.wCounts[KNIGHT];
+  var wNumPawns   = this.wCounts[PAWN];
+  
+  var bNumQueens  = this.bCounts[QUEEN];
+  var bNumRooks   = this.bCounts[ROOK];
+  var bNumBishops = this.bCounts[BISHOP];
+  var bNumKnights = this.bCounts[KNIGHT];
+  var bNumPawns   = this.bCounts[PAWN];
+  
+  //}}}
+  //{{{  draw?
+  
+  //todo - lots more here and drawish.
+  
+  if (numPieces == 2)                                                                  // K v K.
+    return 0;
+  
+  if (numPieces == 3 && (wNumKnights || wNumBishops || bNumKnights || bNumBishops))    // K v K+N|B.
+    return 0;
+  
+  if (numPieces == 4 && (wNumKnights || wNumBishops) && (bNumKnights || bNumBishops))  // K+N|B v K+N|B.
+    return 0;
+  
+  if (numPieces == 4 && (wNumKnights == 2 || bNumKnights == 2))                        // K v K+NN.
+    return 0;
+  
+  if (numPieces == 5 && wNumKnights == 2 && (bNumKnights || bNumBishops))              //
+    return 0;                                                                   //
+                                                                                       // K+N|B v K+NN
+  if (numPieces == 5 && bNumKnights == 2 && (wNumKnights || wNumBishops))              //
+    return 0;                                                                   //
+  
+  if (numPieces == 5 && wNumBishops == 2 && bNumBishops)                               //
+    return 0;                                                                   //
+                                                                                       // K+B v K+BB
+  if (numPieces == 5 && bNumBishops == 2 && wNumBishops)                               //
+    return 0;                                                                   //
+  
+  if (numPieces == 4 && wNumRooks && bNumRooks)                                        // K+R v K+R.
+    return 0;
+  
+  if (numPieces == 4 && wNumQueens && bNumQueens)                                      // K+Q v K+Q.
+    return 0;
+  
+  //}}}
+
+  return this.netFastEval(turn);
+}
+
+//}}}
 //{{{  .getEval
 //
 // Assumes eval has been initialised to INFINITY and that ttGet() has been called.
 //
 
-lozBoard.prototype.getEval = function (ev,node,turn) {
+lozBoard.prototype.getEval = function (eval,node,turn) {
 
-  if (ev != INFINITY) {
-    return ev;                     // We've already got it.
+  if (eval != INFINITY) {
+    return eval;                   // We've already got it.
   }
 
   if (node.hashEval != INFINITY) {
@@ -5688,11 +5535,11 @@ lozBoard.prototype.randomMove = function () {
 
   while (move = node.getNextMove()) {
 
-    this.makePseudoMove(node,move);
+    this.makeMove(node,move);
 
     var attacker = this.isKingAttacked(nextTurn);
 
-    this.unmakePseudoMove(node,move);
+    this.unmakeMove(node,move);
     node.uncache();
 
     if (attacker)
@@ -5701,10 +5548,7 @@ lozBoard.prototype.randomMove = function () {
     moves.push(move);
   }
 
-  if (moves.length)
-    return moves[Math.trunc(Math.random() * moves.length)];
-  else
-    return 0;
+  return moves[Math.trunc(Math.random() * moves.length)];
 }
 
 //}}}
@@ -5853,77 +5697,6 @@ lozBoard.prototype.isDraw = function () {
 }
 
 //}}}
-//{{{  .evaluate
-
-lozBoard.prototype.evaluate = function (turn) {
-
-  //this.hashCheck(turn);
-
-  //{{{  init
-  
-  var numPieces = this.wCount + this.bCount;
-  
-  var wNumQueens  = this.wCounts[QUEEN];
-  var wNumRooks   = this.wCounts[ROOK];
-  var wNumBishops = this.wCounts[BISHOP];
-  var wNumKnights = this.wCounts[KNIGHT];
-  var wNumPawns   = this.wCounts[PAWN];
-  
-  var bNumQueens  = this.bCounts[QUEEN];
-  var bNumRooks   = this.bCounts[ROOK];
-  var bNumBishops = this.bCounts[BISHOP];
-  var bNumKnights = this.bCounts[KNIGHT];
-  var bNumPawns   = this.bCounts[PAWN];
-  
-  //}}}
-  //{{{  draw?
-  
-  //todo - lots more here and drawish.
-  
-  if (numPieces == 2)                                                                  // K v K.
-    return 0;
-  
-  if (numPieces == 3 && (wNumKnights || wNumBishops || bNumKnights || bNumBishops))    // K v K+N|B.
-    return 0;
-  
-  if (numPieces == 4 && (wNumKnights || wNumBishops) && (bNumKnights || bNumBishops))  // K+N|B v K+N|B.
-    return 0;
-  
-  if (numPieces == 4 && (wNumKnights == 2 || bNumKnights == 2))                        // K v K+NN.
-    return 0;
-  
-  if (numPieces == 5 && wNumKnights == 2 && (bNumKnights || bNumBishops))              //
-    return 0;                                                                   //
-                                                                                       // K+N|B v K+NN
-  if (numPieces == 5 && bNumKnights == 2 && (wNumKnights || wNumBishops))              //
-    return 0;                                                                   //
-  
-  if (numPieces == 5 && wNumBishops == 2 && bNumBishops)                               //
-    return 0;                                                                   //
-                                                                                       // K+B v K+BB
-  if (numPieces == 5 && bNumBishops == 2 && wNumBishops)                               //
-    return 0;                                                                   //
-  
-  if (numPieces == 4 && wNumRooks && bNumRooks)                                        // K+R v K+R.
-    return 0;
-  
-  if (numPieces == 4 && wNumQueens && bNumQueens)                                      // K+Q v K+Q.
-    return 0;
-  
-  //}}}
-
-  const cx = colourMultiplier(turn)
-
-  let e = net_o_b;
-
-  for (let i=0; i < net_h1_size; i+=1) {
-    e += net_o_w[i] * net_activation(this.net_h1_a[i]);
-  }
-
-  return e * cx | 0;
-}
-
-//}}}
 //{{{  .netSlowEval
 
 lozBoard.prototype.netSlowEval = function (turn) {
@@ -5955,6 +5728,22 @@ lozBoard.prototype.netSlowEval = function (turn) {
 
   for (let i=0; i < net_h1_size; i++) {
     e += net_o_w[i] * net_activation(h1[i]);
+  }
+
+  return e * cx | 0;
+}
+
+//}}}
+//{{{  .netFastEval
+
+lozBoard.prototype.netFastEval = function (turn) {
+
+  const cx = colourMultiplier(turn)
+
+  let e = net_o_b;
+
+  for (let i=0; i < net_h1_size; i+=1) {
+    e += net_o_w[i] * net_activation(this.net_h1_a[i]);
   }
 
   return e * cx | 0;
@@ -6487,16 +6276,14 @@ function lozStats () {
 
 lozStats.prototype.init = function () {
 
-  this.startTime  = Date.now();
-  this.nodes      = 0;
-  this.ply        = 0;
-  this.moveTime   = 0;
-  this.maxNodes   = 0;
-  this.softNodes  = 0;
-  this.timeOut    = 0;
-  this.selDepth   = 0;
-  this.bestMove   = 0;
-  this.bestScore  = 0;
+  this.startTime = Date.now();
+  this.nodes     = 0;  // per analysis
+  this.ply       = 0;  // current ID root ply
+  this.moveTime  = 0;
+  this.maxNodes  = 0;
+  this.timeOut   = 0;
+  this.selDepth  = 0;
+  this.bestMove  = 0;
 }
 
 //}}}
@@ -6830,7 +6617,6 @@ onmessage = function(e) {
       uci.spec.depth     = uci.getInt('depth',0);
       uci.spec.moveTime  = uci.getInt('movetime',0);
       uci.spec.maxNodes  = uci.getInt('nodes',0);
-      uci.spec.softNodes = uci.getInt('softnodes',0);
       uci.spec.wTime     = uci.getInt('wtime',0);
       uci.spec.bTime     = uci.getInt('btime',0);
       uci.spec.wInc      = uci.getInt('winc',0);
@@ -6895,7 +6681,7 @@ onmessage = function(e) {
       //{{{  uci
       
       uci.send('id name Lozza',BUILD);
-      uci.send('id author ColinJ');
+      uci.send('id author Colin Jenkins');
       uci.send('uciok');
       
       break;
@@ -6957,10 +6743,10 @@ onmessage = function(e) {
     case 'eval':
       //{{{  eval
       
-      const e1 = lozza.board.evaluate(lozza.board.turn);
-      const e2 = lozza.board.netSlowEval(lozza.board.turn);
+      const e1 = lozza.board.netSlowEval(lozza.board.turn);
+      const e2 = lozza.board.netFastEval(lozza.board.turn);
       
-      console.log('fast',e1,'slow',e2);
+      console.log('slow',e1,'fast',e2);
       
       break;
       
@@ -6969,7 +6755,7 @@ onmessage = function(e) {
     case 'board':
       //{{{  board
       
-      uci.send('board',lozza.board.fen(lozza.board.turn));
+      uci.send('board',lozza.board.fen());
       
       break;
       
@@ -7129,76 +6915,6 @@ onmessage = function(e) {
       break;
       
       //}}}
-
-    case 'net':
-    case 'n': {
-      //{{{  net info
-      
-      console.log('build', BUILD);
-      console.log('h1 size', net_h1_size);
-      console.log('lr', net_lr);
-      console.log('activation', net_activation);
-      console.log('stretch', net_stretch);
-      console.log('interp', net_interp);
-      console.log('batch size', net_batch_size);
-      console.log('num_batches', net_num_batches);
-      console.log('positions', net_positions);
-      console.log('opt', net_opt);
-      console.log('l2reg', net_l2_reg);
-      console.log('epochs', net_epochs);
-      console.log('loss', net_loss);
-      
-      let maxWeight = -9999;
-      let minWeight = 9999;
-      
-      for (let i=0; i < net_h1_w.length; i++) {
-        for (let j=0; j < net_h1_size; j++) {
-          const w = Math.abs(net_h1_w[i][j]);
-          if (w < minWeight)
-            minWeight = w;
-          if (w > maxWeight)
-            maxWeight = w;
-        }
-      }
-      
-      console.log('min h1 weight', minWeight);
-      console.log('max h1 weight', maxWeight);
-      
-      maxWeight = -9999;
-      minWeight = 9999;
-      
-      for (let j=0; j < net_h1_size; j++) {
-        const w = Math.abs(net_o_w[j]);
-        if (w < minWeight)
-          minWeight = w;
-        if (w > maxWeight)
-          maxWeight = w;
-      }
-      
-      console.log('min o weight', minWeight);
-      console.log('max o weight', maxWeight);
-      
-      break;
-      
-      //}}}
-    }
-
-    case 'datagen': {
-      //{{{  datagen
-      
-      const file      = uci.getStr('file','');
-      const games     = uci.getInt('games',1);
-      const softNodes = uci.getInt('softnodes',6000);
-      const hardNodes = uci.getInt('hardnodes',1000000);
-      const rand      = uci.getInt('rand',10);
-      const first     = uci.getInt('first',16);
-      
-      lozza.board.dataGen(file, games, softNodes, hardNodes, rand, first);
-      
-      break;
-      
-      //}}}
-    }
 
     default:
       //{{{  ?
