@@ -1,5 +1,6 @@
-
-// messy/hakky code
+//
+//  Train a Lozza net from data generated via datagen.js and filter.js.
+//
 
 //{{{  lang fold
 /*
@@ -8,35 +9,26 @@
 
 //}}}
 
-const id_suffix = '';
-
-const ACTI_RELU   = 1;
-const ACTI_CRELU  = 2;
-const ACTI_SRELU  = 3;
-const ACTI_SCRELU = 4;
-const ACTI_RELU3  = 5;
-
-const fs = require('fs');
-const readline = require('readline');
-const { exec } = require('child_process');
-const path = require('path');
-//const fs = require('fs').promises;
-
-const dataFiles       = ['data/data1.shuf','data/data2.shuf'];
-
+const id_suffix       = '';
+const ACTI_RELU       = 1;
+const ACTI_CRELU      = 2;
+const ACTI_SRELU      = 3;
+const ACTI_SCRELU     = 4;
+const fs              = require('fs');
+const readline        = require('readline');
+const path            = require('path');
+const { exec }        = require('child_process');
+const dataFiles       = ['data/y'];
 const acti            = ACTI_SRELU;
 const hiddenSize      = 75;
-const interp          = 0.5;
-
 const shuffle         = true;
 const batchSize       = 500;
 const learningRate    = 0.001;
-const K               = 100;
+const interp          = 0.5;                  // ************ must be same in filter.js.
+const K               = 100;                  // ************ must be same in filter.js.
 const useL2Reg        = false;
 const useAdamW        = false;
-
-const reportRate      = 50;   // mean batch loss freq during epoch
-const lossRate        = 50;   // dataset loss freq
+const reportRate      = 50;
 const epochs          = 10000;
 const inputSize       = 768;
 const outputSize      = 1;
@@ -50,23 +42,7 @@ const weightDecay     = 0.01;
 const id = activationName() + '_' + hiddenSize + '_' + Math.trunc(interp * 10) + id_suffix;
 console.log(id);
 
-//{{{  line constants
-
-const PART_BOARD      = 0;
-const PART_TURN       = 1;
-const PART_RIGHTS     = 2;
-const PART_EP         = 3;
-const PART_GAME       = 4;
-const PART_PLY        = 5;
-const PART_SCORE      = 6;
-const PART_INCHECK    = 7;
-const PART_NOISY      = 8;
-const PART_WDL        = 9;
-
-//}}}
-
 let minLoss = 9999;
-let numBatches = 0;
 
 //{{{  myround
 
@@ -129,15 +105,6 @@ async function* createLineStream(filenames) {
 }
 
 //}}}
-//{{{  lerp
-
-function lerp(score, wdl, t) {
-  let sg = sigmoid(score);
-  let l = sg + (wdl - sg) * t;
-  return l;
-}
-
-//}}}
 //{{{  optiName
 
 function optiName() {
@@ -188,15 +155,6 @@ function dscrelu(x) {
   return (x > 0 && x < 1) ? 2*x : 0;
 }
 
-function relu3(x) {
-  const y = Math.max(0, x);
-  return y * y * y;
-}
-
-function drelu3(x) {
-  return x > 0 ? 3 * x * x : 0;
-}
-
 function activationFunction(x) {
   switch (acti) {
     case ACTI_RELU:
@@ -207,8 +165,6 @@ function activationFunction(x) {
       return srelu(x);
     case ACTI_SCRELU:
       return screlu(x);
-    case ACTI_RELU3:
-      return relu3(x);
   }
 }
 
@@ -222,8 +178,6 @@ function activationDerivative(x) {
       return dsrelu(x);
     case ACTI_SCRELU:
       return dscrelu(x);
-    case ACTI_RELU3:
-      return drelu3(x);
   }
 }
 
@@ -237,8 +191,6 @@ function activationName(x) {
       return "srelu";
     case ACTI_SCRELU:
       return "screlu";
-    case ACTI_RELU3:
-      return "relu3";
   }
 }
 
@@ -283,8 +235,6 @@ function saveModel(loss, params, epochs) {
   o += 'const net_stretch     = '  + K                      + ';\r\n';
   o += 'const net_interp      = '  + interp                 + ';\r\n';
   o += 'const net_batch_size  = '  + batchSize              + ';\r\n';
-  o += 'const net_num_batches = '  + numBatches             + ';\r\n';
-  o += 'const net_positions   = '  + numBatches * batchSize + ';\r\n';
   o += 'const net_opt         = "' + opt                    + '";\r\n';
   o += 'const net_shuffle     = "' + shuffle                + '";\r\n';
   o += 'const net_l2_reg      = '  + useL2Reg               + ';\r\n';
@@ -449,97 +399,19 @@ function updateParameters(params, grads, t) {
 //}}}
 //{{{  decodeLine
 
-//{{{  constants
-
-const WHITE = 0;
-const BLACK = 1;
-
-const PAWN = 0;
-const KNIGHT = 1;
-const BISHOP = 2;
-const ROOK = 3;
-const QUEEN = 4;
-const KING = 5;
-
-const chPce = {
-  'k': KING, 'q': QUEEN, 'r': ROOK, 'b': BISHOP, 'n': KNIGHT, 'p': PAWN,
-  'K': KING, 'Q': QUEEN, 'R': ROOK, 'B': BISHOP, 'N': KNIGHT, 'P': PAWN
-};
-
-const chCol = {
-  'k': BLACK, 'q': BLACK, 'r': BLACK, 'b': BLACK, 'n': BLACK, 'p': BLACK,
-  'K': WHITE, 'Q': WHITE, 'R': WHITE, 'B': WHITE, 'N': WHITE, 'P': WHITE
-};
-
-const chNum = {'8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2, '1': 1};
-
-//}}}
-
 function decodeLine(line) {
 
-  const parts = line.split(' ');
+  const parts = line.split(',');
+  const n = parts.length;
 
-  const board = parts[PART_BOARD].trim();
-  const score = parseFloat(parts[PART_SCORE].trim());
-  const wdl   = parseFloat(parts[PART_WDL].trim());
+  var activeIndices = Array(n-1);
 
-  var x = 0;
-  var sq = 0;
+  for (let i=0; i < n-1; i++)
+    activeIndices[i] = Number(parts[i]);
 
-  const activeIndices = [];
-
-  let target = 0.0;
-
-  if (!skipP(parts,score,wdl)) {
-
-    //{{{  decode board
-    
-    for (var j = 0; j < board.length; j++) {
-      var ch = board.charAt(j);
-      if (ch == '/')
-        continue;
-      var num = chNum[ch];
-      if (typeof (num) == 'undefined') {
-        if (chCol[ch] == WHITE)
-          x = 0 + chPce[ch] * 64 + sq;
-        else if (chCol[ch] == BLACK)
-          x = 384 + chPce[ch] * 64 + sq;
-        else {
-          console.log(j,board.length,'colour',board,ch.charCodeAt(0),chCol[ch],'                        ');
-          console.log(j,board.length,'colour',board,ch.charCodeAt(0),chCol[ch]);
-          console.log(line);
-          process.exit();
-        }
-        activeIndices.push(x);
-        sq++;
-      }
-      else {
-        sq += num;
-      }
-    }
-    
-    //}}}
-
-    target = lerp(score,wdl,interp);
-  }
+  var target = parseFloat(parts[n-1]);
 
   return {activeIndices, target: [target]};
-}
-
-//}}}
-//{{{  skipP
-
-function skipP (parts,score,wdl) {
-
-  const noisy = parts[PART_NOISY].trim();
-  if (noisy == 'n')
-    return true;
-
-  const inCh  = parts[PART_INCHECK].trim();
-  if (inCh == 'c')
-    return true;
-
-  return false;
 }
 
 //}}}
@@ -561,10 +433,9 @@ async function train(filenames) {
   let params = initializeParameters();
   let datasetLoss = 0;
 
-  numBatches = await calculateNumBatches(filenames);
   saveModel(0, params, 0);
 
-  console.log(id, 'hidden',hiddenSize,'acti',activationName(acti),'stretch',K,'shuffle',shuffle,'batchsize',batchSize,'lr',learningRate,'interp',interp,'num batches',numBatches,'filtered positions',numBatches*batchSize);
+  console.log(id, 'hidden',hiddenSize,'acti',activationName(acti),'stretch',K,'shuffle',shuffle,'batchsize',batchSize,'lr',learningRate,'interp',interp);
 
   let t = 0;
 
@@ -605,7 +476,7 @@ async function train(filenames) {
           batchTargets = [];
         
           if (batchCount % reportRate === 0) {
-            process.stdout.write(`${id} Epoch ${epoch + 1}, Batch ${batchCount}/${numBatches}, Mean Batch Loss: ${totalLoss / batchCount}\r`);
+            process.stdout.write(`${id} Epoch ${epoch + 1}, Batch ${batchCount}, Mean Batch Loss: ${totalLoss / batchCount}\r`);
           }
         }
         
@@ -613,30 +484,9 @@ async function train(filenames) {
       }
     }
     
-    console.log(`${id} Epoch ${epoch + 1} completed. Mean Batch Loss: ${totalLoss / batchCount}`);
+    console.log();
     
-    //{{{  calc dataset loss
-    
-    if ((epoch + 1) % lossRate === 0) {
-    
-      let marker = '';
-      datasetLoss = await calculateDatasetLoss(filenames, params);
-    
-      if (datasetLoss < minLoss) {
-        minLoss = datasetLoss;
-        marker = '***';
-      }
-    
-      console.log(`${id} Dataset Loss after ${epoch + 1} epochs: ${datasetLoss} ${marker}`);
-    }
-    
-    else {
-      datasetLoss = totalLoss / batchCount;
-    }
-    
-    //}}}
-    
-    saveModel(datasetLoss, params, epoch + 1);
+    saveModel(totalLoss/batchCount, params, epoch + 1);
     
     if (shuffle)
       await shuffleAllFiles(dataFiles);
@@ -645,74 +495,6 @@ async function train(filenames) {
   }
 
   return params;
-}
-
-//}}}
-//{{{  calculateNumBatches
-
-async function calculateNumBatches(filenames) {
-
-  const lineStream = createLineStream(filenames);
-
-  let count = 0;
-
-  for await (const line of lineStream) {
-
-    const parts = line.split(' ');
-
-    if (parts.length != 12) {
-      console.log('line format', line, parts.length);
-      process.exit();
-    }
-
-    const score = parseFloat(parts[PART_SCORE].trim());
-    const wdl   = parseFloat(parts[PART_WDL].trim());
-
-    if (!skipP(parts,score,wdl)) {
-
-      count++;
-
-      if ((count % 1000000) == 0)
-        process.stdout.write(count + '\r');
-    }
-  }
-
-  return count / batchSize | 0;
-}
-
-//}}}
-//{{{  calculateDatasetLoss
-
-async function calculateDatasetLoss(filenames, params) {
-
-  const lineStream = createLineStream(filenames);
-
-  let totalLoss = 0;
-  let count = 0;
-
-  for await (const line of lineStream) {
-    const {activeIndices, target} = decodeLine(line);
-    if (activeIndices.length) {
-      //{{{  use this position
-      
-      const forward = forwardPropagation([activeIndices], params);
-      
-      const loss = Math.pow(forward.A2[0] - target[0], 2);
-      
-      totalLoss += loss;
-      
-      count++;
-      
-      if ((count % 100000) == 0)
-        process.stdout.write(count + '\r');
-      
-      //}}}
-    }
-  }
-
-  numBatches = count / batchSize | 0;
-
-  return totalLoss / count;
 }
 
 //}}}
