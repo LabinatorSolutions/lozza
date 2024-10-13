@@ -80,6 +80,10 @@ Commands can also be given on invocation, for example:-
 
 ```net``` displays network properties.
 
+## Creating your own nets
+
+Contact me if you are interested in building a different Lozza net for your project; it's very straightfowward.
+
 ## Acknowledgements
 
 https://www.chessprogramming.org/Main_Page - Chess programming wiki.
