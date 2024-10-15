@@ -6,7 +6,7 @@ A UCI Javascript chess engine. Try her here:-
 
 https://op12no2.github.io/lozza-ui
 
-## Basic use in your web pages
+## Basic use in a browser
 
 All you need is ```lozza.js``` from the latest release.  
 
@@ -34,7 +34,7 @@ Please note that Lozza's code is folded using ```{{{``` and ```}}}``` (emacs con
 
 ## More examples
 
-A sister repo has more web-based examples for playing and analysing etc. with Lozza.
+A sister repo has more browser-based examples for playing and analysing etc. with Lozza.
 
 https://github.com/op12no2/lozza-ui
 
@@ -82,7 +82,7 @@ Commands can also be given on invocation, for example:-
 
 ## Creating your own nets
 
-Contact me if you are interested in building a different Lozza net for your project; it's very straightfowward.
+Contact me if you are interested in building a different Lozza net for your project; it's very straightforward.
 
 ## Acknowledgements
 
