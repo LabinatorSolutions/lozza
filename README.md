@@ -82,7 +82,7 @@ Commands can also be given on invocation, for example:-
 
 ## Creating your own nets
 
-Contact me if you are interested in building a different Lozza net for your project; it's very straightforward.
+Lozza's net is trained using ```trainer.js``` on data generated with ```datagen.js``` and ```filter.js```. Contact me if you are interested in building a different net for your project; it's very straightforward.
 
 ## Acknowledgements
 
