@@ -44,7 +44,7 @@ https://op12no2.github.io/lozza-ui
 
 ## Play Lozza offline in chess user interfaces
 
-As a UCI engine Lozza can be used in popular chesss user interfaces like Banksia, Winboard, Arena and CuteChess. Download the latest release and then follow the instructions in the ```readme.txt``` file.  Any platform that supports ```Node.js``` can be targetted. 
+While Lozza is primarily intended for use in browsers, as a UCI engine Lozza can be used in popular chesss user interfaces like Banksia, Winboard, Arena and CuteChess via ```Node.js```. Download the latest release and then follow the instructions in the ```readme.txt``` file.  Any platform that supports ```Node.js``` can be targetted.   
 
 https://github.com/op12no2/lozza/releases
 
@@ -65,6 +65,8 @@ Commands can also be given on invocation, for example:-
 ```
 > node lozza ucinewgame bench "position startpos" board "go movetime 100" quit
 ```
+
+Alternatives to ```Node.js``` are ```Bun``` and ```Deno```.
 
 ## Commands specific to Lozza
 
