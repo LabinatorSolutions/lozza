@@ -86,7 +86,17 @@ Alternatives to ```Node.js``` are ```Bun``` and ```Deno```.
 
 ## Creating your own nets
 
-Lozza's net is trained using ```trainer.js``` on data generated with ```datagen.js``` and ```filter.js```. Contact me if you are interested in building a different net for your project; it's very straightforward.
+Lozza's net was trained using ```trainer.js``` on data generated with ```datagen.js``` and ```filter.js```; a totally Javascript pipeline. Around 100M positions were used for the Lozza 3 net. Contact me if you are interested in building a different net for your project; it's very straightforward. Essentially the process is:-
+
+```
+mkdir data
+node datagen             // run on as many PCs/threads as possible - see the scripts subdirectory for the script I use.
+cat data/*.fen > data/x  // collate all the data in a single file.
+node filter              // reads x and writes y filtering noisy moves and checks - but configurable.
+shuf data/y > data/x     // shuffle the data back into x. 
+node trainer             // uses x to train a net - lot's of config options like layer size, score-wdl ratio, batch size, 
+                         // activation, optimiser etc. writes nets for every epoch for easy testing (see data sub-dir).
+```                 
 
 ## Acknowledgements
 
