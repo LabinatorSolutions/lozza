@@ -6,7 +6,7 @@ A UCI Javascript chess engine using a small unquantised single-accumulator srelu
 
 https://op12no2.github.io/lozza-ui
 
-Lozza was primarily created for use in browsers, but can also be used in traditional chess UIs via ```Node.js``` and on pretty-much any platform (see below). Note however that Lozza relatively slow compared to compiled engines of a similar design, which also makes her relatively weak. 
+Lozza was primarily created for use in browsers, but can also be used with traditional chess UIs via ```Node.js``` and on pretty-much any platform (see below). Note however that Lozza relatively slow compared to compiled engines of a similar design, which also makes her relatively weak. 
 
 ## Basic use in a browser
 
@@ -46,7 +46,7 @@ https://op12no2.github.io/lozza-ui
 
 ## Play Lozza offline in chess user interfaces
 
-Lozza can be used in popular chesss user interfaces like Banksia, Winboard, Arena and CuteChess via ```Node.js```. Download the latest release and then follow the instructions in the ```readme.txt``` file.  Any platform that supports ```Node.js``` can be targetted.   
+Lozza can be used in popular chesss user interfaces like Banksia, Winboard, Arena and CuteChess via ```Node.js```. Download the latest release and then follow the instructions in the ```readme.txt``` file. Any platform that supports ```Node.js``` can be targetted.   
 
 https://github.com/op12no2/lozza/releases
 
