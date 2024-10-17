@@ -2,7 +2,7 @@ If you are testing Lozza please use the latest release and not the coalface from
 
 # Lozza
 
-A UCI Javascript chess engine with a small 768 -> 75(srelu) -> 1 single accumulator unquantised NNUE evaluation. Try her here:-
+A UCI Javascript chess engine with a small 768x75x1 single srelu accumulator unquantised NNUE evaluation. Try her here:-
 
 https://op12no2.github.io/lozza-ui
 
