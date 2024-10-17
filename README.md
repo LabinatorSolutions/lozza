@@ -2,11 +2,11 @@ If you are testing Lozza please use the latest release and not the coalface from
 
 # Lozza
 
-A UCI Javascript chess engine using a small unquantised single-accumulator srelu 768x75x1 NNUE net for evaluation. Try her here:-
+A UCI Javascript chess engine using a small unquantised single-accumulator srelu 768x75x1 NNUE for evaluation. Try her here:-
 
 https://op12no2.github.io/lozza-ui
 
-Lozza was primarily created for use in browsers, but can also be used with traditional chess UIs via ```Node.js``` and on pretty-much any platform (see below). Note however that Lozza relatively slow compared to compiled engines of a similar design, which also makes her relatively weak. 
+Lozza was primarily created for use in browsers, but can also be used with traditional chess UIs via ```Node.js``` and on pretty-much any platform (see below). Note however that Lozza is relatively slow compared to compiled engines of a similar design, which also makes her relatively weak. 
 
 ## Basic use in a browser
 
