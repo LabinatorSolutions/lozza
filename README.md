@@ -111,4 +111,3 @@ https://discord.gg/uM8J3x46 - Engine Programming Discord - thanks for the help w
 
 https://talkchess.com - Talkchess forums.
 
-https://www.chessprogramming.org/Fruit - Fruit 2.1.
