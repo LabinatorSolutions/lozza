@@ -107,7 +107,7 @@ https://computerchess.org.uk/ccrl/4040 - CCRL rating list.
 
 https://www.wbec-ridderkerk.nl/html/UCIProtocol.html - UCI protocol.
 
-https://discord.gg/uM8J3x46 - Engine Programming Discord - thanks for the help with NNUE/datagen.
+https://discord.gg/uM8J3x46 - Engine Programming Discord - thanks for the help with NNUE/datagen concepts.
 
 https://talkchess.com - Talkchess forums.
 
