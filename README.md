@@ -91,11 +91,12 @@ Lozza's net was trained using ```trainer.js``` on data generated with ```datagen
 ```
 mkdir data
 node datagen             // run on as many PCs/threads as possible - see the scripts subdirectory for the script I use.
-cat data/*.fen > data/x  // collate all the data in a single file.
+cat data/*.fen > data/x  // collate all the data into a single file.
 node filter              // reads x and writes y filtering noisy moves and checks - but configurable.
 shuf data/y > data/x     // shuffle the data back into x. 
 node trainer             // uses x to train a net - lot's of config options like layer size, score-wdl ratio, batch size, 
                          // activation, optimiser etc. writes nets for every epoch for easy testing (see data sub-dir).
+                         // The nets can be pasted into lozza.js replacing the existing one. No other changes are needed.
 ```                 
 
 ## Acknowledgements
