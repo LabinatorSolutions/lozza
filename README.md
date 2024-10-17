@@ -2,9 +2,11 @@ If you are testing Lozza please use the latest release and not the coalface from
 
 # Lozza
 
-A UCI Javascript chess engine with a small 768 -> 75(srelu) -> 1 single accumulator NNUE evaluation. Try her here:-
+A UCI Javascript chess engine with a small 768 -> 75(srelu) -> 1 single accumulator unquantised NNUE evaluation. Try her here:-
 
 https://op12no2.github.io/lozza-ui
+
+Lozza was primarily created for use in browsers, but can also be used in traditional chess UIs via ```Node.js``` on pretty-much any platform, including Raspberry Pi (see below).
 
 ## Basic use in a browser
 
@@ -44,13 +46,13 @@ https://op12no2.github.io/lozza-ui
 
 ## Play Lozza offline in chess user interfaces
 
-While Lozza is primarily intended for use in browsers, as a UCI engine Lozza can be used in popular chesss user interfaces like Banksia, Winboard, Arena and CuteChess via ```Node.js```. Download the latest release and then follow the instructions in the ```readme.txt``` file.  Any platform that supports ```Node.js``` can be targetted.   
+Lozza can be used in popular chesss user interfaces like Banksia, Winboard, Arena and CuteChess via ```Node.js```. Download the latest release and then follow the instructions in the ```readme.txt``` file.  Any platform that supports ```Node.js``` can be targetted.   
 
 https://github.com/op12no2/lozza/releases
 
 ## Fire up Lozza from the command line
 
-Lozza accesses stdio via ```Node.js``` and will run on any platfrom that supports ```Node.js```.  To type UCI commands into Lozza, start ```Node.js``` with ```lozza.js``` or ```lozza``` as the parameter and then enter UCI commands. For example:-
+To type UCI commands into Lozza, start ```Node.js``` with ```lozza.js``` or ```lozza``` as the parameter and then enter commands. For example:-
 
 ```
 > node lozza
@@ -99,4 +101,3 @@ https://discord.gg/uM8J3x46 - Engine Programming Discord - thanks for the help w
 https://talkchess.com - Talkchess forums.
 
 https://www.chessprogramming.org/Fruit - Fruit 2.1.
-
