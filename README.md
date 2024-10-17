@@ -6,7 +6,7 @@ A UCI Javascript chess engine with a small 768 -> 75(srelu) -> 1 single accumula
 
 https://op12no2.github.io/lozza-ui
 
-Lozza was primarily created for use in browsers, but can also be used in traditional chess UIs via ```Node.js``` on pretty-much any platform, including Raspberry Pi (see below).
+Lozza was primarily created for use in browsers, but can also be used in traditional chess UIs via ```Node.js``` and on pretty-much any platform (see below). Note however that Lozza relatively slow compared to compiled engines of a similar design, which also makes her relatively weak. 
 
 ## Basic use in a browser
 
