@@ -1,33 +1,30 @@
 //
-//  Train a Lozza net from data generated via datagen.js and filter.js.
+//  Train a Lozza net from the data generated via datagen.js and filter.js.
 //
 
-//{{{  lang fold
-/*
+//{{{  activations
 
-*/
-
-//}}}
-
-const id_suffix       = '';
 const ACTI_RELU       = 1;
 const ACTI_CRELU      = 2;
 const ACTI_SRELU      = 3;
 const ACTI_SCRELU     = 4;
-const fs              = require('fs');
-const readline        = require('readline');
-const path            = require('path');
-const { exec }        = require('child_process');
-const dataFiles       = ['data/y'];
+
+//}}}
+
+const id_suffix       = '';                         // to manually modify the weights filename.
+const dataFiles       = ['data/datagen.filtered2'];  // list of files generated with filter.js.
 const acti            = ACTI_SRELU;
 const hiddenSize      = 75;
 const shuffle         = true;
 const batchSize       = 500;
 const learningRate    = 0.001;
-const interp          = 0.5;                  // ************ must be same in filter.js.
-const K               = 100;                  // ************ must be same in filter.js.
+const interp          = 0.75;                       // must be same as in filter.js.
+const K               = 100;                        // must be same as in filter.js.
 const useL2Reg        = false;
 const useAdamW        = false;
+
+//{{{  config 2
+
 const reportRate      = 50;
 const epochs          = 10000;
 const inputSize       = 768;
@@ -39,10 +36,19 @@ const epsilon         = 1e-7;
 const l2RegFactor     = 0.001;
 const weightDecay     = 0.01;
 
+//}}}
+//{{{  modules
+
+const fs              = require('fs');
+const readline        = require('readline');
+const path            = require('path');
+const { exec }        = require('child_process');
+
+//}}}
+
 const id = activationName() + '_' + hiddenSize + '_' + Math.trunc(interp * 10) + id_suffix;
 console.log(id);
-
-let minLoss = 9999;
+console.log(dataFiles.toString();
 
 //{{{  myround
 
@@ -116,7 +122,7 @@ function optiName() {
 }
 
 //}}}
-//{{{  activations
+//{{{  activation funcs
 
 function sigmoid(x) {
   return 1 / (1 + Math.exp(-x / K));
@@ -431,7 +437,6 @@ async function train(filenames) {
   //}}}
 
   let params = initializeParameters();
-  let datasetLoss = 0;
 
   saveModel(0, params, 0);
 

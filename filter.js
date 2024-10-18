@@ -1,5 +1,6 @@
 //
 // Filter and simplify FENs from datagen.js for trainer.js.
+// Copy the lozza.js code above here.
 //
 
 //{{{  lang fold
@@ -13,10 +14,10 @@ const fs = require('fs');
 const readline = require('readline');
 const path = require('path');
 
-const rawFiles = ['data/x'];
-const filterFile = 'data/y';
+const rawFiles = ['data/datagen.fen'];        // list of .fen files via datagen.js or same format.
+const filterFile = 'data/datagen.filtered2';  // file to write for trainer.js.
 
-const interp = 0.5;
+const interp = 0.75;
 const K      = 100;
 
 const PART_BOARD      = 0;
@@ -46,8 +47,8 @@ function sigmoid(x) {
 //}}}
 //{{{  lerp
 
-function lerp(eval, wdl, t) {
-  let sg = sigmoid(eval);
+function lerp(score, wdl, t) {
+  let sg = sigmoid(score);
   let l = sg + (wdl - sg) * t;
   return l;
 }
@@ -86,7 +87,7 @@ function decodeLine(line) {
   const parts = line.split(' ');
 
   const board = parts[PART_BOARD].trim();
-  const eval  = parseFloat(parts[PART_SCORE].trim());
+  const score = parseFloat(parts[PART_SCORE].trim());
   const wdl   = parseFloat(parts[PART_WDL].trim());
 
   indexes = [];
@@ -130,7 +131,7 @@ function decodeLine(line) {
     
     //}}}
 
-    target = lerp(eval,wdl,interp);
+    target = lerp(score,wdl,interp);
 
     if (indexes.length > 32) {
       console.log('too many pieces - skipping',indexes.length, line);

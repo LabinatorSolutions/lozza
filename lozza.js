@@ -9,6 +9,7 @@ var RANDOMEVAL = 0;
 //{{{  history
 /*
 
+3 18/10/24 Minor tweaks for datagen + net command.
 3 03/10/24 Integrate the NNUE from my Cwtch experiment (https://github.com/op12no2/cwtch).
 
 */
@@ -54,8 +55,7 @@ function docmd(x) {
 //{{{  constants
 
 const MATERIAL = [0,100,394,388,588,1207,10000];
-
-const IMAP    = Array(16);
+const IMAP     = Array(16);
 
 var MAX_PLY         = 100;                // limited by lozza.board.ttDepth bits.
 var MAX_MOVES       = 250;
@@ -86,7 +86,7 @@ var COLOUR_MASK = 0x8;
 
 var VALUE_PAWN = 100;             // safe - tuning root
 
-const TTSIZE = 1 << 20;
+const TTSIZE = 1 << 23;
 const TTMASK = TTSIZE - 1;
 
 //const PTTSIZE = 1 << 14;
@@ -6766,7 +6766,7 @@ onmessage = function(e) {
         docmd('ucinewgame');
         docmd('position fen ' + fen);
         docmd('id bench' + i);
-        docmd('go depth 10');
+        docmd('go depth 11');
       
         lozza.stats.stop();
       
@@ -6903,6 +6903,57 @@ onmessage = function(e) {
       break;
       
       //}}}
+
+    case 'net':
+    case 'n': {
+      //{{{  net info
+      
+      console.log('build', BUILD);
+      console.log('h1 size', net_h1_size);
+      console.log('lr', net_lr);
+      console.log('activation', net_activation);
+      console.log('stretch', net_stretch);
+      console.log('interp', net_interp);
+      console.log('batch size', net_batch_size);
+      console.log('opt', net_opt);
+      console.log('l2reg', net_l2_reg);
+      console.log('epochs', net_epochs);
+      console.log('loss', net_loss);
+      
+      let maxWeight = -9999;
+      let minWeight = 9999;
+      
+      for (let i=0; i < net_h1_w.length; i++) {
+        for (let j=0; j < net_h1_size; j++) {
+          const w = Math.abs(net_h1_w[i][j]);
+          if (w < minWeight)
+            minWeight = w;
+          if (w > maxWeight)
+            maxWeight = w;
+        }
+      }
+      
+      console.log('min h1 weight', minWeight);
+      console.log('max h1 weight', maxWeight);
+      
+      maxWeight = -9999;
+      minWeight = 9999;
+      
+      for (let j=0; j < net_h1_size; j++) {
+        const w = Math.abs(net_o_w[j]);
+        if (w < minWeight)
+          minWeight = w;
+        if (w > maxWeight)
+          maxWeight = w;
+      }
+      
+      console.log('min o weight', minWeight);
+      console.log('max o weight', maxWeight);
+      
+      break;
+      
+      //}}}
+    }
 
     default:
       //{{{  ?
